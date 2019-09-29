@@ -1,5 +1,6 @@
 from random import shuffle
-from card import Card
+from deuces.card import Card
+
 
 class Deck:
     """
@@ -11,6 +12,7 @@ class Deck:
 
     def __init__(self):
         self.shuffle()
+        self.cards = None
 
     def shuffle(self):
         # and then shuffle
@@ -36,7 +38,7 @@ class Deck:
 
         # create the standard 52 card deck
         for rank in Card.STR_RANKS:
-            for suit,val in Card.CHAR_SUIT_TO_INT_SUIT.iteritems():
+            for suit, val in Card.CHAR_SUIT_TO_INT_SUIT.iteritems():
                 Deck._FULL_DECK.append(Card.new(rank + suit))
 
         return list(Deck._FULL_DECK)

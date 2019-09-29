@@ -1,9 +1,9 @@
 import itertools
-from card import Card
-from deck import Deck
-from lookup import LookupTable
+from deuces.card import Card
+from deuces.lookup import LookupTable
 
-class Evaluator(object):
+
+class Evaluator:
     """
     Evaluates hand strengths using a variant of Cactus Kev's algorithm:
     http://www.suffecool.net/poker/evaluator.html
@@ -17,11 +17,11 @@ class Evaluator(object):
     def __init__(self):
 
         self.table = LookupTable()
-        
+
         self.hand_size_map = {
-            5 : self._five,
-            6 : self._six,
-            7 : self._seven
+            5: self._five,
+            6: self._six,
+            7: self._seven
         }
 
     def evaluate(self, cards, board):
@@ -80,7 +80,7 @@ class Evaluator(object):
 
         all5cardcombobs = itertools.combinations(cards, 5)
         for combo in all5cardcombobs:
-            
+
             score = self._five(combo)
             if score < minimum:
                 minimum = score
@@ -113,13 +113,15 @@ class Evaluator(object):
         else:
             raise Exception("Inavlid hand rank, cannot return rank class")
 
-    def class_to_string(self, class_int):
+    @staticmethod
+    def class_to_string(class_int):
         """
         Converts the integer class hand score into a human-readable string.
         """
         return LookupTable.RANK_CLASS_TO_STRING[class_int]
 
-    def get_five_card_rank_percentage(self, hand_rank):
+    @staticmethod
+    def get_five_card_rank_percentage(hand_rank):
         """
         Scales the hand rank score to the [0.0, 1.0] range.
         """
@@ -141,9 +143,9 @@ class Evaluator(object):
         stages = ["FLOP", "TURN", "RIVER"]
 
         for i in range(len(stages)):
-            line = ("=" * line_length) + " %s " + ("=" * line_length) 
-            print line % stages[i]
-            
+            line = ("=" * line_length) + " %s " + ("=" * line_length)
+            print(line % stages[i])
+
             best_rank = 7463  # rank one worse than worst hand
             winners = []
             for player, hand in enumerate(hands):
@@ -153,8 +155,9 @@ class Evaluator(object):
                 rank_class = self.get_rank_class(rank)
                 class_string = self.class_to_string(rank_class)
                 percentage = 1.0 - self.get_five_card_rank_percentage(rank)  # higher better here
-                print "Player %d hand = %s, percentage rank among all hands = %f" % (
-                    player + 1, class_string, percentage)
+                print(
+                    "Player %d hand = %s, percentage rank among all hands = %f" % (
+                        player + 1, class_string, percentage))
 
                 # detect winner
                 if rank == best_rank:
@@ -167,20 +170,23 @@ class Evaluator(object):
             # if we're not on the river
             if i != stages.index("RIVER"):
                 if len(winners) == 1:
-                    print "Player %d hand is currently winning.\n" % (winners[0] + 1,)
+                    print(
+                        "Player %d hand is currently winning.\n" % (winners[0] + 1,))
                 else:
-                    print "Players %s are tied for the lead.\n" % [x + 1 for x in winners]
+                    print(
+                        "Players %s are tied for the lead.\n" % [x + 1 for x in winners])
 
             # otherwise on all other streets
             else:
-                print
-                print ("=" * line_length) + " HAND OVER " + ("=" * line_length) 
+                print(
+                    print("=" * line_length) + " HAND OVER " + ("=" * line_length))
                 if len(winners) == 1:
-                    print "Player %d is the winner with a %s\n" % (winners[0] + 1, 
-                        self.class_to_string(self.get_rank_class(self.evaluate(hands[winners[0]], board))))
+                    print(
+                        "Player %d is the winner with a %s\n" % (winners[0] + 1,
+                                                                 self.class_to_string(self.get_rank_class(
+                                                                     self.evaluate(hands[winners[0]], board)))))
                 else:
-                    print "Players %s tied for the win with a %s\n" % (winners, 
-                        self.class_to_string(self.get_rank_class(self.evaluate(hands[winners[0]], board))))
-
-
-
+                    print(
+                        "Players %s tied for the win with a %s\n" % (winners,
+                                                                     self.class_to_string(self.get_rank_class(
+                                                                         self.evaluate(hands[winners[0]], board)))))

@@ -1,4 +1,4 @@
-class Card ():
+class Card:
     """
     Static class that handles cards. We represent cards as 32-bit integers, so 
     there is no object instantiation - they are just ints. Most of the bits are 
@@ -33,22 +33,22 @@ class Card ():
     # converstion from string => int
     CHAR_RANK_TO_INT_RANK = dict(zip(list(STR_RANKS), INT_RANKS))
     CHAR_SUIT_TO_INT_SUIT = {
-        's' : 1, # spades
-        'h' : 2, # hearts
-        'd' : 4, # diamonds
-        'c' : 8, # clubs
+        's': 1,  # spades
+        'h': 2,  # hearts
+        'd': 4,  # diamonds
+        'c': 8,  # clubs
     }
     INT_SUIT_TO_CHAR_SUIT = 'xshxdxxxc'
 
     # for pretty printing
     PRETTY_SUITS = {
-        1 : u"\u2660".encode('utf-8'), # spades
-        2 : u"\u2764".encode('utf-8'), # hearts
-        4 : u"\u2666".encode('utf-8'), # diamonds
-        8 : u"\u2663".encode('utf-8') # clubs
+        1: u"\u2660".encode('utf-8'),  # spades
+        2: u"\u2764".encode('utf-8'),  # hearts
+        4: u"\u2666".encode('utf-8'),  # diamonds
+        8: u"\u2663".encode('utf-8')  # clubs
     }
 
-     # hearts and diamonds
+    # hearts and diamonds
     PRETTY_REDS = [2, 4]
 
     @staticmethod
@@ -153,11 +153,11 @@ class Card ():
         For debugging purposes. Displays the binary number as a 
         human readable string in groups of four digits. 
         """
-        bstr = bin(card_int)[2:][::-1] # chop off the 0b and THEN reverse string
-        output = list("".join(["0000" +"\t"] * 7) +"0000")
+        bstr = bin(card_int)[2:][::-1]  # chop off the 0b and THEN reverse string
+        output = list("".join(["0000" + "\t"] * 7) + "0000")
 
         for i in range(len(bstr)):
-            output[i + int(i/4)] = bstr[i]
+            output[i + int(i / 4)] = bstr[i]
 
         # output the string to console
         output.reverse()
@@ -168,14 +168,14 @@ class Card ():
         """
         Prints a single card 
         """
-        
+
         color = False
         try:
             from termcolor import colored
             ### for mac, linux: http://pypi.python.org/pypi/termcolor
             ### can use for windows: http://pypi.python.org/pypi/colorama
             color = True
-        except ImportError: 
+        except ImportError:
             pass
 
         # suit and rank
@@ -189,14 +189,14 @@ class Card ():
 
         r = Card.STR_RANKS[rank_int]
 
-        return " [ " +r+ " " +s+ " ] "
+        return " [ " + r + " " + s + " ] "
 
     @staticmethod
     def print_pretty_card(card_int):
         """
         Expects a single integer as input
         """
-        print Card.int_to_pretty_str(card_int)
+        print(Card.int_to_pretty_str(card_int))
 
     @staticmethod
     def print_pretty_cards(card_ints):
@@ -210,5 +210,5 @@ class Card ():
                 output += Card.int_to_pretty_str(c) + ","
             else:
                 output += Card.int_to_pretty_str(c) + " "
-    
-        print output
+
+        print(output)
