@@ -62,9 +62,12 @@ class HoleCards:
 
 
 class Board:
-    flop: Tuple[Card, Card, Card]
-    turn: Card
-    river: Card
+    """
+    A board of cards, which may be partially or fully rolled out.
+    """
+    flop: Optional[Tuple[Card, Card, Card]]
+    turn: Optional[Card]
+    river: Optional[Card]
 
 
 def get_hand(hole_cards: HoleCards, board: Board) -> Hand:
