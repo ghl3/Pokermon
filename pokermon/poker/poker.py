@@ -1,18 +1,17 @@
 from typing import Tuple, Optional
 from dataclasses import dataclass
 
-from enum import Enum
+from pokermon.poker.ordered_enum import OrderedEnum
 
 
-class Suit(Enum):
+class Suit(OrderedEnum):
     SPADES = 1
     CLUBS = 2
     DIAMONDS = 3
     HEARTS = 4
 
 
-class Rank(Enum):
-    ACE = 1
+class Rank(OrderedEnum):
     TWO = 2
     THREE = 3
     FOUR = 4
@@ -25,9 +24,10 @@ class Rank(Enum):
     JACK = 11
     QUEEN = 12
     KING = 13
+    ACE = 14
 
 
-class HandType(Enum):
+class HandType(OrderedEnum):
     HIGH = 1
     PAIR = 2
     TWO_PAIR = 3
@@ -38,11 +38,11 @@ class HandType(Enum):
     STRAIGHT_FLUSH = 8
 
 
-@dataclass
+@dataclass(order=True)
 class Hand:
     type: HandType
-    suit: Optional[Suit]
-    kickers: Optional[Tuple[Rank, Rank, Rank, Rank, Rank]]
+    kickers: Tuple[Rank, Rank, Rank, Rank, Rank]
+    suit: Optional[Suit] = None
 
 
 Card = Tuple[Rank, Suit]
