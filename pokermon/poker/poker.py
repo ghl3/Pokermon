@@ -1,4 +1,5 @@
-from typing import Tuple
+from typing import Tuple, Optional
+from dataclasses import dataclass
 
 from enum import Enum
 
@@ -26,15 +27,22 @@ class Rank(Enum):
     KING = 13
 
 
-class Hand(Enum):
+class HandType(Enum):
     HIGH = 1
     PAIR = 2
     TWO_PAIR = 3
     TRIPS = 4
-    STRAGHT = 5
+    STRAIGHT = 5
     FLUSH = 6
     FULL_HOUSE = 7
     STRAIGHT_FLUSH = 8
+
+
+@dataclass
+class Hand:
+    type: HandType
+    suit: Optional[Suit]
+    kickers: Optional[Tuple[Rank, Rank, Rank, Rank, Rank]]
 
 
 Card = Tuple[Rank, Suit]
@@ -47,12 +55,11 @@ class HoleCards:
     cards = Tuple[Card, Card]
 
 
-Flop = Tuple[Card, Card, Card]
-
-Turn = Card
-
-River = Card
-
-
 class Board:
-    flop: Flop
+    flop: Tuple[Card, Card, Card]
+    turn: Card
+    river: Card
+
+
+def get_hand(hole_cards: HoleCards, board: Board) -> Hand:
+    return Hand(type=HandType.STRAIGHT, suit=None, kickers=(Rank.ACE, Rank.QUEEN, Rank.NINE, Rank.EIGHT, Rank.FOUR))
