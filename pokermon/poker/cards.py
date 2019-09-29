@@ -1,4 +1,4 @@
-from typing import Tuple, Optional
+from typing import Tuple, Optional, List
 from dataclasses import dataclass
 
 from pokermon.poker.ordered_enum import OrderedEnum
@@ -45,7 +45,13 @@ class Hand:
     suit: Optional[Suit] = None
 
 
-Card = Tuple[Rank, Suit]
+@dataclass(order=True)
+class Card:
+    rank: Rank
+    suit: Suit
+
+
+# Card = Tuple[Rank, Suit]
 
 
 class HoleCards:
@@ -63,3 +69,14 @@ class Board:
 
 def get_hand(hole_cards: HoleCards, board: Board) -> Hand:
     return Hand(type=HandType.STRAIGHT, suit=None, kickers=(Rank.ACE, Rank.QUEEN, Rank.NINE, Rank.EIGHT, Rank.FOUR))
+
+
+def get_winning_hands(board: Board, hole_cards: List[HoleCards]):
+    if len(hole_cards) == 0:
+        raise ValueError("No hole cards given")
+
+    hands = [get_hand(hc, board) for hc in hole_cards]
+    hands = sorted(hands)
+
+    best_hand = hands[0]
+    return [h for h in hands if h == best_hand]

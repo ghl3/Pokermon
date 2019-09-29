@@ -27,4 +27,5 @@ Card.print_pretty_cards(player1_hand)
 Card.print_pretty_cards(player2_hand)
 
 hands = [player1_hand, player2_hand]
+
 evaluator.hand_summary(board, hands)

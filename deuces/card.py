@@ -63,6 +63,10 @@ class Card:
         suit_char = string[1]
         rank_int = Card.CHAR_RANK_TO_INT_RANK[rank_char]
         suit_int = Card.CHAR_SUIT_TO_INT_SUIT[suit_char]
+        return Card.from_rank_int_and_suit_int(rank_int, suit_int)
+
+    @staticmethod
+    def from_rank_int_and_suit_int(rank_int, suit_int):
         rank_prime = Card.PRIMES[rank_int]
 
         bitrank = 1 << rank_int << 16
