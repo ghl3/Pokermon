@@ -179,7 +179,7 @@ class Evaluator:
             # otherwise on all other streets
             else:
                 print(
-                    print("=" * line_length) + " HAND OVER " + ("=" * line_length))
+                    ("=" * line_length) + " HAND OVER " + ("=" * line_length))
                 if len(winners) == 1:
                     print(
                         "Player %d is the winner with a %s\n" % (winners[0] + 1,
