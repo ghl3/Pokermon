@@ -6,6 +6,9 @@ from pokermon.poker.game import BIG_BIND_AMOUNT
 from pokermon.poker.cards import FullDeal, Hand
 
 
+def min_bet_amount(game: GameView) -> int:
+  return max(BIG_BIND_AMOUNT, game.latest_bet_raise_amount)
+
 def action_valid(player_index: int, action: Action, game: GameView) -> bool:
   if action.move == Move.FOLD:
     return action.amount == 0

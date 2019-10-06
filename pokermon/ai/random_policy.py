@@ -4,6 +4,8 @@ from pokermon.poker.cards import Hand
 
 from pokermon.poker.game import Action, Move, GameView
 
+import pokermon.poker.rules as rules
+
 
 class RandomPolicy(Policy):
   def action(self, player_index: int, _: Hand, game: GameView) -> Action:
@@ -22,7 +24,7 @@ class RandomPolicy(Policy):
         return Action(player_index, Move.CHECK_CALL, amount_to_call)
       
       elif move == Move.BET_RAISE:
-        raise_amount = random.randint(game.min_bet_raise_amount(),
+        raise_amount = random.randint(rules.min_bet_amount(game),
                                       remaining_stack)
         return Action(player_index, Move.BET_RAISE, raise_amount)
       
@@ -37,7 +39,7 @@ class RandomPolicy(Policy):
         return Action(player_index, Move.CHECK_CALL, amount_to_call)
       
       elif move == Move.BET_RAISE:
-        raise_amount = random.randint(game.min_bet_raise_amount(),
+        raise_amount = random.randint(rules.min_bet_amount(game),
                                       remaining_stack)
         return Action(player_index, Move.BET_RAISE, raise_amount)
       
