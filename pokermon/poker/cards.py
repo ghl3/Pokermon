@@ -67,17 +67,9 @@ class Board:
   river: Optional[Card]
 
 
-def get_hand(hole_cards: HoleCards, board: Board) -> Hand:
-  return Hand(type=HandType.STRAIGHT, suit=None,
-              kickers=(Rank.ACE, Rank.QUEEN, Rank.NINE, Rank.EIGHT, Rank.FOUR))
+@dataclass
+class FullDeal:
+  hole_cards: List[HoleCards]
+  board: Board
 
 
-def get_winning_hands(board: Board, hole_cards: List[HoleCards]):
-  if len(hole_cards) == 0:
-    raise ValueError("No hole cards given")
-  
-  hands = [get_hand(hc, board) for hc in hole_cards]
-  hands = sorted(hands)
-  
-  best_hand = hands[0]
-  return [h for h in hands if h == best_hand]

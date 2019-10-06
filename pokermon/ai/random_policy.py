@@ -2,11 +2,11 @@ from pokermon.ai.policy import Policy
 import random
 from pokermon.poker.cards import Hand
 
-from pokermon.poker.game import Action, Move, ObservedGameView
+from pokermon.poker.game import Action, Move, GameView
 
 
 class RandomPolicy(Policy):
-  def action(self, player_index: int, _: Hand, game: ObservedGameView) -> Action:
+  def action(self, player_index: int, _: Hand, game: GameView) -> Action:
     
     amount_to_call = game.amount_to_call()[player_index]
     remaining_stack = game.current_stack_sizes()[player_index]

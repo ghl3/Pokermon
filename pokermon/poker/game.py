@@ -1,7 +1,6 @@
 # All Amounts are relative to the small blind.
-from typing import Optional, List, Dict
-from dataclasses import dataclass
-from pokermon.poker.cards import Hand, Board
+from typing import Optional, List, Dict, Set
+from dataclasses import dataclass, field
 from pokermon.poker.ordered_enum import OrderedEnum
 import functools
 
@@ -37,7 +36,7 @@ class Action:
 
 
 @dataclass
-class ObservedGame:
+class Game:
   """
   All data for a game that is fully known to all players.
   
@@ -50,16 +49,32 @@ class ObservedGame:
   """
   
   # A list of starting player stacks
-  stacks = List[int]
+  stacks: List[int]
   
-  current_street: Street
+  current_street: Street = Street.PREFLOP
   
-  board = Board
+  preflop_action: List[Action] = field(default_factory=list)
+  flop_action: List[Action] = field(default_factory=list)
+  turn_action: List[Action] = field(default_factory=list)
+  river_action: List[Action] = field(default_factory=list)
   
-  preflop_action = List[Action]
-  flop_action = List[Action]
-  turn_action = List[Action]
-  river_action = List[Action]
+  def num_players(self) -> int:
+    return len(self.stacks)
+  
+  def get_street_action(self) -> List[Action]:
+    if self.current_street == Street.PREFLOP:
+      return self.preflop_action
+    elif self.current_street == Street.FLOP:
+      return self.flop_action
+    elif self.current_street == Street.TURN:
+      return self.turn_action
+    elif self.current_street == Street.RIVER:
+      return self.river_action
+    else:
+      raise Exception("Invalid current street.")
+  
+  def add_action(self, action: Action) -> None:
+    self.get_street_action().append(action)
   
   def num_timestamps(self) -> int:
     return (len(self.preflop_action) + len(self.flop_action) + len(self.turn_action) + len(
@@ -69,11 +84,22 @@ class ObservedGame:
     if timestamp > self.num_timestamps():
       raise Exception("Timestamp out of range")
     else:
-      return ObservedGameView(self, timestamp)
+      return GameView(self, timestamp)
 
 
 @dataclass
-class ObservedGameView:
+class SidePot:
+  amount: int = 0
+  players: Set[int] = field(default_factory=set)
+
+
+@dataclass
+class Pot:
+  side_pots: List[SidePot]
+
+
+@dataclass
+class GameView:
   """
   A view of an observed game at a given timestamp.
   
@@ -82,7 +108,7 @@ class ObservedGameView:
   # TODO: Memoize all methods
   
   """
-  game: ObservedGame
+  game: Game
   
   # The timestamp is guaranteed to be in the range of the given game.
   timestamp: int
@@ -181,26 +207,30 @@ class ObservedGameView:
             for i, amount_bet in self.amount_bet_in_street()}
   
   @functools.lru_cache
-  def latest_raise_amount(self) -> int:
+  def latest_bet_raise_amount(self) -> int:
     
     for action in reversed(self.street_action()):
       
-      if action.move == Move.BET_RAISE:
+      if action.move in {Move.SMALL_BLIND, Move.BIG_BLIND, Move.BET_RAISE}:
         return action.amount
     
     return 0
   
   @functools.lru_cache
-  def min_bet_raise_amount(self) -> int:
+  def is_folded(self) -> Dict[int, bool]:
     
-    if self.latest_raise_amount() == 0:
-      return BIG_BIND_AMOUNT
-    else:
-      return self.latest_raise_amount()
+    folded = {player_index: False for player_index in range(self.num_players())}
+    
+    for a in self.action():
+      if a.move == Move.FOLD:
+        folded[a.player_index] = True
+    
+    return folded
   
-  def current_street_complete(self) -> bool:
-    return (len(self.street_action()) >= self.num_players() and sum(
-      self.amount_to_call().values()) == 0)
+  @functools.lru_cache
+  def is_all_in(self) -> Dict[int, bool]:
+    return {player_index: current_stack_size == 0
+            for player_index, current_stack_size in self.current_stack_sizes()}
 
 
 @dataclass
@@ -208,10 +238,8 @@ class GameResults:
   """
   """
   
-  winning_player_index: int
+  # If multiple players have the best hand (a tie), return a list of all player indices.
+  best_hand_index: List[int]
   
   # The actual profits, in small blings, won or list by each player during this game
-  profits = List[int]
-  
-  # A list of the actual player hands (or None if the hand is unknown)
-  hands = List[Hand]
+  profits: List[int]
