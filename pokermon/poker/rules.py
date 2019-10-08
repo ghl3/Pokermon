@@ -1,6 +1,6 @@
 from typing import List, Dict
 
-from pokermon.poker.evaluation import Evaluator
+from pokermon.poker.evaluation import Evaluator, EvaluationResult
 from pokermon.poker.game import GameView, GameResults, Action, Move, Pot
 from pokermon.poker.game import BIG_BIND_AMOUNT
 from pokermon.poker.cards import FullDeal, Hand
@@ -8,6 +8,7 @@ from pokermon.poker.cards import FullDeal, Hand
 
 def min_bet_amount(game: GameView) -> int:
   return max(BIG_BIND_AMOUNT, game.latest_bet_raise_amount)
+
 
 def action_valid(player_index: int, action: Action, game: GameView) -> bool:
   if action.move == Move.FOLD:
@@ -62,11 +63,9 @@ def street_over(game: GameView) -> bool:
     game.amount_to_call().values()) == 0)
 
 
-def get_winning_players(hands: Dict[int, Hand]) -> List[int]:
-  hands = sorted(hands.items(), key=lambda pair: pair[1])
-  
-  best_hand = hands[0][1]
-  return [player_idx for player_idx, h in hands if h == best_hand]
+def get_winning_players(hands: Dict[int, EvaluationResult]) -> List[int]:
+  winning_rank = [res.rank for _, res in hands.items()]
+  return [player_idx for player_idx, h in hands if h.rank == winning_rank]
 
 
 def update_pot(pot: Pot, game: GameView, action: Action) -> None:
@@ -129,7 +128,7 @@ def get_result(cards: FullDeal, game: GameView, pot: Pot) -> GameResults:
   
   evaluator = Evaluator()
   
-  showdown_hands = {}
+  showdown_hands: Dict[int, EvaluationResult] = {}
   
   for player_index in range(game.num_players()):
     
@@ -137,9 +136,9 @@ def get_result(cards: FullDeal, game: GameView, pot: Pot) -> GameResults:
       hole_cards = cards.hole_cards[player_index]
       board = cards.board
       
-      hand = evaluator.evaluate(hole_cards, board)
+      eval_result = evaluator.evaluate(hole_cards, board)
       
-      showdown_hands[player_index] = hand
+      showdown_hands[player_index] = eval_result
   
   winning_players = get_winning_players(showdown_hands)
   

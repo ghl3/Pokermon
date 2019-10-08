@@ -35,14 +35,8 @@ class HandType(OrderedEnum):
   STRAIGHT = 5
   FLUSH = 6
   FULL_HOUSE = 7
-  STRAIGHT_FLUSH = 8
-
-
-@dataclass(order=True)
-class Hand:
-  type: HandType
-  kickers: Tuple[Rank, Rank, Rank, Rank, Rank]
-  suit: Optional[Suit] = None
+  QUADS = 8
+  STRAIGHT_FLUSH = 9
 
 
 @dataclass(order=True)
@@ -51,13 +45,13 @@ class Card:
   suit: Suit
 
 
+@dataclass
 class HoleCards:
-  def __init__(self, first: Card, second: Card):
-    self.cards = (first, second)
-  
-  cards = Tuple[Card, Card]
+  left: Card
+  right: Card
 
 
+@dataclass
 class Board:
   """
   A board of cards, which may be partially or fully rolled out.
@@ -71,5 +65,3 @@ class Board:
 class FullDeal:
   hole_cards: List[HoleCards]
   board: Board
-
-
