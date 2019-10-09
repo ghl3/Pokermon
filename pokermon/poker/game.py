@@ -1,4 +1,5 @@
 # All Amounts are relative to the small blind.
+import random
 from typing import Optional, List, Dict, Set
 from dataclasses import dataclass, field
 from pokermon.poker.ordered_enum import OrderedEnum
@@ -25,7 +26,7 @@ SMALL_BLIND_AMOUNT = 1
 BIG_BIND_AMOUNT = 2
 
 
-@dataclass
+@dataclass(frozen=True)
 class Action:
   player_index: int
   move: Move
@@ -58,6 +59,9 @@ class Game:
   turn_action: List[Action] = field(default_factory=list)
   river_action: List[Action] = field(default_factory=list)
   
+  # A unique id for this game
+  id: int = field(default_factory=lambda: random.getrandbits(64))
+  
   def num_players(self) -> int:
     return len(self.stacks)
   
@@ -74,13 +78,28 @@ class Game:
       raise Exception("Invalid current street.")
   
   def add_action(self, action: Action) -> None:
+    # TODO: Validate the player index
     self.get_street_action().append(action)
   
   def num_timestamps(self) -> int:
     return (len(self.preflop_action) + len(self.flop_action) + len(self.turn_action) + len(
       self.river_action))
   
-  def view(self, timestamp: int = -1):
+  def view(self, timestamp: int = None):
+    """
+    Returns a view of the game AFTER the timestamp'th action.
+    
+    So, if timestamp == 0, then no actions have been done.
+    If timestamp==2, then the view is AFTER the big blind is posted.
+    The current view is timestamp=len(action) (in other words, length is one
+    more than the last action index, which is therefore the current move).
+    :param timestamp:
+    :return:
+    """
+    
+    if timestamp is None:
+      timestamp = self.num_timestamps()
+    
     if timestamp > self.num_timestamps():
       raise Exception("Timestamp out of range")
     else:
@@ -98,7 +117,7 @@ class Pot:
   side_pots: List[SidePot]
 
 
-@dataclass
+@dataclass(frozen=True)
 class GameView:
   """
   A view of an observed game at a given timestamp.
@@ -113,11 +132,14 @@ class GameView:
   # The timestamp is guaranteed to be in the range of the given game.
   timestamp: int
   
-  @functools.lru_cache
+  def __hash__(self):
+    return hash((self.game.id, self.timestamp, "364258436582634"))
+  
+  @functools.lru_cache()
   def num_players(self) -> int:
     return len(self.game.stacks)
   
-  @functools.lru_cache
+  @functools.lru_cache()
   def action(self) -> List[Action]:
     """
     The list of actions before the given timestamp  on the street containing the given action.
@@ -134,13 +156,16 @@ class GameView:
       if amount_remaining > len(street_actions):
         all_actions.extend(street_actions)
         amount_remaining -= len(street_actions)
+      elif amount_remaining == len(street_actions):
+        all_actions.extend(street_actions)
+        return all_actions
       else:
         all_actions.extend(street_actions[:amount_remaining])
         return all_actions
     
     raise Exception("Action Error")
   
-  @functools.lru_cache
+  @functools.lru_cache()
   def street_action(self) -> List[Action]:
     """
     The list of actions before the given timestamp  on the street containing the given action.
@@ -153,14 +178,17 @@ class GameView:
     for street_actions in (self.game.preflop_action, self.game.flop_action,
                            self.game.turn_action, self.game.river_action):
       
+      print("STREET AMOUNT REMAINING: ", amount_remaining)
       if amount_remaining > len(street_actions):
         amount_remaining -= len(street_actions)
+      elif amount_remaining == len(street_actions):
+        return street_actions
       else:
         return street_actions[:amount_remaining]
     
     raise Exception("Street Action Error")
   
-  @functools.lru_cache
+  @functools.lru_cache()
   def amount_bet_in_street(self) -> Dict[int, int]:
     """
     Return a dictionary of the total amount bet per player so far.
@@ -176,7 +204,7 @@ class GameView:
     
     return amount
   
-  @functools.lru_cache
+  @functools.lru_cache()
   def amount_bet_total(self) -> Dict[int, int]:
     """
     Return a dictionary of the total amount bet per player so far.
@@ -192,21 +220,21 @@ class GameView:
     
     return amount
   
-  @functools.lru_cache
+  @functools.lru_cache()
   def current_stack_sizes(self) -> Dict[int, int]:
     return {i: self.game.stacks[i] - amount_bet
-            for i, amount_bet in self.amount_bet_total()}
+            for i, amount_bet in self.amount_bet_total().items()}
   
-  @functools.lru_cache
+  @functools.lru_cache()
   def current_bet_amount(self) -> int:
     return max(self.amount_bet_in_street().values())
   
-  @functools.lru_cache
+  @functools.lru_cache()
   def amount_to_call(self) -> Dict[int, int]:
     return {i: self.current_bet_amount() - amount_bet
-            for i, amount_bet in self.amount_bet_in_street()}
+            for i, amount_bet in self.amount_bet_in_street().items()}
   
-  @functools.lru_cache
+  @functools.lru_cache()
   def latest_bet_raise_amount(self) -> int:
     
     for action in reversed(self.street_action()):
@@ -216,7 +244,7 @@ class GameView:
     
     return 0
   
-  @functools.lru_cache
+  @functools.lru_cache()
   def is_folded(self) -> Dict[int, bool]:
     
     folded = {player_index: False for player_index in range(self.num_players())}
@@ -227,13 +255,13 @@ class GameView:
     
     return folded
   
-  @functools.lru_cache
+  @functools.lru_cache()
   def is_all_in(self) -> Dict[int, bool]:
     return {player_index: current_stack_size == 0
-            for player_index, current_stack_size in self.current_stack_sizes()}
+            for player_index, current_stack_size in self.current_stack_sizes().items()}
 
 
-@dataclass
+@dataclass(frozen=True)
 class GameResults:
   """
   """

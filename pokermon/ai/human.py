@@ -2,7 +2,7 @@ from typing import Optional, Tuple
 
 from pokermon.ai.policy import Policy
 from pokermon.poker import rules
-from pokermon.poker.cards import Hand
+from pokermon.poker.cards import HoleCards
 from pokermon.poker.game import GameView, Action, Move
 import re
 
@@ -11,7 +11,7 @@ class Human(Policy):
   _parser_call_fold = re.compile("\s*(call|fold)\s*")
   _parser_bet_raise = re.compile("\s*(bet|raise)\s+([0-9]+)\s*")
   
-  def action(self, player_index: int, hand: Hand, game: GameView) -> Action:
+  def action(self, player_index: int, hand: HoleCards, game: GameView) -> Action:
     amount_to_call = game.amount_to_call()[player_index]
     
     stack_size = game.current_stack_sizes()[player_index]
@@ -36,7 +36,7 @@ class Human(Policy):
     print("Amount to Call {} (Current Stack Size: {})".format(
       amount_to_call, stack_size))
     
-    s = input('Action >>')
+    s = input('Action> ')
     
     maybe_action = parse_action(s)
     

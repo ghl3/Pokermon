@@ -12,11 +12,13 @@ def deal_cards(num_players: int) -> FullDeal:
   for player_index in range(num_players):
     hole_cards.append(deck.draw(2))
   
-  flop = tuple(*[wrapper._from_deuces_card(x) for x in board[:3]])
-  turn = wrapper._from_deuces_card(board[3])
-  river = wrapper._from_deuces_card(board[4])
+  flop = (wrapper.from_deuces_card(board[0]),
+          wrapper.from_deuces_card(board[1]),
+          wrapper.from_deuces_card(board[2]))
+  turn = wrapper.from_deuces_card(board[3])
+  river = wrapper.from_deuces_card(board[4])
   
   return FullDeal(
-    hole_cards=[HoleCards(wrapper._from_deuces_card(x),
-                          wrapper._from_deuces_card(y)) for x, y in hole_cards],
+    hole_cards=[HoleCards(wrapper.from_deuces_card(x),
+                          wrapper.from_deuces_card(y)) for x, y in hole_cards],
     board=Board(flop=flop, turn=turn, river=river))

@@ -3,14 +3,20 @@ from typing import List, Dict
 from pokermon.poker.evaluation import Evaluator, EvaluationResult
 from pokermon.poker.game import GameView, GameResults, Action, Move, Pot
 from pokermon.poker.game import BIG_BIND_AMOUNT
-from pokermon.poker.cards import FullDeal, Hand
+from pokermon.poker.cards import FullDeal
 
 
 def min_bet_amount(game: GameView) -> int:
   return max(BIG_BIND_AMOUNT, game.latest_bet_raise_amount)
 
 
-def action_valid(player_index: int, action: Action, game: GameView) -> bool:
+def action_valid(action_index: int, player_index: int, action: Action, game: GameView) -> bool:
+  if action_index == 0:
+    return action.move == Move.SMALL_BLIND
+  
+  if action_index == 1:
+    return action.move == Move.BIG_BLIND
+  
   if action.move == Move.FOLD:
     return action.amount == 0
   
@@ -59,6 +65,10 @@ def action_valid(player_index: int, action: Action, game: GameView) -> bool:
 
 
 def street_over(game: GameView) -> bool:
+  len(game.street_action())
+  game.num_players()
+  game.amount_to_call().values()
+  
   return (len(game.street_action()) >= game.num_players() and sum(
     game.amount_to_call().values()) == 0)
 

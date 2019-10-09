@@ -1,11 +1,14 @@
-from typing import List, Tuple
+import logging
+from typing import List, Tuple, Optional
 from pokermon.ai.policy import Policy
 from pokermon.poker.cards import FullDeal
-from pokermon.poker.game import Game, GameResults, Action, Move, Street, Pot, SidePot
+from pokermon.poker.game import Game, GameResults, Action, Move, Street, Pot, SidePot, GameView
 import itertools
 import pokermon.poker.rules as rules
 
 from pokermon.poker.game import SMALL_BLIND_AMOUNT, BIG_BIND_AMOUNT
+
+logger = logging.getLogger(__name__)
 
 
 def simulate(players: List[Policy],
@@ -19,6 +22,8 @@ def simulate(players: List[Policy],
   :return:
   """
   
+  logger.debug("Simulating game with %s players", len(players))
+  
   game = Game(stacks=starting_stacks)
   
   action_index = 0
@@ -31,39 +36,50 @@ def simulate(players: List[Policy],
   pot = Pot([SidePot(0, set(range(game.num_players())))])
   
   for street in [Street.PREFLOP, Street.FLOP, Street.TURN, Street.RIVER]:
+    
+    logger.debug("Starting Street: %s", street)
+    
     game.current_street = street
     
-    for player_index, player in itertools.repeat(enumerate(players)):
+    for player_index, player in itertools.cycle(enumerate(players)):
       
       game_view = game.view()
       
-      # Post the small blind
-      if action_index == 0:
-        game.add_action(Action(0, Move.SMALL_BLIND, SMALL_BLIND_AMOUNT))
+      action = _get_action(action_index, player, player_index, game_view, deal)
+      
+      if action is None:
         continue
       
-      # Post the big blind
-      if action_index == 1:
-        game.add_action(Action(1, Move.BIG_BLIND, BIG_BIND_AMOUNT))
-        continue
+      logger.debug("Action %s Player %s: %s", action_index, player_index, action)
       
-      if game_view.is_folded()[player_index]:
-        continue
-      
-      if game_view.is_al_in()[player_index]:
-        continue
-      
-      hand = deal.hole_cards[player_index]
-      
-      action = player.action(player_index, hand, game_view)
+      # # Post the small blind
+      # if action_index == 0:
+      #   game.add_action(Action(0, Move.SMALL_BLIND, SMALL_BLIND_AMOUNT))
+      #   continue
+      #
+      # # Post the big blind
+      # if action_index == 1:
+      #   game.add_action(Action(1, Move.BIG_BLIND, BIG_BIND_AMOUNT))
+      #   continue
+      #
+      # if game_view.is_folded()[player_index]:
+      #   continue
+      #
+      # if game_view.is_al_in()[player_index]:
+      #   continue
+      #
+      # hand = deal.hole_cards[player_index]
+      #
+      # action = player.action(player_index, hand, game_view)
       
       # Update the pot BEFORE applying the action
       rules.update_pot(pot, game_view, action)
       
-      if not rules.action_valid(player_index, action, game_view):
+      if not rules.action_valid(action_index, player_index, action, game_view):
         raise Exception("Action is invalid")
       else:
         game.add_action(action)
+        action_index += 1
       
       if rules.street_over(game_view):
         break
@@ -71,3 +87,23 @@ def simulate(players: List[Policy],
   result = rules.get_result(deal, game.view(), pot)
   
   return (game, result)
+
+
+def _get_action(action_index: int, player: Policy, player_index: int, game_view: GameView,
+                deal: FullDeal) -> Optional[Action]:
+  # Post the small blind
+  if action_index == 0:
+    return Action(player_index, Move.SMALL_BLIND, SMALL_BLIND_AMOUNT)
+  
+  # Post the big blind
+  if action_index == 1:
+    return Action(player_index, Move.BIG_BLIND, BIG_BIND_AMOUNT)
+  
+  if game_view.is_folded()[player_index]:
+    return None
+  
+  if game_view.is_all_in()[player_index]:
+    return None
+  
+  hand = deal.hole_cards[player_index]
+  return player.action(player_index, hand, game_view)
