@@ -145,23 +145,56 @@ def test_latest_bet_raise_amount():
   
   game.add_action(Action(0, Move.SMALL_BLIND, total_bet=1, amount_added=1))
   assert game.view().last_raise_amount() == 1
-  assert  game.view().current_bet_amount() == 1
+  assert game.view().current_bet_amount() == 1
   
   game.add_action(Action(1, Move.BIG_BLIND, total_bet=2, amount_added=2))
   assert game.view().last_raise_amount() == 1
-  assert  game.view().current_bet_amount() == 2
+  assert game.view().current_bet_amount() == 2
   
   game.add_action(Action(2, Move.BET_RAISE, total_bet=10, amount_added=10))
   assert game.view().last_raise_amount() == 8
-  assert  game.view().current_bet_amount() == 10
+  assert game.view().current_bet_amount() == 10
   
   # Raise to 20 total.  This is a raise of 8 on top of the original 10.
   # It is a min-raise.
-  game.add_action(Action(0, Move.BET_RAISE, total_bet=18, amount_added=18-1))
+  game.add_action(Action(0, Move.BET_RAISE, total_bet=18, amount_added=18 - 1))
   assert game.view().last_raise_amount() == 8
-  assert  game.view().current_bet_amount() == 18
+  assert game.view().current_bet_amount() == 18
   
   # Riase it to 30 total (up from the previous 18).  This is a raise of 12.
-  game.add_action(Action(1, Move.BET_RAISE, total_bet=30, amount_added=30-2))
+  game.add_action(Action(1, Move.BET_RAISE, total_bet=30, amount_added=30 - 2))
   assert game.view().last_raise_amount() == 12
-  assert  game.view().current_bet_amount() == 30
+  assert game.view().current_bet_amount() == 30
+
+
+def test_is_folded():
+  game = Game(stacks=[100, 200, 300])
+  
+  game.add_action(Action(0, Move.SMALL_BLIND, total_bet=1, amount_added=1))
+  game.add_action(Action(1, Move.BIG_BLIND, total_bet=2, amount_added=2))
+  game.add_action(Action(2, Move.FOLD, total_bet=2, amount_added=0))
+  
+  assert game.view().is_folded() == {0: False, 1: False, 2: True}
+  
+  game.add_action(Action(1, Move.CHECK_CALL, total_bet=2, amount_added=1))
+  game.add_action(Action(2, Move.CHECK_CALL, total_bet=2, amount_added=0))
+  
+  assert game.view().is_folded() == {0: False, 1: False, 2: True}
+  
+  game.current_street = Street.TURN
+  
+  assert game.view().is_folded() == {0: False, 1: False, 2: True}
+  
+  game.add_action(Action(0, Move.BET_RAISE, total_bet=10, amount_added=10))
+  game.add_action(Action(1, Move.FOLD, total_bet=10, amount_added=0))
+  assert game.view().is_folded() == {0: False, 1: True, 2: True}
+
+
+def test_is_all_in():
+  game = Game(stacks=[100, 200, 10])
+  
+  game.add_action(Action(0, Move.SMALL_BLIND, total_bet=1, amount_added=1))
+  game.add_action(Action(1, Move.BIG_BLIND, total_bet=2, amount_added=2))
+  game.add_action(Action(2, Move.BET_RAISE, total_bet=10, amount_added=10))
+  
+  assert game.view().is_all_in() == {0: False, 1: False, 2: True}
