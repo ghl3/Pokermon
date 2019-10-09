@@ -7,7 +7,7 @@ from pokermon.poker.cards import FullDeal
 
 
 def min_bet_amount(game: GameView) -> int:
-  return max(BIG_BIND_AMOUNT, game.latest_bet_raise_amount)
+  return max(BIG_BIND_AMOUNT, game.latest_bet_amount)
 
 
 def action_valid(action_index: int, player_index: int, action: Action, game: GameView) -> bool:
@@ -55,7 +55,7 @@ def action_valid(action_index: int, player_index: int, action: Action, game: Gam
       
       # Must bet at least the big blind OR must raise at least as much as the
       # last bet/raise
-      min_bet_amount = max(BIG_BIND_AMOUNT, game.latest_bet_raise_amount)
+      min_bet_amount = max(BIG_BIND_AMOUNT, game.latest_bet_amount)
       
       # Player must raise at least as much as the previous raise.
       if action.amount < min_bet_amount:
@@ -153,7 +153,7 @@ def get_result(cards: FullDeal, game: GameView, pot: Pot) -> GameResults:
   winning_players = get_winning_players(showdown_hands)
   
   profit_per_player = {player_index: -1 * amount_bet
-                       for player_index, amount_bet in game.amount_bet_total()}
+                       for player_index, amount_bet in game.amount_added_total()}
   
   # For now, assume there is only one pot.
   # TODO: Support Side Pots

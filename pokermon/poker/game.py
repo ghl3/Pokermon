@@ -30,10 +30,12 @@ BIG_BIND_AMOUNT = 2
 class Action:
   player_index: int
   move: Move
-  # The total amount of the bet/call/raise.  For a call, it's the additional
-  # money called on this action.  For a raise, it's the additional money raised
-  # (the amount "on top"), not the total bet for this street.
-  amount: Optional[int]
+  
+  # The amount this player added to the pot as a part of this action.
+  amount_added: int
+  
+  # The new total size of the bet after this action.
+  total_bet: int
 
 
 @dataclass
@@ -189,7 +191,7 @@ class GameView:
     raise Exception("Street Action Error")
   
   @functools.lru_cache()
-  def amount_bet_in_street(self) -> Dict[int, int]:
+  def amount_added_in_street(self) -> Dict[int, int]:
     """
     Return a dictionary of the total amount bet per player so far.
     :return:
@@ -200,12 +202,12 @@ class GameView:
     for action in self.street_action():
       player_id = action.player_index
       
-      amount[player_id] += action.amount
+      amount[player_id] += action.amount_added
     
     return amount
   
   @functools.lru_cache()
-  def amount_bet_total(self) -> Dict[int, int]:
+  def amount_added_total(self) -> Dict[int, int]:
     """
     Return a dictionary of the total amount bet per player so far.
     :return:
@@ -216,33 +218,45 @@ class GameView:
     for action in self.action():
       player_id = action.player_index
       
-      amount[player_id] += action.amount
+      amount[player_id] += action.amount_added
     
     return amount
   
   @functools.lru_cache()
   def current_stack_sizes(self) -> Dict[int, int]:
     return {i: self.game.stacks[i] - amount_bet
-            for i, amount_bet in self.amount_bet_total().items()}
+            for i, amount_bet in self.amount_added_total().items()}
   
   @functools.lru_cache()
   def current_bet_amount(self) -> int:
-    return max(self.amount_bet_in_street().values())
+    return max(self.amount_added_in_street().values())
   
   @functools.lru_cache()
   def amount_to_call(self) -> Dict[int, int]:
     return {i: self.current_bet_amount() - amount_bet
-            for i, amount_bet in self.amount_bet_in_street().items()}
+            for i, amount_bet in self.amount_added_in_street().items()}
   
   @functools.lru_cache()
-  def latest_bet_raise_amount(self) -> int:
+  def last_raise_amount(self) -> int:
+    """
+    The size of the last raise over the previous bet
+    :return:
+    """
+    
+    if len(self.street_action()) == 0:
+      return 0
+    
+    current_bet = self.street_action()[-1].total_bet
     
     for action in reversed(self.street_action()):
       
-      if action.move in {Move.SMALL_BLIND, Move.BIG_BLIND, Move.BET_RAISE}:
-        return action.amount
+      if action.total_bet != current_bet:
+        return current_bet - action.total_bet
+      
+      #if action.move in {Move.SMALL_BLIND, Move.BIG_BLIND, Move.BET_RAISE}:
+      #  return action.total_bet
     
-    return 0
+    return current_bet
   
   @functools.lru_cache()
   def is_folded(self) -> Dict[int, bool]:
