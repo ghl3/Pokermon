@@ -16,32 +16,29 @@ class RandomPolicy(Policy):
     if amount_to_call > 0:
       
       move = random.choice([Move.FOLD, Move.CHECK_CALL, Move.BET_RAISE])
-      
-      if move == Move.FOLD:
-        return Action(player_index, Move.FOLD, 0)
-      
-      elif move == Move.CHECK_CALL:
-        return Action(player_index, Move.CHECK_CALL, amount_to_call)
-      
-      elif move == Move.BET_RAISE:
-        raise_amount = random.randint(rules.min_bet_amount(game),
-                                      remaining_stack)
-        return Action(player_index, Move.BET_RAISE, raise_amount)
-      
-      else:
-        raise Exception()
     
     else:
-      
       move = random.choice([Move.CHECK_CALL, Move.BET_RAISE])
+    
+    if move == Move.FOLD:
+      return game.fold()
+    
+    elif move == Move.CHECK_CALL:
+      return game.call()
+    
+    elif move == Move.BET_RAISE:
       
-      if move == Move.CHECK_CALL:
-        return Action(player_index, Move.CHECK_CALL, amount_to_call)
+      max_amount = remaining_stack
       
-      elif move == Move.BET_RAISE:
-        raise_amount = random.randint(rules.min_bet_amount(game),
-                                      remaining_stack)
-        return Action(player_index, Move.BET_RAISE, raise_amount)
+      min_amount = max((game.current_bet_amount() + rules.min_bet_amount(game) -
+                       game.amount_added_in_street()[player_index], 0))
       
-      else:
-        raise Exception()
+      # min_amoun_to_add =
+      
+      raise_amount = random.randint(min_amount,
+                                    max_amount)
+      return game.bet_raise(
+        raise_amount=raise_amount)  # Action(player_index, Move.BET_RAISE, raise_amount)
+    
+    else:
+      raise Exception()

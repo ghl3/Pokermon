@@ -6,7 +6,7 @@ from pokermon.poker.game import Game, GameResults, Action, Move, Street, Pot, Si
 import itertools
 import pokermon.poker.rules as rules
 
-from pokermon.poker.game import SMALL_BLIND_AMOUNT, BIG_BIND_AMOUNT
+from pokermon.poker.game import SMALL_BLIND_AMOUNT, BIG_BLIND_AMOUNT
 
 logger = logging.getLogger(__name__)
 
@@ -75,7 +75,8 @@ def simulate(players: List[Policy],
       # Update the pot BEFORE applying the action
       rules.update_pot(pot, game_view, action)
       
-      if not rules.action_valid(action_index, player_index, action, game_view):
+      if not rules.action_valid(action_index=action_index, player_index=player_index,
+                                action=action, game=game_view).is_valid():
         raise Exception("Action is invalid")
       else:
         game.add_action(action)
@@ -93,11 +94,13 @@ def _get_action(action_index: int, player: Policy, player_index: int, game_view:
                 deal: FullDeal) -> Optional[Action]:
   # Post the small blind
   if action_index == 0:
-    return Action(player_index, Move.SMALL_BLIND, SMALL_BLIND_AMOUNT)
+    return Action(player_index, Move.SMALL_BLIND, amount_added=SMALL_BLIND_AMOUNT,
+                  total_bet=SMALL_BLIND_AMOUNT)
   
   # Post the big blind
   if action_index == 1:
-    return Action(player_index, Move.BIG_BLIND, BIG_BIND_AMOUNT)
+    return Action(player_index, Move.BIG_BLIND, amount_added=BIG_BLIND_AMOUNT,
+                  total_bet=BIG_BLIND_AMOUNT)
   
   if game_view.is_folded()[player_index]:
     return None

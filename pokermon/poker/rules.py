@@ -1,67 +1,151 @@
-from typing import List, Dict
+import logging
+from dataclasses import dataclass
+from enum import Enum
+from typing import List, Dict, Any, Optional
 
 from pokermon.poker.evaluation import Evaluator, EvaluationResult
-from pokermon.poker.game import GameView, GameResults, Action, Move, Pot
-from pokermon.poker.game import BIG_BIND_AMOUNT
+from pokermon.poker.game import GameView, GameResults, Action, Move, Pot, SMALL_BLIND_AMOUNT
+from pokermon.poker.game import BIG_BLIND_AMOUNT
 from pokermon.poker.cards import FullDeal
+
+logger = logging.getLogger(__name__)
+
+
+class Error(Enum):
+  UNKNOWN_MOVE = 1
+  SMALL_BLIND_REQUIRED = 2
+  BIG_BLIND_REQUIRED = 3
+  INVALID_AMOUNT_ADDED = 4
+  INVAID_TOTAL_BET = 5
+  INVALID_PLAYER = 6
+  MIN_RAISE_REQUIRED = 7
+
+
+class Metadata(Enum):
+  TYPE = 1
+  BLIND_AMOUNT = 2
+  AMOUNT_ADDED_SHOULD_BE_GE = 3
+  AMOUNT_ADDED_SHOULD_BE_LE = 4
+  TOTAL_BET_SHOULD_BE = 5
+  MIN_BE_RAISE_AMOUNT = 6
+  RAISE_MUST_BE_GE = 7
+
+
+@dataclass
+class Result:
+  error: Optional[Error]
+  
+  metadata: Dict[Metadata, Any]
+  
+  def is_valid(self):
+    return self.error is not None
+
+
+MOVE_OK = Result(None, {})
 
 
 def min_bet_amount(game: GameView) -> int:
-  return max(BIG_BIND_AMOUNT, game.latest_bet_amount)
+  return max(BIG_BLIND_AMOUNT, game.last_raise_amount())
 
 
-def action_valid(action_index: int, player_index: int, action: Action, game: GameView) -> bool:
+def action_valid(action_index: int, player_index: int, action: Action,
+                 game: GameView) -> Result:
+  amount_to_call = game.amount_to_call()[player_index]
+  player_stack = game.current_stack_sizes()[player_index]
+  amount_already_addded = game.amount_added_in_street()[player_index]
+  
   if action_index == 0:
-    return action.move == Move.SMALL_BLIND
+    if action.move != Move.SMALL_BLIND:
+      return Result(Error.SMALL_BLIND_REQUIRED, {Metadata.BLIND_AMOUNT: SMALL_BLIND_AMOUNT})
+    if action.amount_added != SMALL_BLIND_AMOUNT:
+      return Result(Error.INVALID_AMOUNT_ADDED, {Metadata.BLIND_AMOUNT: SMALL_BLIND_AMOUNT})
+    if action.total_bet != SMALL_BLIND_AMOUNT:
+      return Result(Error.INVAID_TOTAL_BET, {Metadata.BLIND_AMOUNT: SMALL_BLIND_AMOUNT})
+    return MOVE_OK
+    # return action.move == Move.SMALL_BLIND and action.amount_added == SMALL_BLIND_AMOUNT and action.total_bet == SMALL_BLIND_AMOUNT
   
-  if action_index == 1:
-    return action.move == Move.BIG_BLIND
+  elif action_index == 1:
+    if action.move != Move.BIG_BLIND:
+      return Result(Error.BIG_BLIND_REQUIRED, {Metadata.BLIND_AMOUNT: BIG_BLIND_AMOUNT})
+    if action.amount_added != BIG_BLIND_AMOUNT:
+      return Result(Error.INVALID_AMOUNT_ADDED, {Metadata.BLIND_AMOUNT: BIG_BLIND_AMOUNT})
+    if action.total_bet != BIG_BLIND_AMOUNT:
+      return Result(Error.INVAID_TOTAL_BET, {Metadata.BLIND_AMOUNT: BIG_BLIND_AMOUNT})
+    return MOVE_OK
   
-  if action.move == Move.FOLD:
-    return action.amount == 0
+  elif action.move == Move.FOLD:
+    if action.amount_added != 0:
+      return Result(Error.INVALID_AMOUNT_ADDED, {Metadata.AMOUNT_ADDED_SHOULD_BE: 0})
+    if action.total_bet != game.current_bet_amount():
+      return Result(Error.INVALID_AMOUNT_ADDED,
+                    {Metadata.TOTAL_AMOUNT_SHOULD_BE: game.current_bet_amount()})
+    return MOVE_OK
   
   # Blinds handled elsewhere
-  elif action.move in {Move.SMALL_BLIND, Move.BIG_BLIND}:
-    return False
+  #  elif action.move in {Move.SMALL_BLIND, Move.BIG_BLIND}:
+  #    return False
   
   elif action.move == Move.CHECK_CALL:
     
-    amount_to_call = game.amount_to_call()[player_index]
-    player_stack = game.current_stack_sizes()[player_index]
-    
     if amount_to_call <= player_stack:
       
-      if action.amount != amount_to_call:
-        return False
+      if action.amount_added != amount_to_call:
+        return Result(Error.INVALID_AMOUNT_ADDED, {Metadata.AMOUNT_ADDED_SHOULD_BE: amount_to_call})
+      
+      if action.total_bet != game.current_bet_amount():
+        return Result(Error.INVAID_TOTAL_BET,
+                      {Metadata.TOTAL_BET_SHOULD_BE: game.current_bet_amount()})
+      
+      return MOVE_OK
+      
+      # return action.amount_added == amount_to_call and action.total_bet == game.current_bet_amount()
     
     else:
-      
       # Player calls all in
-      if action.amount != player_stack:
-        return False
+      
+      if action.amount_added != player_stack:
+        return Result(Error.INVALID_AMOUNT_ADDED, {Metadata.AMOUNT_ADDED_SHOULD_BE: player_stack})
+      
+      if action.total_bet != game.current_bet_amount():
+        return Result(Error.INVAID_TOTAL_BET,
+                      {Metadata.TOTAL_BET_SHOULD_BE: game.current_bet_amount()})
+      
+      return MOVE_OK
+      
+      # return action.amount_added == player_stack and action.total_bet == game.current_bet_amount()
   
   elif action.move == Move.BET_RAISE:
     
-    if action.amount == 0:
-      return False
+    #    if action.amount_added == 0:
     
-    player_stack = game.current_stack_sizes()[player_index]
+    #      return Result(Error.INVALID_AMOUNT_ADDED, {Metadata.AMOUNT_ADDED_SHOULD_BE: player_stack})
+    #      return False
+    
+    if action.amount_added > player_stack:
+      return Result(Error.INVALID_AMOUNT_ADDED, {Metadata.AMOUNT_ADDED_SHOULD_BE_LE: player_stack})
     
     # Player goes all in.  You can always call all in.
-    if action.amount == player_stack:
-      return True
+    if action.amount_added == player_stack:
+      # TODO: Check the total bet size here is consistent
+      
+      required_total_bet = player_stack + amount_already_addded
+      
+      if action.total_bet != required_total_bet:
+        return Result(Error.INVAID_TOTAL_BET, {Metadata.TOTAL_BET_SHOULD_BE: required_total_bet})
+      
+      return MOVE_OK
     
     else:
       
       # Must bet at least the big blind OR must raise at least as much as the
       # last bet/raise
-      min_bet_amount = max(BIG_BIND_AMOUNT, game.latest_bet_amount)
+      min_bet_amount = max(BIG_BLIND_AMOUNT, game.last_raise_amount())
       
       # Player must raise at least as much as the previous raise.
-      if action.amount < min_bet_amount:
-        return False
+      if action.total_bet - game.current_bet_amount() < min_bet_amount:
+        return Result(Error.MIN_RAISE_REQUIRED, {Metadata.RAISE_MUST_BE_GE: min_bet_amount})
   
-  return True
+  return Result(Error.UNKNOWN_MOVE, {})
 
 
 def street_over(game: GameView) -> bool:
@@ -86,7 +170,7 @@ def update_pot(pot: Pot, game: GameView, action: Action) -> None:
   
   # If a Player bets or calls, add that amount to the pot
   # TODO: Handle side pots
-  pot.side_pots[0].amount += action.amount
+  pot.side_pots[0].amount += action.amount_added
 
 
 # def update_pots(game: GameView, pot: Pot, action: Action) -> None:

@@ -23,7 +23,7 @@ class Move(OrderedEnum):
 
 
 SMALL_BLIND_AMOUNT = 1
-BIG_BIND_AMOUNT = 2
+BIG_BLIND_AMOUNT = 2
 
 
 @dataclass(frozen=True)
@@ -36,7 +36,7 @@ class Action:
   
   # The new total size of the bet after this action.
   total_bet: int
-
+  
 
 @dataclass
 class Game:
@@ -140,6 +140,21 @@ class GameView:
   @functools.lru_cache()
   def num_players(self) -> int:
     return len(self.game.stacks)
+  
+  def _player_list(self, starting_player: int = 0) -> List[int]:
+    all_players_twice = list(range(self.num_players())) + list(range(self.num_players()))
+    return all_players_twice[starting_player: starting_player + self.num_players()]
+  
+  @functools.lru_cache()
+  def current_player(self) -> int:
+    if len(self.street_action()) == 0:
+      starting_player = 0
+    else:
+      starting_player = (self.street_action()[-1].player_index + 1) % self.num_players()
+    
+    for player in self._player_list(starting_player):
+      if not self.is_folded()[player]:
+        return player
   
   @functools.lru_cache()
   def action(self) -> List[Action]:
@@ -253,7 +268,7 @@ class GameView:
       if action.total_bet != current_bet:
         return current_bet - action.total_bet
       
-      #if action.move in {Move.SMALL_BLIND, Move.BIG_BLIND, Move.BET_RAISE}:
+      # if action.move in {Move.SMALL_BLIND, Move.BIG_BLIND, Move.BET_RAISE}:
       #  return action.total_bet
     
     return current_bet
@@ -273,6 +288,57 @@ class GameView:
   def is_all_in(self) -> Dict[int, bool]:
     return {player_index: current_stack_size == 0
             for player_index, current_stack_size in self.current_stack_sizes().items()}
+  
+  @functools.lru_cache()
+  def call(self) -> Action:
+    pass
+  
+  @functools.lru_cache()
+  def bet_raise(self, to: Optional[int] = None, raise_amount: Optional[int] = None) -> Optional[
+    Action]:
+    
+    player_id = self.current_player()
+    
+    if to is not None and raise_amount is not None:
+      raise Exception()
+    
+    elif to is not None:
+      new_bet_size = to
+      amount_to_add = to - self.amount_added_in_street()[player_id]
+    
+    elif raise_amount is not None:
+      
+      new_bet_size = self.current_bet_amount() + raise_amount
+      amount_to_add = new_bet_size - self.amount_added_in_street()[player_id]
+    
+    else:
+      raise Exception()
+    
+    raise_amount = new_bet_size - self.current_bet_amount()
+    
+    # Player is all in
+    if amount_to_add == self.current_stack_sizes()[player_id]:
+      return Action(player_id, Move.BET_RAISE, amount_to_add, new_bet_size)
+    
+    elif amount_to_add > self.current_stack_sizes()[player_id]:
+      return None
+    
+    # Must raise at least the minimum
+    elif raise_amount < self.last_raise_amount():
+      return None
+    
+    else:
+      return Action(player_id, Move.BET_RAISE, amount_to_add, new_bet_size)
+  
+  @functools.lru_cache()
+  def fold(self) -> Action:
+    player_id = self.current_player()
+    
+    return Action(player_id, Move.BET_RAISE, amount_added=0, total_bet=self.current_bet_amount())
+  
+  @functools.lru_cache()
+  def all_in(self) -> Action:
+    pass
 
 
 @dataclass(frozen=True)
