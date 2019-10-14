@@ -24,11 +24,12 @@ class Error(Enum):
 class Metadata(Enum):
   TYPE = 1
   BLIND_AMOUNT = 2
-  AMOUNT_ADDED_SHOULD_BE_GE = 3
-  AMOUNT_ADDED_SHOULD_BE_LE = 4
-  TOTAL_BET_SHOULD_BE = 5
-  MIN_BE_RAISE_AMOUNT = 6
-  RAISE_MUST_BE_GE = 7
+  AMOUNT_ADDED_SHOULD_BE = 3
+  AMOUNT_ADDED_SHOULD_BE_GE = 4
+  AMOUNT_ADDED_SHOULD_BE_LE = 5
+  TOTAL_BET_SHOULD_BE = 6
+  MIN_BE_RAISE_AMOUNT = 7
+  RAISE_MUST_BE_GE = 8
 
 
 @dataclass
@@ -38,7 +39,7 @@ class Result:
   metadata: Dict[Metadata, Any]
   
   def is_valid(self):
-    return self.error is not None
+    return self.error is None
 
 
 MOVE_OK = Result(None, {})
@@ -125,7 +126,7 @@ def action_valid(action_index: int, player_index: int, action: Action,
       return Result(Error.INVALID_AMOUNT_ADDED, {Metadata.AMOUNT_ADDED_SHOULD_BE_LE: player_stack})
     
     # Player goes all in.  You can always call all in.
-    if action.amount_added == player_stack:
+    elif action.amount_added == player_stack:
       # TODO: Check the total bet size here is consistent
       
       required_total_bet = player_stack + amount_already_addded
@@ -144,6 +145,8 @@ def action_valid(action_index: int, player_index: int, action: Action,
       # Player must raise at least as much as the previous raise.
       if action.total_bet - game.current_bet_amount() < min_bet_amount:
         return Result(Error.MIN_RAISE_REQUIRED, {Metadata.RAISE_MUST_BE_GE: min_bet_amount})
+      
+      return MOVE_OK
   
   return Result(Error.UNKNOWN_MOVE, {})
 

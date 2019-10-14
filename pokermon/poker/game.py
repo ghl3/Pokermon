@@ -36,7 +36,7 @@ class Action:
   
   # The new total size of the bet after this action.
   total_bet: int
-  
+
 
 @dataclass
 class Game:
@@ -195,7 +195,6 @@ class GameView:
     for street_actions in (self.game.preflop_action, self.game.flop_action,
                            self.game.turn_action, self.game.river_action):
       
-      print("STREET AMOUNT REMAINING: ", amount_remaining)
       if amount_remaining > len(street_actions):
         amount_remaining -= len(street_actions)
       elif amount_remaining == len(street_actions):
@@ -291,7 +290,18 @@ class GameView:
   
   @functools.lru_cache()
   def call(self) -> Action:
-    pass
+    player_index = self.current_player()
+    
+    amount_to_call = self.amount_to_call()[player_index]
+    player_stack = self.current_stack_sizes()[player_index]
+    # amount_already_addded = game.amount_added_in_street()[player_index]
+    
+    if amount_to_call < player_stack:
+      return Action(player_index, Move.CHECK_CALL, amount_added=amount_to_call,
+                    total_bet=self.current_bet_amount())
+    else:
+      return Action(player_index, Move.CHECK_CALL, amount_added=player_stack,
+                    total_bet=self.current_bet_amount())
   
   @functools.lru_cache()
   def bet_raise(self, to: Optional[int] = None, raise_amount: Optional[int] = None) -> Optional[

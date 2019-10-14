@@ -198,3 +198,37 @@ def test_is_all_in():
   game.add_action(Action(2, Move.BET_RAISE, total_bet=10, amount_added=10))
   
   assert game.view().is_all_in() == {0: False, 1: False, 2: True}
+
+
+def test_call():
+  game = Game(stacks=[100, 200, 10])
+  
+  game.add_action(Action(0, Move.SMALL_BLIND, total_bet=1, amount_added=1))
+  game.add_action(Action(1, Move.BIG_BLIND, total_bet=2, amount_added=2))
+  game.add_action(Action(2, Move.BET_RAISE, total_bet=10, amount_added=10))
+  
+  call = game.view().call()
+  assert call == Action(player_index=0, move=Move.CHECK_CALL, amount_added=9,
+                        total_bet=10)
+  game.add_action(call)
+  
+  call = game.view().call()
+  assert call == Action(player_index=1, move=Move.CHECK_CALL, amount_added=8,
+                        total_bet=10)
+
+
+def test_call_all_in():
+  game = Game(stacks=[10, 20, 100])
+  
+  game.add_action(Action(0, Move.SMALL_BLIND, total_bet=1, amount_added=1))
+  game.add_action(Action(1, Move.BIG_BLIND, total_bet=2, amount_added=2))
+  game.add_action(Action(2, Move.BET_RAISE, total_bet=100, amount_added=100))
+  
+  call = game.view().call()
+  assert game.view().call() == Action(player_index=0, move=Move.CHECK_CALL, amount_added=9,
+                                      total_bet=100)
+  game.add_action(call)
+  
+  call = game.view().call()
+  assert call == Action(player_index=1, move=Move.CHECK_CALL, amount_added=18,
+                        total_bet=100)

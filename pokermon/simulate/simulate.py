@@ -75,9 +75,12 @@ def simulate(players: List[Policy],
       # Update the pot BEFORE applying the action
       rules.update_pot(pot, game_view, action)
       
-      if not rules.action_valid(action_index=action_index, player_index=player_index,
-                                action=action, game=game_view).is_valid():
-        raise Exception("Action is invalid")
+      action_result = rules.action_valid(action_index=action_index, player_index=player_index,
+                                         action=action, game=game_view)
+      
+      if not action_result.is_valid():
+        logger.error("Action is invalid %s %s", action, action_result)
+        raise Exception("Action is invalid", action, action_result)
       else:
         game.add_action(action)
         action_index += 1

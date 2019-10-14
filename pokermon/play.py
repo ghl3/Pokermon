@@ -1,5 +1,7 @@
 import argparse
 import logging
+import sys
+from sys import stderr
 from typing import List
 
 from pokermon.ai import policies
@@ -22,11 +24,19 @@ def main():
   
   args = parser.parse_args()
   
-  print(args)
-  
   # Configure the logger
+  format = '[%(asctime)s] %(pathname)s:%(lineno)d %(levelname)s - %(message)s'
   log_level = getattr(logging, args.log[0])
-  logging.basicConfig(level=log_level)
+  logging.basicConfig(level=log_level, format=format)
+
+#  ch = logging.StreamHandler()
+#  ch.setLevel(logging.ERROR)
+  
+#  formatter = logging.Formatter(
+#    '[%(asctime)s] p%(process)s {%(pathname)s:%(lineno)d} %(levelname)s - %(message)s',
+#    '%m-%d %H:%M:%S')
+#  handler = logging.StreamHandler(stderr)
+#  handler.setFormatter(formatter)
   
   players: List[Policy] = [policies.POLICIES[player] for player in args.player]
   
@@ -38,6 +48,8 @@ def main():
   
   print(game)
   print(result)
+  
+  sys.exit(0)
 
 
 if __name__ == '__main__':

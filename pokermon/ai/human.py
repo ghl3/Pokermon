@@ -52,6 +52,7 @@ class Human(Policy):
       
       if maybe_action is None:
         print("Action Not Parsed")
+        logger.error("Action Not Parsed")
         continue
       
       logger.debug("Parsed Acton: %s", maybe_action)
@@ -60,7 +61,8 @@ class Human(Policy):
                                            action=maybe_action, game=game)
       
       if not validity_result.is_valid():
-        print("Action Invalid: %s", validity_result)
+        print("Action {} Invalid: {}", maybe_action, validity_result)
+        logger.error("Action %s Invalid %s", maybe_action, validity_result)
         continue
       
       return maybe_action
