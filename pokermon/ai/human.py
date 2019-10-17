@@ -28,15 +28,11 @@ class Human(Policy):
       if move is None:
         return None
       elif move == Move.FOLD:
-        return game.fold()  # Action(player_index, Move.FOLD, 0)
+        return game.fold()
       elif move == Move.CHECK_CALL:
-        # amount_able_to_call = min(amount_to_call, stack_size)
-        # return Action(player_index, Move.CHECK_CALL, amount_able_to_call)
         return game.call()
       elif move == Move.BET_RAISE:
         return game.bet_raise(to=int(amount))
-      #        amount_to_raise = min(amount, stack_size)
-      #        return Action(player_index, Move.BET_RAISE, amount_to_raise)
       else:
         return None
     
@@ -67,16 +63,11 @@ class Human(Policy):
       
       return maybe_action
   
-  #      s = input('Action >>')
-  #      maybe_action = parse_action(s)
-  
-  #    return maybe_action
-  
   def parse_move(self, line: str) -> Tuple[Optional[Move], Optional[int]]:
     
     # Attempt to parse call/fold
     
-    match = self._parser_call_fold.match(line)  # groups(line)
+    match = self._parser_call_fold.match(line)
     if match is not None:
       
       action = match.groups()[0]

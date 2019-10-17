@@ -4,7 +4,7 @@ from enum import Enum
 from typing import List, Dict, Any, Optional
 
 from pokermon.poker.evaluation import Evaluator, EvaluationResult
-from pokermon.poker.game import GameView, GameResults, Action, Move, Pot, SMALL_BLIND_AMOUNT
+from pokermon.poker.game import GameView, GameResults, Action, Move, SMALL_BLIND_AMOUNT
 from pokermon.poker.game import BIG_BLIND_AMOUNT
 from pokermon.poker.cards import FullDeal
 
@@ -84,10 +84,6 @@ def action_valid(action_index: int, player_index: int, action: Action,
                     {Metadata.TOTAL_AMOUNT_SHOULD_BE: game.current_bet_amount()})
     return MOVE_OK
   
-  # Blinds handled elsewhere
-  #  elif action.move in {Move.SMALL_BLIND, Move.BIG_BLIND}:
-  #    return False
-  
   elif action.move == Move.CHECK_CALL:
     
     if amount_to_call <= player_stack:
@@ -100,8 +96,6 @@ def action_valid(action_index: int, player_index: int, action: Action,
                       {Metadata.TOTAL_BET_SHOULD_BE: game.current_bet_amount()})
       
       return MOVE_OK
-      
-      # return action.amount_added == amount_to_call and action.total_bet == game.current_bet_amount()
     
     else:
       # Player calls all in
@@ -114,15 +108,8 @@ def action_valid(action_index: int, player_index: int, action: Action,
                       {Metadata.TOTAL_BET_SHOULD_BE: game.current_bet_amount()})
       
       return MOVE_OK
-      
-      # return action.amount_added == player_stack and action.total_bet == game.current_bet_amount()
   
   elif action.move == Move.BET_RAISE:
-    
-    #    if action.amount_added == 0:
-    
-    #      return Result(Error.INVALID_AMOUNT_ADDED, {Metadata.AMOUNT_ADDED_SHOULD_BE: player_stack})
-    #      return False
     
     if action.amount_added > player_stack:
       return Result(Error.INVALID_AMOUNT_ADDED, {Metadata.AMOUNT_ADDED_SHOULD_BE_LE: player_stack})
@@ -158,7 +145,6 @@ def street_over(game: GameView) -> bool:
   for action in game.street_action():
     players_acted_this_street.add(action.player_index)
   
-  #  is_over = False
   for player_index in range(game.num_players()):
     
     if game.is_folded()[player_index]:
@@ -176,52 +162,9 @@ def street_over(game: GameView) -> bool:
   return True
 
 
-#  return (len(game.street_action()) >= game.num_players() and sum(
-#    game.amount_to_call().values()) == 0)
-
-
 def get_winning_players(hands: Dict[int, EvaluationResult]) -> List[int]:
   winning_rank = [res.rank for _, res in hands.items()]
   return [player_idx for player_idx, h in hands if h.rank == winning_rank]
-
-
-def update_pot(pot: Pot, game: GameView, action: Action) -> None:
-  # If a Player folds, remove them from all pots
-  if action.move == Move.FOLD:
-    for side_pot in pot.side_pots:
-      side_pot.players.remove(action.player_index)
-  
-  # If a Player bets or calls, add that amount to the pot
-  # TODO: Handle side pots
-  pot.side_pots[0].amount += action.amount_added
-
-
-# def update_pots(game: GameView, pot: Pot, action: Action) -> None:
-#   """
-#   Returns an updated list of pots based on the most recent action.
-#
-#   The game represents the state of the game BEFORE the action is applied.
-#
-#   """
-#
-#   player_index = action.player_index
-#
-#   # If a Player folds, remove them from all pots
-#   if action.move == Move.FOLD:
-#     for side_pot in pot.side_pots:
-#       side_pot.players.remove(action.player_index)
-#
-#
-#   # If a player calls less than the bet, a side pot of their amount is created:
-#   if action.move == Move.CHECK_CALL and action.amount < game.amount_to_call()[player_index]:
-#
-#     action.
-#
-#   # If a player calls their entire stack, a new pot is created
-#   if game.current_stack_sizes()[action.player_index] == action.amount:
-#
-#
-
 
 def pot_per_winning_player(pot_size: int, winning_players: List[int]) -> Dict[int, int]:
   pot_even_division = pot_size // len(winning_players)
@@ -262,9 +205,7 @@ def get_result(cards: FullDeal, game: GameView) -> GameResults:
   profit_per_player = {player_index: -1 * amount_bet
                        for player_index, amount_bet in game.amount_added_total()}
   
-  # For now, assume there is only one pot.
-  # TODO: Support Side Pots
-  # pot_size = pot.side_pots[0].amount
+  # TODO: Support side pots
   pot_size = 0
   for amount in game.amount_added_total():
     pot_size += amount

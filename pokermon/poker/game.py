@@ -108,17 +108,6 @@ class Game:
       return GameView(self, timestamp)
 
 
-@dataclass
-class SidePot:
-  amount: int = 0
-  players: Set[int] = field(default_factory=set)
-
-
-@dataclass
-class Pot:
-  side_pots: List[SidePot]
-
-
 @dataclass(frozen=True)
 class GameView:
   """
@@ -270,9 +259,6 @@ class GameView:
       
       if action.total_bet != current_bet:
         return current_bet - action.total_bet
-      
-      # if action.move in {Move.SMALL_BLIND, Move.BIG_BLIND, Move.BET_RAISE}:
-      #  return action.total_bet
     
     return current_bet
   
@@ -308,7 +294,6 @@ class GameView:
     
     amount_to_call = self.amount_to_call()[player_index]
     player_stack = self.current_stack_sizes()[player_index]
-    # amount_already_addded = game.amount_added_in_street()[player_index]
     
     if amount_to_call < player_stack:
       return Action(player_index, Move.CHECK_CALL, amount_added=amount_to_call,
@@ -340,32 +325,10 @@ class GameView:
     # This may be an invalid raise, but this will be caught downstream
     return Action(player_id, Move.BET_RAISE, amount_to_add, new_bet_size)
   
-  #    raise_amount = new_bet_size - self.current_bet_amount()
-  
-  # Player is all in
-  #    if amount_to_add == self.current_stack_sizes()[player_id]:
-  #      return Action(player_id, Move.BET_RAISE, amount_to_add, new_bet_size)
-  
-  #    elif amount_to_add > self.current_stack_sizes()[player_id]:
-  #      return None
-  
-  # Must raise at least the minimum
-  #    elif raise_amount < self.last_raise_amount():
-  #      return None
-  
-  #    else:
-  #      return Action(player_id, Move.BET_RAISE, amount_to_add, new_bet_size)
-  
   @functools.lru_cache()
   def fold(self) -> Action:
     player_id = self.current_player()
     return Action(player_id, Move.FOLD, amount_added=0, total_bet=self.current_bet_amount())
-
-
-#  @functools.lru_cache()
-#  def all_in(self) -> Action:
-#    return self.bet_raise(to=game.cur)
-#    pass
 
 
 @dataclass(frozen=True)

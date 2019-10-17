@@ -40,12 +40,6 @@ class RandomPolicy(Policy):
       min_amount_to_put_in = min(remaining_stack, amount_needed_to_min_raise)
       max_amount_to_put_in = remaining_stack
       
-      # max_amount_to_put_in = remaining_stack
-      
-      # min_amount = max((, 0))
-      
-      # min_amoun_to_add =
-      
       # randint is inclusive
       amount_to_add = random.randint(min_amount_to_put_in,
                                      max_amount_to_put_in)
@@ -62,7 +56,6 @@ class RandomPolicy(Policy):
       
       # return game.bet_raise()
       return game.bet_raise(to=new_bet_amount)
-      # Action(player_index, Move.BET_RAISE, raise_amount)
     
     else:
       raise Exception()

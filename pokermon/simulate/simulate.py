@@ -33,8 +33,6 @@ def simulate(players: List[Policy],
   # TODO: Support Side Pots
   assert len(set(starting_stacks)) == 1
   
-  # pot = Pot([SidePot(0, set(range(game.num_players())))])
-  
   for street in [Street.PREFLOP, Street.FLOP, Street.TURN, Street.RIVER]:
     
     logger.debug("Starting Street: %s", street)
@@ -64,29 +62,6 @@ def simulate(players: List[Policy],
       
       logger.debug("Action %s Player %s: %s", action_index, player_index, action)
       
-      # # Post the small blind
-      # if action_index == 0:
-      #   game.add_action(Action(0, Move.SMALL_BLIND, SMALL_BLIND_AMOUNT))
-      #   continue
-      #
-      # # Post the big blind
-      # if action_index == 1:
-      #   game.add_action(Action(1, Move.BIG_BLIND, BIG_BIND_AMOUNT))
-      #   continue
-      #
-      # if game_view.is_folded()[player_index]:
-      #   continue
-      #
-      # if game_view.is_al_in()[player_index]:
-      #   continue
-      #
-      # hand = deal.hole_cards[player_index]
-      #
-      # action = player.action(player_index, hand, game_view)
-      
-      # Update the pot BEFORE applying the action
-      # rules.update_pot(pot, game_view, action)
-      
       action_result = rules.action_valid(action_index=action_index, player_index=player_index,
                                          action=action, game=game_view)
       
@@ -113,12 +88,6 @@ def _get_action(action_index: int, player: Policy, player_index: int, game_view:
   if action_index == 1:
     return Action(player_index, Move.BIG_BLIND, amount_added=BIG_BLIND_AMOUNT,
                   total_bet=BIG_BLIND_AMOUNT)
-  
-  if game_view.is_folded()[player_index]:
-    return None
-  
-  if game_view.is_all_in()[player_index]:
-    return None
   
   hand = deal.hole_cards[player_index]
   return player.action(player_index, hand, game_view)
