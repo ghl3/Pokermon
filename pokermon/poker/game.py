@@ -126,8 +126,6 @@ class GameView:
   
   Contains methods to get useful information summarizing the state of the game.
   
-  # TODO: Memoize all methods
-  
   """
   game: Game
   
@@ -135,12 +133,16 @@ class GameView:
   timestamp: int
   
   def __hash__(self):
-    return hash((self.game.id, self.timestamp, "364258436582634"))
+    return hash((self.game.id,
+                 self.game.current_street,
+                 self.timestamp,
+                 "364258436582634"))
   
   @functools.lru_cache()
   def num_players(self) -> int:
     return len(self.game.stacks)
   
+  @functools.lru_cache()
   def _player_list(self, starting_player: int = 0) -> List[int]:
     all_players_twice = list(range(self.num_players())) + list(range(self.num_players()))
     return all_players_twice[starting_player: starting_player + self.num_players()]
@@ -192,6 +194,8 @@ class GameView:
     
     amount_remaining = self.timestamp
     
+    # TODO: Street action is broken at the end of a steet.
+    # Needs to consider the current street
     for street_actions in (self.game.preflop_action, self.game.flop_action,
                            self.game.turn_action, self.game.river_action):
       
@@ -289,6 +293,16 @@ class GameView:
             for player_index, current_stack_size in self.current_stack_sizes().items()}
   
   @functools.lru_cache()
+  def small_blind(self):
+    return Action(0, Move.SMALL_BLIND, total_bet=SMALL_BLIND_AMOUNT,
+                  amount_added=SMALL_BLIND_AMOUNT)
+  
+  @functools.lru_cache()
+  def big_blind(self):
+    return Action(0, Move.BIG_BLIND, total_bet=BIG_BLIND_AMOUNT,
+                  amount_added=BIG_BLIND_AMOUNT)
+  
+  @functools.lru_cache()
   def call(self) -> Action:
     player_index = self.current_player()
     
@@ -317,38 +331,41 @@ class GameView:
       amount_to_add = to - self.amount_added_in_street()[player_id]
     
     elif raise_amount is not None:
-      
       new_bet_size = self.current_bet_amount() + raise_amount
       amount_to_add = new_bet_size - self.amount_added_in_street()[player_id]
     
     else:
       raise Exception()
     
-    raise_amount = new_bet_size - self.current_bet_amount()
-    
-    # Player is all in
-    if amount_to_add == self.current_stack_sizes()[player_id]:
-      return Action(player_id, Move.BET_RAISE, amount_to_add, new_bet_size)
-    
-    elif amount_to_add > self.current_stack_sizes()[player_id]:
-      return None
-    
-    # Must raise at least the minimum
-    elif raise_amount < self.last_raise_amount():
-      return None
-    
-    else:
-      return Action(player_id, Move.BET_RAISE, amount_to_add, new_bet_size)
+    # This may be an invalid raise, but this will be caught downstream
+    return Action(player_id, Move.BET_RAISE, amount_to_add, new_bet_size)
+  
+  #    raise_amount = new_bet_size - self.current_bet_amount()
+  
+  # Player is all in
+  #    if amount_to_add == self.current_stack_sizes()[player_id]:
+  #      return Action(player_id, Move.BET_RAISE, amount_to_add, new_bet_size)
+  
+  #    elif amount_to_add > self.current_stack_sizes()[player_id]:
+  #      return None
+  
+  # Must raise at least the minimum
+  #    elif raise_amount < self.last_raise_amount():
+  #      return None
+  
+  #    else:
+  #      return Action(player_id, Move.BET_RAISE, amount_to_add, new_bet_size)
   
   @functools.lru_cache()
   def fold(self) -> Action:
     player_id = self.current_player()
-    
-    return Action(player_id, Move.BET_RAISE, amount_added=0, total_bet=self.current_bet_amount())
-  
-  @functools.lru_cache()
-  def all_in(self) -> Action:
-    pass
+    return Action(player_id, Move.FOLD, amount_added=0, total_bet=self.current_bet_amount())
+
+
+#  @functools.lru_cache()
+#  def all_in(self) -> Action:
+#    return self.bet_raise(to=game.cur)
+#    pass
 
 
 @dataclass(frozen=True)

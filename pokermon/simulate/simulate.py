@@ -33,7 +33,7 @@ def simulate(players: List[Policy],
   # TODO: Support Side Pots
   assert len(set(starting_stacks)) == 1
   
-  pot = Pot([SidePot(0, set(range(game.num_players())))])
+  # pot = Pot([SidePot(0, set(range(game.num_players())))])
   
   for street in [Street.PREFLOP, Street.FLOP, Street.TURN, Street.RIVER]:
     
@@ -45,10 +45,22 @@ def simulate(players: List[Policy],
       
       game_view = game.view()
       
+      if rules.street_over(game_view):
+        break
+      
+      if game_view.is_folded()[player_index]:
+        logger.debug("Player %s is folded", player_index)
+        continue
+      
+      if game_view.is_all_in()[player_index]:
+        logger.debug("Player %s is all in", player_index)
+        continue
+      
       action = _get_action(action_index, player, player_index, game_view, deal)
       
+      # Action is None if the player has already folded or gone all in.
       if action is None:
-        continue
+        raise Exception("Invalid Action")
       
       logger.debug("Action %s Player %s: %s", action_index, player_index, action)
       
@@ -73,7 +85,7 @@ def simulate(players: List[Policy],
       # action = player.action(player_index, hand, game_view)
       
       # Update the pot BEFORE applying the action
-      rules.update_pot(pot, game_view, action)
+      # rules.update_pot(pot, game_view, action)
       
       action_result = rules.action_valid(action_index=action_index, player_index=player_index,
                                          action=action, game=game_view)
@@ -84,11 +96,8 @@ def simulate(players: List[Policy],
       else:
         game.add_action(action)
         action_index += 1
-      
-      if rules.street_over(game_view):
-        break
   
-  result = rules.get_result(deal, game.view(), pot)
+  result = rules.get_result(deal, game.view())
   
   return (game, result)
 

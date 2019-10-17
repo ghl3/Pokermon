@@ -46,6 +46,8 @@ MOVE_OK = Result(None, {})
 
 
 def min_bet_amount(game: GameView) -> int:
+  """The minimim amount that can be raised above the last bet
+  """
   return max(BIG_BLIND_AMOUNT, game.last_raise_amount())
 
 
@@ -152,12 +154,30 @@ def action_valid(action_index: int, player_index: int, action: Action,
 
 
 def street_over(game: GameView) -> bool:
-  len(game.street_action())
-  game.num_players()
-  game.amount_to_call().values()
+  players_acted_this_street = set()
+  for action in game.street_action():
+    players_acted_this_street.add(action.player_index)
   
-  return (len(game.street_action()) >= game.num_players() and sum(
-    game.amount_to_call().values()) == 0)
+  #  is_over = False
+  for player_index in range(game.num_players()):
+    
+    if game.is_folded()[player_index]:
+      continue
+    
+    if game.is_all_in()[player_index]:
+      continue
+    
+    if player_index not in players_acted_this_street:
+      return False
+    
+    if game.amount_to_call()[player_index] > 0:
+      return False
+  
+  return True
+
+
+#  return (len(game.street_action()) >= game.num_players() and sum(
+#    game.amount_to_call().values()) == 0)
 
 
 def get_winning_players(hands: Dict[int, EvaluationResult]) -> List[int]:
@@ -220,7 +240,7 @@ def pot_per_winning_player(pot_size: int, winning_players: List[int]) -> Dict[in
   return winning_per_player
 
 
-def get_result(cards: FullDeal, game: GameView, pot: Pot) -> GameResults:
+def get_result(cards: FullDeal, game: GameView) -> GameResults:
   # Calculate who has the best hand
   
   evaluator = Evaluator()
@@ -244,7 +264,10 @@ def get_result(cards: FullDeal, game: GameView, pot: Pot) -> GameResults:
   
   # For now, assume there is only one pot.
   # TODO: Support Side Pots
-  pot_size = pot.side_pots[0].amount
+  # pot_size = pot.side_pots[0].amount
+  pot_size = 0
+  for amount in game.amount_added_total():
+    pot_size += amount
   
   for player_index, winnings in pot_per_winning_player(pot_size, winning_players):
     profit_per_player[player_index] += winnings

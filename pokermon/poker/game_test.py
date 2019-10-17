@@ -232,3 +232,4 @@ def test_call_all_in():
   call = game.view().call()
   assert call == Action(player_index=1, move=Move.CHECK_CALL, amount_added=18,
                         total_bet=100)
+
