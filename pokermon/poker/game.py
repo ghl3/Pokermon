@@ -64,16 +64,8 @@ class Action:
   total_bet: int
 
 
+# A street, as an event, represents the dealing of that street.
 Event = Union[Action, Street]
-
-
-# @dataclass(frozen=True)
-# class Event:
-# The index of the first action for which this event applies.
-# So, START_HAND should be at 0
-#  timestamp: int
-
-#  type: Street
 
 
 @dataclass
@@ -94,57 +86,32 @@ class Game:
   
   events: List[Event] = field(default_factory=list)
   
-  # preflop_action: List[Action] = field(default_factory=list)
-  # flop_action: List[Action] = field(default_factory=list)
-  # turn_action: List[Action] = field(default_factory=list)
-  # river_action: List[Action] = field(default_factory=list)
-  
-  _current_street = Street.PREFLOP
-  
   # A unique id for this game
   id: int = field(default_factory=lambda: random.getrandbits(64))
   
   def num_players(self) -> int:
     return len(self.starting_stacks)
   
-  def current_street(self) -> Street:
-    return self._current_street
-  
   def set_street(self, street: Street):
     self.events.append(street)
-    self._current_street = street
+  
+  def current_street(self) -> Street:
+    for e in reversed(self.events):
+      if isinstance(e, Street):
+        return e
+    return Street.PREFLOP
   
   def end_hand(self):
     self.set_street(Street.OVER)
   
   def all_action(self) -> List[Action]:
     return [e for e in self.events if isinstance(e, Action)]
-    # return (self.preflop_action + self.flop_action + self.turn_action + self.river_action)
-  
-  #  def street_action(self, street=None) -> List[Action]:
-  
-  #    if street is None:
-  #      street = self.current_street()
-  
-  #    if street == Street.PREFLOP:
-  #      return self.preflop_action()
-  #    elif street == Street.FLOP:
-  #    return self.flop_action()
-  #    elif street == Street.TURN:
-  #      return self.turn_action()
-  #    elif street == Street.RIVER:
-  #      return self.river_action()
-  #    else:
-  #      raise Exception("Invalid current street.")
   
   def add_action(self, action: Action) -> None:
     self.events.append(action)
   
   def timestamp(self) -> int:
     return len(self.events)
-  
-  #    return (len(self.preflop_action) + len(self.flop_action) + len(self.turn_action) + len(
-  #      self.river_action))
   
   def view(self, timestamp: int = None):
     """Return a view of the game at the given timestamp.
@@ -182,27 +149,29 @@ class GameView:
   Contains methods to get useful information summarizing the state of the game.
   
   """
-  game: Game
+  _game: Game
   
   # The timestamp is guaranteed to be in the range of the given game.
   timestamp: int
   
   def __hash__(self):
-    return hash((self.game.id,
+    return hash((self._game.id,
                  self.timestamp,
                  "364258436582634"))
   
   @functools.lru_cache()
   def num_players(self) -> int:
-    return self.game.num_players()
+    return self._game.num_players()
   
   @functools.lru_cache()
   def events(self) -> Iterable[Event]:
-    return self.game.events[:self.timestamp]
+    return self._game.events[:self.timestamp]
   
-  #    for i, e in enumerate(self.game.events):
+  @functools.lru_cache()
+  def starting_stacks(self) -> List[int]:
+    return self._game.starting_stacks
   
-  #    return self.game.num_players()
+  # Nothing below these methods should reference the underlying game
   
   @functools.lru_cache()
   def _player_list(self, starting_player: int = 0) -> List[int]:
@@ -232,13 +201,6 @@ class GameView:
     
     return current_street
   
-  #      if event.timestamp <= self.timestamp:
-  #        current_street = event.type
-  #      elif event.timestamp > self.timestamp:
-  #        break
-  
-  #    return current_street
-  
   @functools.lru_cache()
   def street_action_dict(self):
     
@@ -260,55 +222,9 @@ class GameView:
   def street_action(self):
     return self.street_action_dict()[self.street()]
   
-  #    current_street = self.street()
-  
-  #    time_remaining = self.timestamp
-  
-  #    for street in Street:
-  #
-  #      if street == current_street:
-  #        return self.game.street_action(street=street)[:time_remaining]
-  #      else:
-  #        time_remaining -= len(self.game.street_action(street=street))
-  
   @functools.lru_cache()
   def current_street_index(self):
     return len(self.street_action())
-  
-  # @functools.lru_cache()
-  # def street_and_index_of_last_action(self) -> Tuple[Street, int]:
-  #
-  #   # First, find the street
-  #
-  #   for i in range(self.timestamp):
-  #
-  #   amount_remaining = self.timestamp
-  #
-  #   for street, street_actions in ((Street.PREFLOP, self.game.preflop_action),
-  #                                  (Street.FLOP, self.game.flop_action),
-  #                                  (Street.TURN, self.game.turn_action),
-  #                                  (Street.RIVER, self.game.river_action)):
-  #
-  #     if amount_remaining > len(street_actions):
-  #       amount_remaining -= len(street_actions)
-  #     else:
-  #       return street, amount_remaining
-  #
-  #   raise Exception("Action Error")
-  #
-  # def current_street_and_index(self) -> Tuple[Street, int]:
-  #   """ Returns the street of the the NEXT action to be played.
-  #   """
-  #
-  #   # Find the street of the last action
-  #   last_action_street, last_action_index = self.street_and_index_of_last_action()
-  #
-  #   # If the current street is over, return the next street
-  #   if self.street_over():
-  #     return last_action_street.succ(), 0
-  #
-  #   # Else, return the current street
-  #   return last_action_street, last_action_index + 1
   
   @functools.lru_cache()
   def action(self) -> List[Action]:
@@ -318,54 +234,7 @@ class GameView:
     :return:
     """
     
-    return self.game.all_action()[:self.timestamp]
-    
-    # all_actions = []
-    # amount_remaining = self.timestamp
-    #
-    # for street_actions in (self.game.preflop_action, self.game.flop_action,
-    #                        self.game.turn_action, self.game.river_action):
-    #
-    #   if amount_remaining > len(street_actions):
-    #     all_actions.extend(street_actions)
-    #     amount_remaining -= len(street_actions)
-    #   elif amount_remaining == len(street_actions):
-    #     all_actions.extend(street_actions)
-    #     return all_actions
-    #   else:
-    #     all_actions.extend(street_actions[:amount_remaining])
-    #     return all_actions
-    #
-    # raise Exception("Action Error")
-  
-  # @functools.lru_cache()
-  # def street_action(self) -> List[Action]:
-  #   """
-  #   The list of actions before the given timestamp  on the street containing the given action.
-  #   :param timestamp:
-  #   :return:
-  #   """
-  #
-  #   current_street, current_street_index = self.current_street_index()
-  #
-  #   all_street_actions = self.game.get_street_action(current_street)
-  #   return all_street_actions[:current_street_index]
-  
-  #    amount_remaining = self.timestamp
-  
-  #    # TODO: Street action is broken at the end of a steet.
-  #    # Needs to consider the current street
-  #    for street_actions in (self.game.preflop_action, self.game.flop_action,
-  #                           self.game.turn_action, self.game.river_action):
-  #
-  #      if amount_remaining > len(street_actions):
-  #        amount_remaining -= len(street_actions)
-  #      elif amount_remaining == len(street_actions):
-  #        return street_actions
-  #      else:
-  #        return street_actions[:amount_remaining]
-  #
-  #    raise Exception("Street Action Error")
+    return [e for e in self.events() if isinstance(e, Action)]
   
   @functools.lru_cache()
   def amount_added_in_street(self) -> Dict[int, int]:
@@ -401,7 +270,7 @@ class GameView:
   
   @functools.lru_cache()
   def current_stack_sizes(self) -> Dict[int, int]:
-    return {i: self.game.starting_stacks[i] - amount_bet
+    return {i: self.starting_stacks()[i] - amount_bet
             for i, amount_bet in self.amount_added_total().items()}
   
   @functools.lru_cache()
