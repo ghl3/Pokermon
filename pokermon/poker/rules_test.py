@@ -3,7 +3,7 @@ from pokermon.poker.game import Game, Action, Street
 
 
 def test_street_over():
-  game = Game(stacks=[100, 200, 300])
+  game = Game(starting_stacks=[100, 200, 300])
   assert rules.street_over(game.view()) == False
   
   game.add_action(game.view().small_blind())
@@ -22,7 +22,7 @@ def test_street_over():
   assert rules.street_over(game.view()) == True
   
   # Flop
-  game.current_street = Street.FLOP
+  game.set_street(Street.FLOP)
   assert rules.street_over(game.view()) == False
   
   game.add_action(game.view().call())
@@ -35,7 +35,7 @@ def test_street_over():
   assert rules.street_over(game.view()) == True
   
   # Turn
-  game.current_street = Street.TURN
+  game.set_street(Street.TURN)
   assert rules.street_over(game.view()) == False
   
   game.add_action(game.view().bet_raise(to=20))
@@ -48,7 +48,7 @@ def test_street_over():
   assert rules.street_over(game.view()) == True
   
   # River
-  game.current_street = Street.TURN
+  game.set_street(Street.RIVER)
   assert rules.street_over(game.view()) == False
   
   game.add_action(game.view().call())

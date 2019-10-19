@@ -2,7 +2,7 @@ import logging
 from typing import List, Tuple, Optional
 from pokermon.ai.policy import Policy
 from pokermon.poker.cards import FullDeal
-from pokermon.poker.game import Game, GameResults, Action, Move, Street, Pot, SidePot, GameView
+from pokermon.poker.game import Game, GameResults, Action, Move, Street, GameView
 import itertools
 import pokermon.poker.rules as rules
 
@@ -24,7 +24,7 @@ def simulate(players: List[Policy],
   
   logger.debug("Simulating game with %s players", len(players))
   
-  game = Game(stacks=starting_stacks)
+  game = Game(starting_stacks=starting_stacks)
   
   action_index = 0
   
@@ -37,7 +37,7 @@ def simulate(players: List[Policy],
     
     logger.debug("Starting Street: %s", street)
     
-    game.current_street = street
+    game.set_street(street)
     
     for player_index, player in itertools.cycle(enumerate(players)):
       
@@ -71,6 +71,8 @@ def simulate(players: List[Policy],
       else:
         game.add_action(action)
         action_index += 1
+  
+  game.end_hand()
   
   result = rules.get_result(deal, game.view())
   

@@ -166,6 +166,7 @@ def get_winning_players(hands: Dict[int, EvaluationResult]) -> List[int]:
   winning_rank = [res.rank for _, res in hands.items()]
   return [player_idx for player_idx, h in hands if h.rank == winning_rank]
 
+
 def pot_per_winning_player(pot_size: int, winning_players: List[int]) -> Dict[int, int]:
   pot_even_division = pot_size // len(winning_players)
   leftover = pot_size - pot_even_division
