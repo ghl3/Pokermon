@@ -27,14 +27,14 @@ _DEUCES_RANK_CLASS_TO_HAND = {
 
 
 def to_decues_card(card: Card) -> DeucesCard:
-  rank_int = card.rank.value() - 2
+  rank_int = card.rank.value - 2
   suit_int = _SUIT_TO_DEUCES_INT[card.suit]
   return deuces.card.Card.from_rank_int_and_suit_int(rank_int, suit_int)
 
 
 def to_deuces_hand(hole_cards: HoleCards) -> Tuple[DeucesCard, DeucesCard]:
-  return (to_decues_card(hole_cards.left),
-          to_decues_card(hole_cards.right))
+  return (to_decues_card(hole_cards[0]),
+          to_decues_card(hole_cards[1]))
 
 
 def to_deuces_board(board: Board) -> Tuple[int, int, int, int, int]:

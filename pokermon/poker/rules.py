@@ -145,13 +145,17 @@ def street_over(game: GameView) -> bool:
   for action in game.street_action():
     players_acted_this_street.add(action.player_index)
   
-  for player_index in range(game.num_players()):
-    
-    if game.is_folded()[player_index]:
-      continue
-    
-    if game.is_all_in()[player_index]:
-      continue
+  active_players = [i for i in range(game.num_players())
+                    if not game.is_folded()[i]
+                    and not game.is_all_in()[i]]
+  
+  # If everyone is folded or all-in at the start of the street, no need
+  # for further action
+  if len(game.street_action()) == 0:
+    if len(active_players) < 2:
+      return True
+  
+  for player_index in active_players:
     
     if player_index not in players_acted_this_street:
       return False
@@ -163,8 +167,10 @@ def street_over(game: GameView) -> bool:
 
 
 def get_winning_players(hands: Dict[int, EvaluationResult]) -> List[int]:
-  winning_rank = [res.rank for _, res in hands.items()]
-  return [player_idx for player_idx, h in hands if h.rank == winning_rank]
+  # Lower ranks are better
+  winning_rank = min([res.rank for _, res in hands.items()])
+  return [player_idx for player_idx, h in hands.items()
+          if h.rank == winning_rank]
 
 
 def pot_per_winning_player(pot_size: int, winning_players: List[int]) -> Dict[int, int]:
@@ -197,23 +203,24 @@ def get_result(cards: FullDeal, game: GameView) -> GameResults:
       hole_cards = cards.hole_cards[player_index]
       board = cards.board
       
-      eval_result = evaluator.evaluate(hole_cards, board)
+      eval_result: EvaluationResult = evaluator.evaluate(hole_cards, board)
       
       showdown_hands[player_index] = eval_result
   
   winning_players = get_winning_players(showdown_hands)
   
   profit_per_player = {player_index: -1 * amount_bet
-                       for player_index, amount_bet in game.amount_added_total()}
+                       for player_index, amount_bet in game.amount_added_total().items()}
   
   # TODO: Support side pots
   pot_size = 0
-  for amount in game.amount_added_total():
+  for _, amount in game.amount_added_total().items():
     pot_size += amount
   
-  for player_index, winnings in pot_per_winning_player(pot_size, winning_players):
+  for player_index, winnings in pot_per_winning_player(pot_size, winning_players).items():
     profit_per_player[player_index] += winnings
   
   return GameResults(best_hand_index=winning_players,
+                     hands=showdown_hands,
                      profits=[profit_per_player[player_index]
                               for player_index in range(game.num_players())])

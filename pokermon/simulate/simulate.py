@@ -33,11 +33,20 @@ def simulate(players: List[Policy],
   # TODO: Support Side Pots
   assert len(set(starting_stacks)) == 1
   
+  logger.info("Hole Cards: %s",  deal.hole_cards)
+  
   for street in [Street.PREFLOP, Street.FLOP, Street.TURN, Street.RIVER]:
     
     logger.debug("Starting Street: %s", street)
     
     game.set_street(street)
+    
+    if game.current_street() == Street.FLOP:
+      logger.info("Flop: %s", deal.board.flop)
+    elif game.current_street() == Street.TURN:
+      logger.info("Turn: %s", deal.board.turn)
+    elif game.current_street() == Street.RIVER:
+      logger.info("River: %s", deal.board.river)
     
     for player_index, player in itertools.cycle(enumerate(players)):
       
@@ -75,6 +84,8 @@ def simulate(players: List[Policy],
   game.end_hand()
   
   result = rules.get_result(deal, game.view())
+  
+  logger.info("Result: %s", result)
   
   return (game, result)
 

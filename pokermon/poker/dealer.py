@@ -19,6 +19,6 @@ def deal_cards(num_players: int) -> FullDeal:
   river = wrapper.from_deuces_card(board[4])
   
   return FullDeal(
-    hole_cards=[HoleCards(wrapper.from_deuces_card(x),
-                          wrapper.from_deuces_card(y)) for x, y in hole_cards],
+    hole_cards=[(wrapper.from_deuces_card(x),
+                 wrapper.from_deuces_card(y)) for x, y in hole_cards],
     board=Board(flop=flop, turn=turn, river=river))

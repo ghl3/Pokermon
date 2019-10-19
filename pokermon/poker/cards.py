@@ -1,5 +1,8 @@
+import re
 from typing import Tuple, Optional, List
 from dataclasses import dataclass
+
+import regex as regex
 
 from pokermon.poker.ordered_enum import OrderedEnum
 
@@ -45,10 +48,102 @@ class Card:
   suit: Suit
 
 
-@dataclass
-class HoleCards:
-  left: Card
-  right: Card
+card_map = {
+  'A': Rank.ACE,
+  'K': Rank.KING,
+  'Q': Rank.QUEEN,
+  'J': Rank.JACK,
+  '10': Rank.TEN,
+  '9': Rank.NINE,
+  '8': Rank.EIGHT,
+  '7': Rank.SEVEN,
+  '6': Rank.SIX,
+  '5': Rank.FIVE,
+  '4': Rank.FOUR,
+  '3': Rank.THREE,
+  '2': Rank.TWO,
+}
+
+suit_map = {
+  'S': Suit.SPADES,
+  'C': Suit.CLUBS,
+  'D': Suit.DIAMONDS,
+  'H': Suit.HEARTS
+  
+}
+
+_card_regex = regex.compile('^(([AKQJ]|10|[2-9])([SHCD]))+$')
+
+
+def mkcards(s: str) -> List[Card]:
+  s = s.upper()
+  
+  match = _card_regex.match(s)
+  
+  if not match:
+    raise Exception("Invaid Cards")
+  
+  cards = []
+  
+  for rank, suit in zip(match.captures(2),
+                        match.captures(3)):
+    cards.append(Card(rank=card_map[rank],
+                      suit=suit_map[suit]))
+  return cards
+  
+  
+def mkcard(s: str) -> Card:
+  cards = mkcards(s)
+  assert len(cards) == 1
+  return cards[0]
+
+def mkhand(s: str) -> Tuple[Card, Card]:
+    cards = mkcards(s)
+    assert len(cards) == 2
+    return (cards[0], cards[1])
+
+
+def mkflop(s: str) -> Tuple[Card, Card, Card]:
+  cards = mkcards(s)
+  assert len(cards) == 3
+  return (cards[0], cards[1], cards[2])
+  
+  # groups = match.groups()
+  #
+  # print(match.captures(2))
+  # print(match.captures(3))
+  #
+  # print(groups)
+  #
+  # card_matches = [groups[i:i + 3] for i in range(0, len(groups), 3)]
+  #
+  # cards = []
+  #
+  # for (_, card, suit) in card_matches:
+  #   cards.append(Card(rank=card_map[card],
+  #                     suit=suit_map[suit]))
+  # return cards
+
+
+# def card(s: str):
+#  assert len(s) == 2 or len(s) == 3
+#  card_str = (s[0] if len(s) == 2 else s[0:2]).capitalize()
+#  suit_str = (s[-1]).capitalize()
+#  return Card(rank=card_map[card_str],
+#              suit=suit_map[suit_str])
+
+
+#  if s[0].lower() ==
+
+# @dataclass
+# class HoleCards:
+#  left: Card
+#  right: Card
+
+HoleCards = Tuple[Card, Card]
+
+
+# def hole_cards(s: str)-> HoleCards:
 
 
 @dataclass

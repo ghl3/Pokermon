@@ -3,6 +3,9 @@ import random
 from collections import defaultdict
 from typing import Optional, List, Dict, Union, Iterable
 from dataclasses import dataclass, field
+
+from pokermon.poker.cards import HandType
+from pokermon.poker.evaluation import EvaluationResult
 from pokermon.poker.ordered_enum import OrderedEnum
 import functools
 
@@ -377,6 +380,8 @@ class GameResults:
   
   # If multiple players have the best hand (a tie), return a list of all player indices.
   best_hand_index: List[int]
+  
+  hands: Dict[int, EvaluationResult]
   
   # The actual profits, in small blings, won or list by each player during this game
   profits: List[int]
