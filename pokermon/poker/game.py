@@ -6,7 +6,6 @@ from typing import Optional, List, Dict, Union, Iterable
 from dataclasses import dataclass, field
 from pokermon.poker.ordered_enum import OrderedEnum
 
-
 """
 An important concept in a game is the timestamp.  A timestamp connects two ideas:
 - An index into events
@@ -176,7 +175,7 @@ class GameView:
         return player
   
   @functools.lru_cache()
-  def street(self):
+  def street(self) -> Street:
     
     current_street = Street.PREFLOP
     
@@ -188,7 +187,7 @@ class GameView:
     return current_street
   
   @functools.lru_cache()
-  def street_action_dict(self):
+  def street_action_dict(self) -> Dict[Street, List[Action]]:
     
     street_actions = defaultdict(lambda: [])
     
@@ -205,11 +204,11 @@ class GameView:
     return street_actions
   
   @functools.lru_cache()
-  def street_action(self):
+  def street_action(self) -> List[Action]:
     return self.street_action_dict()[self.street()]
   
   @functools.lru_cache()
-  def current_street_index(self):
+  def current_street_index(self) -> int:
     return len(self.street_action())
   
   @functools.lru_cache()
@@ -223,13 +222,13 @@ class GameView:
     return [e for e in self.events() if isinstance(e, Action)]
   
   @functools.lru_cache()
-  def amount_added_in_street(self) -> Dict[int, int]:
+  def amount_added_in_street(self) -> List[int]:
     """
     Return a dictionary of the total amount bet per player so far.
     :return:
     """
     
-    amount = {i: 0 for i in range(self.num_players())}
+    amount = [0 for _ in range(self.num_players())]
     
     for action in self.street_action():
       player_id = action.player_index
@@ -239,13 +238,13 @@ class GameView:
     return amount
   
   @functools.lru_cache()
-  def amount_added_total(self) -> Dict[int, int]:
+  def amount_added_total(self) -> List[int]:
     """
     Return a dictionary of the total amount bet per player so far.
     :return:
     """
     
-    amount = {i: 0 for i in range(self.num_players())}
+    amount = [0 for _ in range(self.num_players())]
     
     for action in self.action():
       player_id = action.player_index
@@ -255,18 +254,18 @@ class GameView:
     return amount
   
   @functools.lru_cache()
-  def current_stack_sizes(self) -> Dict[int, int]:
-    return {i: self.starting_stacks()[i] - amount_bet
-            for i, amount_bet in self.amount_added_total().items()}
+  def current_stack_sizes(self) -> List[int]:
+    return [self.starting_stacks()[i] - amount_bet
+            for i, amount_bet in enumerate(self.amount_added_total())]
   
   @functools.lru_cache()
   def current_bet_amount(self) -> int:
-    return max(self.amount_added_in_street().values())
+    return max(self.amount_added_in_street())
   
   @functools.lru_cache()
-  def amount_to_call(self) -> Dict[int, int]:
-    return {i: self.current_bet_amount() - amount_bet
-            for i, amount_bet in self.amount_added_in_street().items()}
+  def amount_to_call(self) -> List[int]:
+    return [self.current_bet_amount() - amount_bet
+            for amount_bet in self.amount_added_in_street()]
   
   @functools.lru_cache()
   def last_raise_amount(self) -> int:
@@ -288,9 +287,9 @@ class GameView:
     return current_bet
   
   @functools.lru_cache()
-  def is_folded(self) -> Dict[int, bool]:
+  def is_folded(self) -> List[bool]:
     
-    folded = {player_index: False for player_index in range(self.num_players())}
+    folded = [False for _ in range(self.num_players())]
     
     for a in self.action():
       if a.move == Move.FOLD:
@@ -299,17 +298,17 @@ class GameView:
     return folded
   
   @functools.lru_cache()
-  def is_all_in(self) -> Dict[int, bool]:
-    return {player_index: current_stack_size == 0
-            for player_index, current_stack_size in self.current_stack_sizes().items()}
+  def is_all_in(self) -> List[bool]:
+    return [current_stack_size == 0
+            for current_stack_size in self.current_stack_sizes()]
   
   @functools.lru_cache()
-  def small_blind(self):
+  def small_blind(self) -> Action:
     return Action(0, Move.SMALL_BLIND, total_bet=SMALL_BLIND_AMOUNT,
                   amount_added=SMALL_BLIND_AMOUNT)
   
   @functools.lru_cache()
-  def big_blind(self):
+  def big_blind(self) -> Action:
     return Action(0, Move.BIG_BLIND, total_bet=BIG_BLIND_AMOUNT,
                   amount_added=BIG_BLIND_AMOUNT)
   
@@ -328,8 +327,9 @@ class GameView:
                     total_bet=self.current_bet_amount())
   
   @functools.lru_cache()
-  def bet_raise(self, to: Optional[int] = None, raise_amount: Optional[int] = None) -> Optional[
-    Action]:
+  def bet_raise(self,
+                to: Optional[int] = None,
+                raise_amount: Optional[int] = None) -> Optional[Action]:
     
     player_id = self.current_player()
     
@@ -354,4 +354,3 @@ class GameView:
   def fold(self) -> Action:
     player_id = self.current_player()
     return Action(player_id, Move.FOLD, amount_added=0, total_bet=self.current_bet_amount())
-

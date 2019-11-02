@@ -1,8 +1,7 @@
 from pokermon.poker import rules
 from pokermon.poker.cards import FullDeal, Board, mkhand, mkflop, mkcard
+from pokermon.poker.evaluation import Evaluator
 from pokermon.poker.game import Game, Street
-
-from pokermon.poker.cards import mkcards
 
 
 def test_street_over():
@@ -118,5 +117,4 @@ def test_game_result():
   game.add_action(game.view().call())
   game.add_action(game.view().call())
   
-  result = rules.get_result(deal, game.view())
-  print(result)
+  result = rules.get_result(deal, game.view(), Evaluator())

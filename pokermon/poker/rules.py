@@ -221,12 +221,12 @@ def get_result(cards: FullDeal, game: GameView, evaluator: Evaluator) -> GameRes
   
   winning_players = get_winning_players(showdown_hands)
   
-  profit_per_player = {player_index: -1 * amount_bet
-                       for player_index, amount_bet in game.amount_added_total().items()}
+  profit_per_player = [-1 * amount_bet
+                       for amount_bet in game.amount_added_total()]
   
   # TODO: Support side pots
   pot_size = 0
-  for _, amount in game.amount_added_total().items():
+  for amount in game.amount_added_total():
     pot_size += amount
   
   winnings_per_player = [0 for _ in range(game.num_players())]
