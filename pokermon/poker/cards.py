@@ -1,5 +1,4 @@
 import dataclasses
-import re
 from typing import Tuple, Optional, List
 from dataclasses import dataclass
 

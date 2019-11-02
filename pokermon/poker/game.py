@@ -1,12 +1,11 @@
 # All Amounts are relative to the small blind.
 import random
 from collections import defaultdict
+import functools
 from typing import Optional, List, Dict, Union, Iterable
 from dataclasses import dataclass, field
-
-from pokermon.poker.evaluation import EvaluationResult
 from pokermon.poker.ordered_enum import OrderedEnum
-import functools
+
 
 """
 An important concept in a game is the timestamp.  A timestamp connects two ideas:

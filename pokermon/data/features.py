@@ -67,16 +67,16 @@ class Row:
   won_hand: bool
 
 
-def make_example(game: Game, deal: FullDeal, results: GameResults,
-                 evaluator: Evaluator) -> List[Row]:
+def make_rows(game: Game, deal: FullDeal, results: GameResults,
+              evaluator: Evaluator) -> List[Row]:
   rows = []
   
   # Profits at the end of the game
-  cumulative_rewards = results.winnings
+  cumulative_rewards: List[int] = results.winnings
   
-  is_last_action = [True for _ in range(game.num_players())]
+  is_last_action: List[bool] = [True for _ in range(game.num_players())]
   
-  for i, e in reversed(enumerate(game.events)):
+  for i, e in reversed(list(enumerate(game.events))):
     
     if isinstance(e, Action):
       a = e
@@ -85,6 +85,7 @@ def make_example(game: Game, deal: FullDeal, results: GameResults,
     
     # Subtract the amount lost after taking the given action, which is a part
     # of the future cumulative winnings / losses
+    # print(cumulative_rewards, a.player_index, a.amount_added)
     cumulative_rewards[a.player_index] -= a.amount_added
     
     game_view = game.view(i)
@@ -95,19 +96,19 @@ def make_example(game: Game, deal: FullDeal, results: GameResults,
     
     hc_0, hc_1 = sorted(deal.hole_cards[a.player_index])
     
-    hole_card_0_rank = hc_0.rank
-    hole_card_0_suit = hc_0.suit
-    hole_card_1_rank = hc_1.rank
-    hole_card_1_suit = hc_1.suit
+    hole_card_0_rank = hc_0.rank.value
+    hole_card_0_suit = hc_0.suit.value
+    hole_card_1_rank = hc_1.rank.value
+    hole_card_1_suit = hc_1.suit.value
     
     if game_view.street() >= Street.FLOP:
       flop_0, flop_1, flop_2 = sorted(deal.board.flop)
-      flop_0_rank = flop_0.rank
-      flop_0_suit = flop_0.suit
-      flop_1_rank = flop_1.rank
-      flop_1_suit = flop_1.suit
-      flop_2_rank = flop_2.rank
-      flop_2_suit = flop_2.suit
+      flop_0_rank = flop_0.rank.value
+      flop_0_suit = flop_0.suit.value
+      flop_1_rank = flop_1.rank.value
+      flop_1_suit = flop_1.suit.value
+      flop_2_rank = flop_2.rank.value
+      flop_2_suit = flop_2.suit.value
     else:
       flop_0_rank = -1
       flop_0_suit = -1
@@ -118,26 +119,33 @@ def make_example(game: Game, deal: FullDeal, results: GameResults,
     
     if game_view.street() >= Street.TURN:
       turn = deal.board.turn
-      turn_rank = turn.rank
-      turn_suit = turn.suit
+      turn_rank = turn.rank.value
+      turn_suit = turn.suit.value
     else:
       turn_rank = -1
       turn_suit = -1
     
     if game_view.street() >= Street.RIVER:
       river = deal.board.turn
-      river_rank = river.rank
-      river_suit = river.suit
+      river_rank = river.rank.value
+      river_suit = river.suit.value
     else:
       river_rank = -1
       river_suit = -1
     
     board_at_street = deal.board.at_street(game_view.street())
     
-    evaluation_result = evaluator.evaluate(deal.hole_cards[a.player_index],
-                                           board_at_street)
+    if game_view.street() >= Street.FLOP:
+      evaluation_result = evaluator.evaluate(deal.hole_cards[a.player_index],
+                                             board_at_street)
+      current_hand_strength = evaluation_result.percentage
+      current_hand_type = evaluation_result.hand_type.value
+      current_hand_rank = evaluation_result.rank
+    else:
+      current_hand_strength = -1
+      current_hand_type = -1
+      current_hand_rank = -1
     
-    cumulative_rewards = cumulative_rewards[a.player_index]
     instant_reward = 0
     if is_last_action[a.player_index]:
       instant_reward = results.winnings[a.player_index]
@@ -148,7 +156,7 @@ def make_example(game: Game, deal: FullDeal, results: GameResults,
       num_players=game.num_players(),
       stack_sizes=game_view.current_stack_sizes(),
       current_player_mask=current_player_mask,
-      street=game_view.street(),
+      street=game_view.street().value,
       amount_to_call=game_view.amount_to_call(),
       min_raise_amount=rules.min_bet_amount(game_view),
       hole_card_0_rank=hole_card_0_rank,
@@ -166,13 +174,13 @@ def make_example(game: Game, deal: FullDeal, results: GameResults,
       river_rank=river_rank,
       river_suit=river_suit,
       
-      current_hand_strength=evaluation_result.percentage,
-      current_hand_type=evaluation_result.hand_type.value,
-      current_hand_rank=evaluation_result.rank,
+      current_hand_strength=current_hand_strength,
+      current_hand_type=current_hand_type,
+      current_hand_rank=current_hand_rank,
       
       action_encoded=a.move.value,
       amount_added=a.amount_added,
-      cumulative_reward=cumulative_rewards,
+      cumulative_reward=cumulative_rewards[a.player_index],
       instant_reward=instant_reward,
       won_hand=won_hand
     

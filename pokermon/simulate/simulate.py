@@ -1,10 +1,13 @@
 import logging
 from typing import List, Tuple, Optional
 from pokermon.ai.policy import Policy
+from pokermon.data.features import make_rows
 from pokermon.poker.cards import FullDeal
-from pokermon.poker.game import Game, GameResults, Action, Move, Street, GameView
+from pokermon.poker.evaluation import Evaluator
+from pokermon.poker.game import Game, Action, Move, Street, GameView
 import itertools
 import pokermon.poker.rules as rules
+from pokermon.poker.rules import GameResults
 
 from pokermon.poker.game import SMALL_BLIND_AMOUNT, BIG_BLIND_AMOUNT
 
@@ -33,7 +36,7 @@ def simulate(players: List[Policy],
   # TODO: Support Side Pots
   assert len(set(starting_stacks)) == 1
   
-  logger.info("Hole Cards: %s",  deal.hole_cards)
+  logger.info("Hole Cards: %s", deal.hole_cards)
   
   for street in [Street.PREFLOP, Street.FLOP, Street.TURN, Street.RIVER]:
     
@@ -83,9 +86,14 @@ def simulate(players: List[Policy],
   
   game.end_hand()
   
-  result = rules.get_result(deal, game.view())
+  evaluator = Evaluator()
+  
+  result = rules.get_result(deal, game.view(), evaluator)
   
   logger.info("Result: %s", result)
+  
+  for row in make_rows(game, deal, result, evaluator):
+    print(row)
   
   return (game, result)
 

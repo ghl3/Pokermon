@@ -64,16 +64,6 @@ def to_deuces_board(board: Board) -> Optional[Union[Tuple[int, int, int],
     return None
 
 
-#  deuces_cards = [None, None, None, None, None]
-#  for idx, card in enumerate(board.flop):
-#    deuces_cards[idx] = to_decues_card(card)
-
-#  deuces_cards.append(to_decues_card(board.turn))
-#  deuces_cards.append(to_decues_card(board.river))
-
-#  return tuple(deuces_cards)
-
-
 def from_deuces_card(deuces_card: DeucesCard) -> Card:
   rank_int = deuces.Card.get_rank_int(deuces_card)
   suit_int = deuces.Card.get_suit_int(deuces_card)

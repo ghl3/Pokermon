@@ -4,7 +4,7 @@ from enum import Enum
 from typing import List, Dict, Any, Optional
 
 from pokermon.poker.evaluation import Evaluator, EvaluationResult
-from pokermon.poker.game import GameView, GameResults, Action, Move, SMALL_BLIND_AMOUNT
+from pokermon.poker.game import GameView, Action, Move, SMALL_BLIND_AMOUNT
 from pokermon.poker.game import BIG_BLIND_AMOUNT
 from pokermon.poker.cards import FullDeal
 
@@ -13,9 +13,6 @@ logger = logging.getLogger(__name__)
 
 @dataclass(frozen=True)
 class GameResults:
-  """
-  """
-  
   # If multiple players have the best hand (a tie), return a list of all player indices.
   best_hand_index: List[int]
   
@@ -207,10 +204,8 @@ def pot_per_winning_player(pot_size: int, winning_players: List[int]) -> Dict[in
   return winning_per_player
 
 
-def get_result(cards: FullDeal, game: GameView) -> GameResults:
+def get_result(cards: FullDeal, game: GameView, evaluator: Evaluator) -> GameResults:
   # Calculate who has the best hand
-  
-  evaluator = Evaluator()
   
   showdown_hands: Dict[int, EvaluationResult] = {}
   
