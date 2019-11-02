@@ -4,34 +4,18 @@ from collections import defaultdict
 from typing import Optional, List, Dict, Union, Iterable
 from dataclasses import dataclass, field
 
-from pokermon.poker.cards import HandType
 from pokermon.poker.evaluation import EvaluationResult
 from pokermon.poker.ordered_enum import OrderedEnum
 import functools
 
 """
-An important concept in a game is the timestamp.
+An important concept in a game is the timestamp.  A timestamp connects two ideas:
+- An index into events
+- An index for the state of the game BEFORE the ith action was made
 
-The timestamp is the index of the current player's action.  In other words, the
-timestamp will the index of the current player's action in the action list when
-they make that action.
-
-the current player completes their action, So, it could look like this:
-0: SMALL_BLIND
-1: BIG_BLIND
-2: BET
-3: RAISE
-4: CALL
-
-In addition to actions, the game has events.
-
-
-Event: FLOP (event.timestamp=5)
-5: BE
-6: CALL
-
-At any given time, the timestamp can be thought to
-
+So, game.view(0) is the state of the game before any action, and action[0] is
+the very first action.  Similarly, game.view(i) is the state of the game when
+a player is contemplating what will become the ith action.
 """
 
 
@@ -372,16 +356,3 @@ class GameView:
     player_id = self.current_player()
     return Action(player_id, Move.FOLD, amount_added=0, total_bet=self.current_bet_amount())
 
-
-@dataclass(frozen=True)
-class GameResults:
-  """
-  """
-  
-  # If multiple players have the best hand (a tie), return a list of all player indices.
-  best_hand_index: List[int]
-  
-  hands: Dict[int, EvaluationResult]
-  
-  # The actual profits, in small blings, won or list by each player during this game
-  profits: List[int]

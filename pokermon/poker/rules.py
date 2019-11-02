@@ -11,6 +11,23 @@ from pokermon.poker.cards import FullDeal
 logger = logging.getLogger(__name__)
 
 
+@dataclass(frozen=True)
+class GameResults:
+  """
+  """
+  
+  # If multiple players have the best hand (a tie), return a list of all player indices.
+  best_hand_index: List[int]
+  
+  hands: Dict[int, EvaluationResult]
+  
+  # The amount of money won by this player at the end of the hand (not profit)
+  winnings: List[int]
+  
+  # The actual profits, in small blinds, won or list by each player during this game
+  profits: List[int]
+
+
 class Error(Enum):
   UNKNOWN_MOVE = 1
   SMALL_BLIND_REQUIRED = 2
@@ -217,10 +234,13 @@ def get_result(cards: FullDeal, game: GameView) -> GameResults:
   for _, amount in game.amount_added_total().items():
     pot_size += amount
   
+  winnings_per_player = [0 for _ in range(game.num_players())]
   for player_index, winnings in pot_per_winning_player(pot_size, winning_players).items():
+    winnings_per_player[player_index] += winnings
     profit_per_player[player_index] += winnings
   
   return GameResults(best_hand_index=winning_players,
                      hands=showdown_hands,
+                     winnings=winnings_per_player,
                      profits=[profit_per_player[player_index]
                               for player_index in range(game.num_players())])

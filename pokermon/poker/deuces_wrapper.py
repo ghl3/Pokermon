@@ -1,4 +1,4 @@
-from typing import Tuple
+from typing import Tuple, Union, Optional
 
 import deuces
 from pokermon.poker.cards import Suit, Card, Rank, Board, HoleCards, HandType
@@ -37,12 +37,31 @@ def to_deuces_hand(hole_cards: HoleCards) -> Tuple[DeucesCard, DeucesCard]:
           to_decues_card(hole_cards[1]))
 
 
-def to_deuces_board(board: Board) -> Tuple[int, int, int, int, int]:
-  return (to_decues_card(board.flop[0]),
-          to_decues_card(board.flop[1]),
-          to_decues_card(board.flop[2]),
-          to_decues_card(board.turn),
-          to_decues_card(board.river))
+def to_deuces_board(board: Board) -> Optional[Union[Tuple[int, int, int],
+                                                    Tuple[int, int, int, int],
+                                                    Tuple[int, int, int, int, int]]]:
+  
+  if board.flop is not None and board.turn is not None and board.river is not None:
+    return (to_decues_card(board.flop[0]),
+            to_decues_card(board.flop[1]),
+            to_decues_card(board.flop[2]),
+            to_decues_card(board.turn),
+            to_decues_card(board.river))
+  
+  elif board.flop is not None and board.turn is not None:
+    return (to_decues_card(board.flop[0]),
+            to_decues_card(board.flop[1]),
+            to_decues_card(board.flop[2]),
+            to_decues_card(board.turn))
+  
+  elif board.flop is not None:
+    
+    return (to_decues_card(board.flop[0]),
+            to_decues_card(board.flop[1]),
+            to_decues_card(board.flop[2]))
+  
+  else:
+    return None
 
 
 #  deuces_cards = [None, None, None, None, None]
