@@ -18,11 +18,7 @@ class Evaluator:
 
         self.table = LookupTable()
 
-        self.hand_size_map = {
-            5: self._five,
-            6: self._six,
-            7: self._seven
-        }
+        self.hand_size_map = {5: self._five, 6: self._six, 7: self._seven}
 
     def evaluate(self, cards, board):
         """
@@ -151,13 +147,16 @@ class Evaluator:
             for player, hand in enumerate(hands):
 
                 # evaluate current board position
-                rank = self.evaluate(hand, board[:(i + 3)])
+                rank = self.evaluate(hand, board[: (i + 3)])
                 rank_class = self.get_rank_class(rank)
                 class_string = self.class_to_string(rank_class)
-                percentage = 1.0 - self.get_five_card_rank_percentage(rank)  # higher better here
+                percentage = 1.0 - self.get_five_card_rank_percentage(
+                    rank
+                )  # higher better here
                 print(
-                    "Player %d hand = %s, percentage rank among all hands = %f" % (
-                        player + 1, class_string, percentage))
+                    "Player %d hand = %s, percentage rank among all hands = %f"
+                    % (player + 1, class_string, percentage)
+                )
 
                 # detect winner
                 if rank == best_rank:
@@ -170,23 +169,36 @@ class Evaluator:
             # if we're not on the river
             if i != stages.index("RIVER"):
                 if len(winners) == 1:
-                    print(
-                        "Player %d hand is currently winning.\n" % (winners[0] + 1,))
+                    print("Player %d hand is currently winning.\n" % (winners[0] + 1,))
                 else:
                     print(
-                        "Players %s are tied for the lead.\n" % [x + 1 for x in winners])
+                        "Players %s are tied for the lead.\n" % [x + 1 for x in winners]
+                    )
 
             # otherwise on all other streets
             else:
-                print(
-                    ("=" * line_length) + " HAND OVER " + ("=" * line_length))
+                print(("=" * line_length) + " HAND OVER " + ("=" * line_length))
                 if len(winners) == 1:
                     print(
-                        "Player %d is the winner with a %s\n" % (winners[0] + 1,
-                                                                 self.class_to_string(self.get_rank_class(
-                                                                     self.evaluate(hands[winners[0]], board)))))
+                        "Player %d is the winner with a %s\n"
+                        % (
+                            winners[0] + 1,
+                            self.class_to_string(
+                                self.get_rank_class(
+                                    self.evaluate(hands[winners[0]], board)
+                                )
+                            ),
+                        )
+                    )
                 else:
                     print(
-                        "Players %s tied for the win with a %s\n" % (winners,
-                                                                     self.class_to_string(self.get_rank_class(
-                                                                         self.evaluate(hands[winners[0]], board)))))
+                        "Players %s tied for the win with a %s\n"
+                        % (
+                            winners,
+                            self.class_to_string(
+                                self.get_rank_class(
+                                    self.evaluate(hands[winners[0]], board)
+                                )
+                            ),
+                        )
+                    )

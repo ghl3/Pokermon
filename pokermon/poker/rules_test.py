@@ -6,22 +6,22 @@ from pokermon.poker.game import Game, Street
 
 def test_street_over():
     game = Game(starting_stacks=[100, 200, 300])
-    assert rules.street_over(game.view()) == False
+    assert rules.street_over(game.view()) is False
 
     game.add_action(game.view().small_blind())
-    assert rules.street_over(game.view()) == False
+    assert rules.street_over(game.view()) is False
 
     game.add_action(game.view().big_blind())
-    assert rules.street_over(game.view()) == False
+    assert rules.street_over(game.view()) is False
 
     game.add_action(game.view().bet_raise(to=10))
-    assert rules.street_over(game.view()) == False
+    assert rules.street_over(game.view()) is False
 
     game.add_action(game.view().call())
-    assert rules.street_over(game.view()) == False
+    assert rules.street_over(game.view()) is False
 
     game.add_action(game.view().call())
-    assert rules.street_over(game.view()) == True
+    assert rules.street_over(game.view()) is True
 
     # Flop
     game.set_street(Street.FLOP)

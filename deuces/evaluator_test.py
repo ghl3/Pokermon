@@ -2,15 +2,8 @@ from deuces import Card
 from deuces import Evaluator
 from deuces import Deck
 
-board = [
-    Card.new('Ah'),
-    Card.new('Kd'),
-    Card.new('Jc')
-]
-hand = [
-    Card.new('Qs'),
-    Card.new('Th')
-]
+board = [Card.new("Ah"), Card.new("Kd"), Card.new("Jc")]
+hand = [Card.new("Qs"), Card.new("Th")]
 
 Card.print_pretty_cards(board + hand)
 

@@ -25,6 +25,7 @@ class LookupTable:
     * Royal flush (best hand possible)          => 1
     * 7-5-4-3-2 unsuited (worst hand possible)  => 7462
     """
+
     MAX_STRAIGHT_FLUSH = 10
     MAX_FOUR_OF_A_KIND = 166
     MAX_FULL_HOUSE = 322
@@ -44,7 +45,7 @@ class LookupTable:
         MAX_THREE_OF_A_KIND: 6,
         MAX_TWO_PAIR: 7,
         MAX_PAIR: 8,
-        MAX_HIGH_CARD: 9
+        MAX_HIGH_CARD: 9,
     }
 
     RANK_CLASS_TO_STRING = {
@@ -56,7 +57,7 @@ class LookupTable:
         6: "Three of a Kind",
         7: "Two Pair",
         8: "Pair",
-        9: "High Card"
+        9: "High Card",
     }
 
     def __init__(self):
@@ -91,13 +92,13 @@ class LookupTable:
             124,  # int('0b1111100', 2),
             62,  # int('0b111110', 2),
             31,  # int('0b11111', 2),
-            4111  # int('0b1000000001111', 2) # 5 high
+            4111,  # int('0b1000000001111', 2) # 5 high
         ]
 
         # now we'll dynamically generate all the other
         # flushes (including straight flushes)
         flushes = []
-        gen = self.get_lexographically_next_bit_sequence(int('0b11111', 2))
+        gen = self.get_lexographically_next_bit_sequence(int("0b11111", 2))
 
         # 1277 = number of high cards
         # 1277 + len(str_flushes) is number of hands with all cards unique rank
@@ -109,7 +110,7 @@ class LookupTable:
             # straight flush, do not add it
             notSF = True
             for sf in straight_flushes:
-                # if f XOR sf == 0, then bit pattern 
+                # if f XOR sf == 0, then bit pattern
                 # is same, and we should not add
                 if not f ^ sf:
                     notSF = False
@@ -141,7 +142,7 @@ class LookupTable:
 
         # we can reuse these bit sequences for straights
         # and high cards since they are inherently related
-        # and differ only by context 
+        # and differ only by context
         self.straight_and_highcards(straight_flushes, flushes)
 
     def straight_and_highcards(self, straights, highcards):
@@ -224,7 +225,11 @@ class LookupTable:
             kickers.remove(pair1)
             kickers.remove(pair2)
             for kicker in kickers:
-                product = Card.PRIMES[pair1] ** 2 * Card.PRIMES[pair2] ** 2 * Card.PRIMES[kicker]
+                product = (
+                    Card.PRIMES[pair1] ** 2
+                    * Card.PRIMES[pair2] ** 2
+                    * Card.PRIMES[kicker]
+                )
                 self.unsuited_lookup[product] = rank
                 rank += 1
 
@@ -240,8 +245,12 @@ class LookupTable:
 
             for kickers in kgen:
                 k1, k2, k3 = kickers
-                product = Card.PRIMES[pairrank] ** 2 * Card.PRIMES[k1] \
-                          * Card.PRIMES[k2] * Card.PRIMES[k3]
+                product = (
+                    Card.PRIMES[pairrank] ** 2
+                    * Card.PRIMES[k1]
+                    * Card.PRIMES[k2]
+                    * Card.PRIMES[k3]
+                )
                 self.unsuited_lookup[product] = rank
                 rank += 1
 
@@ -249,9 +258,9 @@ class LookupTable:
         """
         Writes lookup table to disk
         """
-        with open(filepath, 'w') as f:
+        with open(filepath, "w") as f:
             for prime_prod, rank in table.iteritems():
-                f.write(str(prime_prod) + "," + str(rank) + '\n')
+                f.write(str(prime_prod) + "," + str(rank) + "\n")
 
     def get_lexographically_next_bit_sequence(self, bits):
         """
