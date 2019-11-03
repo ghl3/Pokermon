@@ -17,6 +17,8 @@ class Row:
     num_players: int
     street: int
     current_player_mask: List[int]
+    folded_player_mask: List[int]
+    all_in_player_mask: List[int]
     stack_sizes: List[int]
 
     amount_to_call: int
@@ -136,8 +138,8 @@ def make_rows(
             turn_rank = -1
             turn_suit = -1
 
-        if game_view.street() >= Street.RIVER and deal.board.turn is not None:
-            river = deal.board.turn
+        if game_view.street() >= Street.RIVER and deal.board.river is not None:
+            river = deal.board.river
             river_rank = river.rank.value
             river_suit = river.suit.value
         else:
@@ -168,6 +170,8 @@ def make_rows(
             num_players=game.num_players(),
             stack_sizes=game_view.current_stack_sizes(),
             current_player_mask=current_player_mask,
+            folded_player_mask=game_view.is_folded(),
+            all_in_player_mask=game_view.is_all_in(),
             street=game_view.street().value,
             amount_to_call=game_view.amount_to_call(),
             min_raise_amount=rules.min_bet_amount(game_view),
