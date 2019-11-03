@@ -1,5 +1,5 @@
 from pokermon.poker import rules
-from pokermon.poker.cards import FullDeal, Board, mkhand, mkflop, mkcard
+from pokermon.poker.cards import Board, FullDeal, mkcard, mkflop, mkhand
 from pokermon.poker.evaluation import Evaluator
 from pokermon.poker.game import Game, Street
 

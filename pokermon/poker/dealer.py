@@ -1,6 +1,6 @@
-from pokermon.poker.cards import FullDeal, Board
 import deuces
 import pokermon.poker.deuces_wrapper as wrapper
+from pokermon.poker.cards import Board, FullDeal
 
 
 def deal_cards(num_players: int) -> FullDeal:

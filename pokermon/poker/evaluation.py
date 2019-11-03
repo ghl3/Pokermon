@@ -2,7 +2,7 @@ from dataclasses import dataclass
 
 import deuces
 from pokermon.poker import deuces_wrapper
-from pokermon.poker.cards import HoleCards, Board, HandType
+from pokermon.poker.cards import Board, HandType, HoleCards
 
 
 @dataclass

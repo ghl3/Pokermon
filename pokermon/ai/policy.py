@@ -1,6 +1,7 @@
 from abc import ABC, abstractmethod
+
 from pokermon.poker.cards import HoleCards
-from pokermon.poker.game import GameView, Action
+from pokermon.poker.game import Action, GameView
 
 
 class Policy(ABC):

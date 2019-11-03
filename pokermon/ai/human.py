@@ -1,11 +1,11 @@
 import logging
+import re
 from typing import Optional, Tuple
 
 from pokermon.ai.policy import Policy
 from pokermon.poker import rules
 from pokermon.poker.cards import HoleCards
-from pokermon.poker.game import GameView, Action, Move
-import re
+from pokermon.poker.game import Action, GameView, Move
 
 logger = logging.getLogger(__name__)
 

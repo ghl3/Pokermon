@@ -1,4 +1,4 @@
-from pokermon.poker.game import Game, Action, Move, Street
+from pokermon.poker.game import Action, Game, Move, Street
 
 
 def test_num_players():

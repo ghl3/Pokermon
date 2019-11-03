@@ -1,12 +1,10 @@
 import logging
-
-from pokermon.ai.policy import Policy
 import random
 
-from pokermon.poker.cards import HoleCards
-from pokermon.poker.game import Action, Move, GameView
-
 import pokermon.poker.rules as rules
+from pokermon.ai.policy import Policy
+from pokermon.poker.cards import HoleCards
+from pokermon.poker.game import Action, GameView, Move
 
 logger = logging.getLogger(__name__)
 

@@ -1,15 +1,22 @@
+import itertools
 import logging
-from typing import List, Tuple, Optional
+from typing import List, Optional, Tuple
+
+import pokermon.poker.rules as rules
 from pokermon.ai.policy import Policy
 from pokermon.data.features import make_rows
 from pokermon.poker.cards import FullDeal
 from pokermon.poker.evaluation import Evaluator
-from pokermon.poker.game import Game, Action, Move, Street, GameView
-import itertools
-import pokermon.poker.rules as rules
+from pokermon.poker.game import (
+    BIG_BLIND_AMOUNT,
+    SMALL_BLIND_AMOUNT,
+    Action,
+    Game,
+    GameView,
+    Move,
+    Street,
+)
 from pokermon.poker.rules import GameResults
-
-from pokermon.poker.game import SMALL_BLIND_AMOUNT, BIG_BLIND_AMOUNT
 
 logger = logging.getLogger(__name__)
 

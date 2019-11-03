@@ -1,6 +1,6 @@
 import dataclasses
-from typing import Tuple, Optional, List
 from dataclasses import dataclass
+from typing import List, Optional, Tuple
 
 import regex as regex  # type: ignore
 

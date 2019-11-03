@@ -1,7 +1,7 @@
-from typing import Tuple, Union, Optional
+from typing import Optional, Tuple, Union
 
 import deuces
-from pokermon.poker.cards import Suit, Card, Rank, Board, HoleCards, HandType
+from pokermon.poker.cards import Board, Card, HandType, HoleCards, Rank, Suit
 
 DeucesCard = int
 DeucesHand = int
