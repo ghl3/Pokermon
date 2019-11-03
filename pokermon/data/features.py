@@ -14,6 +14,14 @@ def card_order(card: Card) -> Tuple[int, int]:
 
 @dataclass(frozen=True)
 class Row:
+
+    #
+    # Metadata
+    #
+
+    player_index: int
+    action_index: int
+
     #
     # State Features
     #
@@ -25,7 +33,7 @@ class Row:
     all_in_player_mask: List[int]
     stack_sizes: List[int]
 
-    amount_to_call: int
+    amount_to_call: List[int]
     min_raise_amount: int
 
     # Cards are ordered by:
@@ -174,6 +182,8 @@ def make_rows(
         won_hand = a.player_index in set(results.best_hand_index)
 
         row = Row(
+            player_index=a.player_index,
+            action_index=i,
             num_players=game.num_players(),
             stack_sizes=game_view.current_stack_sizes(),
             current_player_mask=current_player_mask,
