@@ -1,11 +1,15 @@
 from dataclasses import dataclass
-from typing import List
+from typing import List, Tuple
 
 from pokermon.poker import rules
-from pokermon.poker.cards import FullDeal
+from pokermon.poker.cards import Card, FullDeal
 from pokermon.poker.evaluation import Evaluator
 from pokermon.poker.game import Action, Game, Street
 from pokermon.poker.rules import GameResults
+
+
+def card_order(card: Card) -> Tuple[int, int]:
+    return 0 - card.rank.value, card.suit.value
 
 
 @dataclass(frozen=True)
@@ -67,6 +71,9 @@ class Row:
     # Targets
     #
 
+    # Is this the last move the player makes in the hand
+    is_players_last_action: bool
+
     # The amount earned as a result of this move.  Will be negative if the player
     # bets on this turn and it isn't their last turn.  May be negative or positive
     # if it's their last turn (depending on whether they bet and whether they win).
@@ -107,7 +114,7 @@ def make_rows(
         current_player_mask = [0 for _ in range(num_players)]
         current_player_mask[a.player_index] = 1
 
-        hc_0, hc_1 = sorted(deal.hole_cards[a.player_index])
+        hc_0, hc_1 = sorted(deal.hole_cards[a.player_index], key=card_order)
 
         hole_card_0_rank = hc_0.rank.value
         hole_card_0_suit = hc_0.suit.value
@@ -115,7 +122,7 @@ def make_rows(
         hole_card_1_suit = hc_1.suit.value
 
         if game_view.street() >= Street.FLOP and deal.board.flop is not None:
-            flop_0, flop_1, flop_2 = sorted(deal.board.flop)
+            flop_0, flop_1, flop_2 = sorted(deal.board.flop, key=card_order)
             flop_0_rank = flop_0.rank.value
             flop_0_suit = flop_0.suit.value
             flop_1_rank = flop_1.rank.value
@@ -194,6 +201,7 @@ def make_rows(
             current_hand_rank=current_hand_rank,
             action_encoded=a.move.value,
             amount_added=a.amount_added,
+            is_players_last_action=is_last_action[a.player_index],
             cumulative_reward=cumulative_rewards[a.player_index],
             instant_reward=instant_reward,
             won_hand=won_hand,
