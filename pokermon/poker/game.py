@@ -57,10 +57,10 @@ Event = Union[Action, Street]
 class Game:
     """
   All data for a game that is fully known to all players.
-  
+
   An observed game is a snapshot of a game at a given action (or possibly after
   all actions are complete and the hand is done).
-  
+
   Each action in an observed game has a timestamp index (integer).  These
   integers cross streets (so, if the last action on the FLOP is N, then the
   first action on the TURN is N+1).
@@ -100,15 +100,15 @@ class Game:
 
     def view(self, timestamp: int = None):
         """Return a view of the game at the given timestamp.
-    
+
     The meaning of a timestamp is defined as follows:
     - At the ith timestamp, i moves have been made
     - At the ith timestamp, a user is deciding the move with index=i (0 indexed)
-    
+
     A timestamp represents different states of the game
     Returns a view of the game AFTER the timestamp'th action.  Or, equivalantly,
     returns a view of the game when the 0-indexed action is being decided.
-    
+
     So, if timestamp == 0, then no actions have been done.
     If timestamp==2, then the view is AFTER the big blind is posted.
     The current view is timestamp=len(action) (in other words, length is one
@@ -130,9 +130,9 @@ class Game:
 class GameView:
     """
   A view of an observed game at a given timestamp.
-  
+
   Contains methods to get useful information summarizing the state of the game.
-  
+
   """
 
     _game: Game
@@ -176,7 +176,7 @@ class GameView:
         for player in self._player_list(starting_player):
             if not self.is_folded()[player]:
                 return player
-        
+
         return -1
 
     @functools.lru_cache()
