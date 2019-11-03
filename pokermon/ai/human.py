@@ -11,8 +11,8 @@ logger = logging.getLogger(__name__)
 
 
 class Human(Policy):
-    _parser_call_fold = re.compile("\s*(check|call|fold)\s*")
-    _parser_bet_raise = re.compile("\s*(bet|raise to)\s+([0-9]+)\s*")
+    _parser_call_fold = re.compile(r"\s*(check|call|fold)\s*")
+    _parser_bet_raise = re.compile(r"\s*(bet|raise to)\s+([0-9]+)\s*")
 
     def action(self, player_index: int, hand: HoleCards, game: GameView) -> Action:
         amount_to_call = game.amount_to_call()[player_index]

@@ -1,8 +1,8 @@
 from dataclasses import dataclass
-from typing import List, Iterable
+from typing import List
 
 from pokermon.poker import rules
-from pokermon.poker.cards import FullDeal, Card
+from pokermon.poker.cards import FullDeal
 from pokermon.poker.evaluation import Evaluator
 from pokermon.poker.game import Game, Action, Street
 from pokermon.poker.rules import GameResults

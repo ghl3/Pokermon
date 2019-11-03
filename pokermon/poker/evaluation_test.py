@@ -1,5 +1,4 @@
 import deuces
-import pokermon.poker.evaluation
 
 
 def test_deck():

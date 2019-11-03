@@ -25,42 +25,42 @@ def test_street_over():
 
     # Flop
     game.set_street(Street.FLOP)
-    assert rules.street_over(game.view()) == False
+    assert rules.street_over(game.view()) is False
 
     game.add_action(game.view().call())
-    assert rules.street_over(game.view()) == False
+    assert rules.street_over(game.view()) is False
 
     game.add_action(game.view().call())
-    assert rules.street_over(game.view()) == False
+    assert rules.street_over(game.view()) is False
 
     game.add_action(game.view().call())
-    assert rules.street_over(game.view()) == True
+    assert rules.street_over(game.view()) is True
 
     # Turn
     game.set_street(Street.TURN)
-    assert rules.street_over(game.view()) == False
+    assert rules.street_over(game.view()) is False
 
     game.add_action(game.view().bet_raise(to=20))
-    assert rules.street_over(game.view()) == False
+    assert rules.street_over(game.view()) is False
 
     game.add_action(game.view().fold())
-    assert rules.street_over(game.view()) == False
+    assert rules.street_over(game.view()) is False
 
     game.add_action(game.view().call())
-    assert rules.street_over(game.view()) == True
+    assert rules.street_over(game.view()) is True
 
     # River
     game.set_street(Street.RIVER)
-    assert rules.street_over(game.view()) == False
+    assert rules.street_over(game.view()) is False
 
     game.add_action(game.view().call())
-    assert rules.street_over(game.view()) == False
+    assert rules.street_over(game.view()) is False
 
     game.add_action(game.view().bet_raise(to=30))
-    assert rules.street_over(game.view()) == False
+    assert rules.street_over(game.view()) is False
 
     game.add_action(game.view().call())
-    assert rules.street_over(game.view()) == True
+    assert rules.street_over(game.view()) is True
 
 
 def test_street_over_all_fold():
@@ -72,16 +72,16 @@ def test_street_over_all_fold():
     game.add_action(game.view().fold())
     game.add_action(game.view().fold())
 
-    assert rules.street_over(game.view()) == True
+    assert rules.street_over(game.view()) is True
 
     game.set_street(Street.FLOP)
-    assert rules.street_over(game.view()) == True
+    assert rules.street_over(game.view()) is True
 
     game.set_street(Street.TURN)
-    assert rules.street_over(game.view()) == True
+    assert rules.street_over(game.view()) is True
 
     game.set_street(Street.RIVER)
-    assert rules.street_over(game.view()) == True
+    assert rules.street_over(game.view()) is True
 
 
 def test_game_result():
@@ -113,4 +113,4 @@ def test_game_result():
     game.add_action(game.view().call())
     game.add_action(game.view().call())
 
-    result = rules.get_result(deal, game.view(), Evaluator())
+    rules.get_result(deal, game.view(), Evaluator())

@@ -1,4 +1,4 @@
-from pokermon.poker.cards import FullDeal, HoleCards, Board
+from pokermon.poker.cards import FullDeal, Board
 import deuces
 import pokermon.poker.deuces_wrapper as wrapper
 
