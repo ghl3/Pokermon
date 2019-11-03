@@ -1,0 +1,2 @@
+isort --recursive pokermon
+black pokermon
