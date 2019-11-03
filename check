@@ -1,0 +1,2 @@
+mypy pokermon
+flake8 pokermon
