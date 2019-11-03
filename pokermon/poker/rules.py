@@ -86,7 +86,6 @@ def action_valid(
                 Error.INVAID_TOTAL_BET, {Metadata.BLIND_AMOUNT: SMALL_BLIND_AMOUNT}
             )
         return MOVE_OK
-        # return action.move == Move.SMALL_BLIND and action.amount_added == SMALL_BLIND_AMOUNT and action.total_bet == SMALL_BLIND_AMOUNT
 
     elif action_index == 1:
         if action.move != Move.BIG_BLIND:
@@ -111,7 +110,7 @@ def action_valid(
         if action.total_bet != game.current_bet_amount():
             return Result(
                 Error.INVALID_AMOUNT_ADDED,
-                {Metadata.TOTAL_AMOUNT_SHOULD_BE: game.current_bet_amount()},
+                {Metadata.TOTAL_BET_SHOULD_BE: game.current_bet_amount()},
             )
         return MOVE_OK
 

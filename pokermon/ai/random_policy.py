@@ -59,7 +59,6 @@ class RandomPolicy(Policy):
                 )
             )
 
-            # return game.bet_raise()
             return game.bet_raise(to=new_bet_amount)
 
         else:

@@ -2,7 +2,7 @@ import dataclasses
 from typing import Tuple, Optional, List
 from dataclasses import dataclass
 
-import regex as regex
+import regex as regex # type: ignore
 
 from pokermon.poker.game import Street
 from pokermon.poker.ordered_enum import OrderedEnum

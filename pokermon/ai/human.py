@@ -19,7 +19,7 @@ class Human(Policy):
 
         stack_size = game.current_stack_sizes()[player_index]
 
-        def parse_action(line: str):
+        def parse_action(line: str) -> Optional[Action]:
 
             move, amount = self.parse_move(line)
 
@@ -31,8 +31,8 @@ class Human(Policy):
                 return game.fold()
             elif move == Move.CHECK_CALL:
                 return game.call()
-            elif move == Move.BET_RAISE:
-                return game.bet_raise(to=int(amount))
+            elif move == Move.BET_RAISE and amount is not None:
+                return game.bet_raise(to=amount)
             else:
                 return None
 
@@ -92,6 +92,6 @@ class Human(Policy):
         if match is not None:
             action, amount = match.groups()
 
-            return Move.BET_RAISE, amount
+            return Move.BET_RAISE, int(amount)
 
         return None, None

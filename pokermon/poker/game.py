@@ -176,6 +176,8 @@ class GameView:
         for player in self._player_list(starting_player):
             if not self.is_folded()[player]:
                 return player
+        
+        return -1
 
     @functools.lru_cache()
     def street(self) -> Street:
@@ -192,7 +194,7 @@ class GameView:
     @functools.lru_cache()
     def street_action_dict(self) -> Dict[Street, List[Action]]:
 
-        street_actions = defaultdict(lambda: [])
+        street_actions: Dict[Street, List[Action]] = defaultdict(lambda: [])
 
         current_street = Street.PREFLOP
 
@@ -350,7 +352,7 @@ class GameView:
     @functools.lru_cache()
     def bet_raise(
         self, to: Optional[int] = None, raise_amount: Optional[int] = None
-    ) -> Optional[Action]:
+    ) -> Action:
 
         player_id = self.current_player()
 

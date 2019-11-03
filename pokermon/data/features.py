@@ -102,7 +102,7 @@ def make_rows(
         hole_card_1_rank = hc_1.rank.value
         hole_card_1_suit = hc_1.suit.value
 
-        if game_view.street() >= Street.FLOP:
+        if game_view.street() >= Street.FLOP and deal.board.flop is not None:
             flop_0, flop_1, flop_2 = sorted(deal.board.flop)
             flop_0_rank = flop_0.rank.value
             flop_0_suit = flop_0.suit.value
@@ -118,7 +118,7 @@ def make_rows(
             flop_2_rank = -1
             flop_2_suit = -1
 
-        if game_view.street() >= Street.TURN:
+        if game_view.street() >= Street.TURN and deal.board.turn is not None:
             turn = deal.board.turn
             turn_rank = turn.rank.value
             turn_suit = turn.suit.value
@@ -126,7 +126,7 @@ def make_rows(
             turn_rank = -1
             turn_suit = -1
 
-        if game_view.street() >= Street.RIVER:
+        if game_view.street() >= Street.RIVER and deal.board.turn is not None:
             river = deal.board.turn
             river_rank = river.rank.value
             river_suit = river.suit.value
