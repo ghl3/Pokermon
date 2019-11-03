@@ -56,6 +56,23 @@ def test_basic_features():
 
     assert len(rows) == len(game.all_action())
 
+    # The row where player 2 bets preflop
+    row = rows[2]
+    assert row.current_player_mask == [0, 0, 1]
+    assert row.all_in_player_mask == [0, 0, 0]
+    assert row.folded_player_mask == [0, 0, 0]
+    assert row.stack_sizes == [99, 198, 300]
+    assert row.min_raise_amount == 2
+    assert row.street == Street.PREFLOP.value
+    assert row.current_hand_type == -1
+    assert row.river_rank == -1
+    assert row.river_suit == -1
+    assert row.action_encoded == Move.BET_RAISE.value
+    assert row.amount_added == 10
+    assert row.instant_reward == 0
+    assert row.cumulative_reward == 70
+    assert row.won_hand is True
+
     # The row where player 1 folds
     row = rows[9]
     assert row.current_player_mask == [0, 1, 0]

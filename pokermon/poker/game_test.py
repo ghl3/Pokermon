@@ -238,3 +238,15 @@ def test_call_all_in():
     assert call == Action(
         player_index=1, move=Move.CHECK_CALL, amount_added=18, total_bet=100
     )
+
+
+def test_blinds():
+    game = Game(starting_stacks=[10, 20, 100])
+
+    assert game.view().small_blind() == Action(
+        0, Move.SMALL_BLIND, total_bet=1, amount_added=1
+    )
+
+    assert game.view().big_blind() == Action(
+        1, Move.BIG_BLIND, total_bet=2, amount_added=2
+    )

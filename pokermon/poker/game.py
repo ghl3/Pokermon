@@ -326,7 +326,7 @@ class GameView:
     @functools.lru_cache()
     def big_blind(self) -> Action:
         return Action(
-            0, Move.BIG_BLIND, total_bet=BIG_BLIND_AMOUNT, amount_added=BIG_BLIND_AMOUNT
+            1, Move.BIG_BLIND, total_bet=BIG_BLIND_AMOUNT, amount_added=BIG_BLIND_AMOUNT
         )
 
     @functools.lru_cache()
