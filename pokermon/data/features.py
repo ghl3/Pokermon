@@ -44,6 +44,16 @@ class Row:
     current_hand_strength: float
     current_hand_rank: int
 
+    # Desired Features:
+    # Post Flop Best Hand index (eg is nuts, etc)
+    # Though, I guess current rank doesn't really matter, only equity.
+    # Equity % against random hand
+    # Possible Solutions:
+    # treys
+    # https://github.com/ktseng/holdem_calc
+    # https://pypi.org/project/PokerSleuth/#history
+    # https://github.com/mitpokerbots/pbots_calc
+
     #
     # Action Features
     #

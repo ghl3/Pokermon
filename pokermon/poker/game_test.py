@@ -80,7 +80,7 @@ def test_amount_bet():
     for a in preflop_action:
         game.add_action(a)
 
-    assert game.view().amount_added_in_street() == [1, 2, 6]  # {0: 1, 1: 2, 2: 6}
+    assert game.view().amount_added_in_street() == [1, 2, 6]
 
     game.set_street(Street.FLOP)
 
@@ -94,66 +94,50 @@ def test_amount_bet():
     for a in flop_action:
         game.add_action(a)
 
-    assert game.view().amount_added_in_street() == [0, 10, 0]  # {0: 0, 1: 10, 2: 0}
-    assert game.view().amount_added_total() == [1, 12, 6]  # {0: 1, 1: 12, 2: 6}
+    assert game.view().amount_added_in_street() == [0, 10, 0]
+    assert game.view().amount_added_total() == [1, 12, 6]
 
 
 def test_stack_sizes():
     game = Game(starting_stacks=[100, 200, 300])
 
-    assert game.view().current_stack_sizes() == [
-        100,
-        200,
-        300,
-    ]  # {0: 100, 1: 200, 2: 300}
+    assert game.view().current_stack_sizes() == [100, 200, 300]
 
     game.add_action(Action(0, Move.SMALL_BLIND, total_bet=1, amount_added=1))
     game.add_action(Action(1, Move.BIG_BLIND, total_bet=2, amount_added=2))
     game.add_action(Action(2, Move.BET_RAISE, total_bet=6, amount_added=6))
-    assert game.view().current_stack_sizes() == [
-        99,
-        198,
-        294,
-    ]  # {0: 99, 1: 198, 2: 294}
+    assert game.view().current_stack_sizes() == [99, 198, 294]
 
     game.add_action(Action(0, Move.CHECK_CALL, total_bet=6, amount_added=5))
     game.add_action(Action(1, Move.CHECK_CALL, total_bet=6, amount_added=4))
-    assert game.view().current_stack_sizes() == [
-        94,
-        194,
-        294,
-    ]  # {0: 94, 1: 194, 2: 294}
+    assert game.view().current_stack_sizes() == [94, 194, 294]
 
     game.set_street(Street.TURN)
 
     game.add_action(Action(0, Move.CHECK_CALL, total_bet=0, amount_added=0))
     game.add_action(Action(1, Move.BET_RAISE, total_bet=10, amount_added=10))
-    assert game.view().current_stack_sizes() == [
-        94,
-        184,
-        294,
-    ]  # {0: 94, 1: 184, 2: 294}
+    assert game.view().current_stack_sizes() == [94, 184, 294]
 
 
 def test_bet_and_call_amount():
     game = Game(starting_stacks=[100, 200, 300])
 
     assert game.view().current_bet_amount() == 0
-    assert game.view().amount_to_call() == [0, 0, 0]  # {0: 0, 1: 0, 2: 0}
+    assert game.view().amount_to_call() == [0, 0, 0]
 
     game.add_action(Action(0, Move.SMALL_BLIND, total_bet=1, amount_added=1))
     assert game.view().current_bet_amount() == 1
-    assert game.view().amount_to_call() == [0, 1, 1]  # {0: 0, 1: 1, 2: 1}
+    assert game.view().amount_to_call() == [0, 1, 1]
 
     game.add_action(Action(1, Move.BIG_BLIND, total_bet=2, amount_added=2))
     game.add_action(Action(2, Move.BET_RAISE, total_bet=10, amount_added=10))
     assert game.view().current_bet_amount() == 10
-    assert game.view().amount_to_call() == [9, 8, 0]  # {0: 9, 1: 8, 2: 0}
+    assert game.view().amount_to_call() == [9, 8, 0]
 
     game.add_action(Action(0, Move.CHECK_CALL, total_bet=10, amount_added=9))
     game.add_action(Action(1, Move.CHECK_CALL, total_bet=10, amount_added=8))
     assert game.view().current_bet_amount() == 10
-    assert game.view().amount_to_call() == [0, 0, 0]  # {0: 0, 1: 0, 2: 0}
+    assert game.view().amount_to_call() == [0, 0, 0]
 
 
 def test_latest_bet_raise_amount():
@@ -192,36 +176,20 @@ def test_is_folded():
     game.add_action(Action(1, Move.BIG_BLIND, total_bet=2, amount_added=2))
     game.add_action(Action(2, Move.FOLD, total_bet=2, amount_added=0))
 
-    assert game.view().is_folded() == [
-        False,
-        False,
-        True,
-    ]  # {0: False, 1: False, 2: True}
+    assert game.view().is_folded() == [False, False, True]
 
     game.add_action(Action(1, Move.CHECK_CALL, total_bet=2, amount_added=1))
     game.add_action(Action(2, Move.CHECK_CALL, total_bet=2, amount_added=0))
 
-    assert game.view().is_folded() == [
-        False,
-        False,
-        True,
-    ]  # {0: False, 1: False, 2: True}
+    assert game.view().is_folded() == [False, False, True]
 
     game.set_street(Street.TURN)
 
-    assert game.view().is_folded() == [
-        False,
-        False,
-        True,
-    ]  # {0: False, 1: False, 2: True}
+    assert game.view().is_folded() == [False, False, True]
 
     game.add_action(Action(0, Move.BET_RAISE, total_bet=10, amount_added=10))
     game.add_action(Action(1, Move.FOLD, total_bet=10, amount_added=0))
-    assert game.view().is_folded() == [
-        False,
-        True,
-        True,
-    ]  # {0: False, 1: True, 2: True}
+    assert game.view().is_folded() == [False, True, True]
 
 
 def test_is_all_in():
@@ -231,11 +199,7 @@ def test_is_all_in():
     game.add_action(Action(1, Move.BIG_BLIND, total_bet=2, amount_added=2))
     game.add_action(Action(2, Move.BET_RAISE, total_bet=10, amount_added=10))
 
-    assert game.view().is_all_in() == [
-        False,
-        False,
-        True,
-    ]  # {0: False, 1: False, 2: True}
+    assert game.view().is_all_in() == [False, False, True]
 
 
 def test_call():

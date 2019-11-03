@@ -1,2 +1,4 @@
+set -e
+
 isort --recursive pokermon
 black pokermon

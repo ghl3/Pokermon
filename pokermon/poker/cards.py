@@ -109,8 +109,8 @@ HoleCards = Tuple[Card, Card]
 @dataclass(frozen=True)
 class Board:
     """
-  A board of cards, which may be partially or fully rolled out.
-  """
+    A board of cards, which may be partially or fully rolled out.
+    """
 
     flop: Optional[Tuple[Card, Card, Card]]
     turn: Optional[Card]
