@@ -9,7 +9,7 @@ def deal_cards(num_players: int) -> FullDeal:
 
     hole_cards = []
 
-    for player_index in range(num_players):
+    for _ in range(num_players):
         hole_cards.append(deck.draw(2))
 
     flop = (
