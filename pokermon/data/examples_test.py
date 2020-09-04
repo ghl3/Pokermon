@@ -35,23 +35,29 @@ def test_empty_example() -> None:
 
     example_dict = seq_example_to_dict(example)
 
+    # Context Features
     assert example_dict['context']['num_players'] == [3]
     assert example_dict['context']['starting_stack_sizes'] == [100, 200, 300]
 
-    # Player 3 (UTG) wins the blinds
-    # Shouldn't other players lose 1 and 2?
-    assert example_dict['context']['total_rewards'] == [0, 0, 3]
+    # Player 3 (UTG) wins the blinds, the others lose their blinds
+    assert example_dict['context']['total_rewards'] == [-1, -2, 3]
 
+    # Bet, Fold, Fold
+    assert example_dict['features']['action__action_encoded'] == [[5], [3], [3]]
 
+    # Bet 10, fold, fold
+    assert example_dict['features']['action__amount_added'] == [[10], [0], [0]]
 
-# assert len(example.features.feature) == 33
+    # These are the states before the action (the blinds have already taken place)
+    assert example_dict['features']['state__stack_sizes'] == [[99, 198, 300], [99, 198, 290],
+                                                              [99, 198, 290]]
 
-# There should be 3 decision points that are made
-# - 1: The First Bet
-# - 2: The First Fold
-# - 3: The Second Fold
+    # Hole Cards 0: Jc Ac As
+    # Hole Cards 1: Jh Ad Kh
+    assert example_dict['features']['state__hole_card_0_rank'] == [[11], [14], [14]]
+    assert example_dict['features']['state__hole_card_0_suit'] == [[2], [2], [1]]
+    assert example_dict['features']['state__hole_card_1_rank'] == [[11], [14], [13]]
+    assert example_dict['features']['state__hole_card_1_suit'] == [[4], [3], [4]]
 
-# x = seq_example_to_dict(example)
-
-#    for k, v in seq_example_to_dict(example)['features'].items():
-#        assert len(v) == 3 or len(v) == 3 * 3
+    # These are the indices of the actions
+    assert example_dict['features']['state__action_index'] == [[3], [4], [5]]

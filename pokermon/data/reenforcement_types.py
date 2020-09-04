@@ -124,15 +124,15 @@ def make_rows(
         # We now know the event is an action
         a: Action = e
 
-        # Since Small/Big blinds are forced actions, we don't generate
-        # rows for them
-        if a.move == Move.SMALL_BLIND or a.move == Move.BIG_BLIND:
-            continue
-
         # Subtract the amount lost after taking the given action, which is a part
         # of the future cumulative winnings / losses
         # print(cumulative_rewards, a.player_index, a.amount_added)
         cumulative_rewards[a.player_index] -= a.amount_added
+
+        # Since Small/Big blinds are forced actions, we don't generate
+        # rows for them
+        if a.move == Move.SMALL_BLIND or a.move == Move.BIG_BLIND:
+            continue
 
         game_view = game.view(i)
 
