@@ -13,86 +13,96 @@ def card_order(card: Card) -> Tuple[int, int]:
 
 
 @dataclass(frozen=True)
-class RState:
-    player_index: int
-    action_index: int
-
+class Context:
     num_players: int
-    street: int
-    current_player_mask: List[int]
-    folded_player_mask: List[int]
-    all_in_player_mask: List[int]
-    stack_sizes: List[int]
 
-    amount_to_call: List[int]
-    min_raise_amount: int
+    starting_stack_sizes: List[int]
 
-    # Cards are ordered by:
-    # Rank, [S, C, D, H]
-    hole_card_0_rank: int
-    hole_card_0_suit: int
-    hole_card_1_rank: int
-    hole_card_1_suit: int
-
-    flop_0_rank: int
-    flop_0_suit: int
-    flop_1_rank: int
-    flop_1_suit: int
-    flop_2_rank: int
-    flop_2_suit: int
-    turn_rank: int
-    turn_suit: int
-    river_rank: int
-    river_suit: int
-
-    current_hand_type: int
-    current_hand_strength: float
-    current_hand_rank: int
-
-    # Desired Features:
-    # Post Flop Best Hand index (eg is nuts, etc)
-    # Though, I guess current rank doesn't really matter, only equity.
-    # Equity % against random hand
-    # Possible Solutions:
-    # treys
-    # https://github.com/ktseng/holdem_calc
-    # https://pypi.org/project/PokerSleuth/#history
-    # https://github.com/mitpokerbots/pbots_calc
-
-
-@dataclass(frozen=True)
-class RAction:
-    action_encoded: int
-    amount_added: int
-
-
-@dataclass(frozen=True)
-class RReward:
-    # Is this the last move the player makes in the hand
-    is_players_last_action: bool
-
-    # The amount earned as a result of this move.  Will be negative if the player
-    # bets on this turn and it isn't their last turn.  May be negative or positive
-    # if it's their last turn (depending on whether they bet and whether they win).
-    instant_reward: int
-
-    # The net amount the player earns or loses for the rest of the hand, including
-    # the result of the current action (a bet/raise).
-    cumulative_reward: int
-
-    won_hand: bool
+    # The total reward this player will earn throughout this hand
+    total_rewards: List[int]
 
 
 @dataclass(frozen=True)
 class Row:
-    state: RState
-    action: RAction
-    reward: RReward
+    @dataclass(frozen=True)
+    class State:
+        player_index: int
+        action_index: int
+
+        street: int
+        current_player_mask: List[int]
+        folded_player_mask: List[int]
+        all_in_player_mask: List[int]
+        stack_sizes: List[int]
+
+        amount_to_call: List[int]
+        min_raise_amount: int
+
+        # Cards are ordered by:
+        # Rank, [S, C, D, H]
+        hole_card_0_rank: int
+        hole_card_0_suit: int
+        hole_card_1_rank: int
+        hole_card_1_suit: int
+
+        flop_0_rank: int
+        flop_0_suit: int
+        flop_1_rank: int
+        flop_1_suit: int
+        flop_2_rank: int
+        flop_2_suit: int
+        turn_rank: int
+        turn_suit: int
+        river_rank: int
+        river_suit: int
+
+        current_hand_type: int
+        current_hand_strength: float
+        current_hand_rank: int
+
+        # Desired Features:
+        # Post Flop Best Hand index (eg is nuts, etc)
+        # Though, I guess current rank doesn't really matter, only equity.
+        # Equity % against random hand
+        # Possible Solutions:
+        # treys
+        # https://github.com/ktseng/holdem_calc
+        # https://pypi.org/project/PokerSleuth/#history
+        # https://github.com/mitpokerbots/pbots_calc
+
+    @dataclass(frozen=True)
+    class Action:
+        action_encoded: int
+        amount_added: int
+
+    @dataclass(frozen=True)
+    class Reward:
+        # Is this the last move the player makes in the hand
+        is_players_last_action: bool
+
+        # The amount earned as a result of this move.  Will be negative if the player
+        # bets on this turn and it isn't their last turn.  May be negative or positive
+        # if it's their last turn (depending on whether they bet and whether they win).
+        instant_reward: int
+
+        # The net amount the player earns or loses for the rest of the hand, including
+        # the result of the current action (a bet/raise).
+        cumulative_reward: int
+
+        won_hand: bool
+
+    state: State
+    action: Action
+    reward: Reward
 
 
 def make_rows(
     game: Game, deal: FullDeal, results: GameResults, evaluator: Evaluator
-) -> List[Row]:
+) -> Tuple[Context, List[Row]]:
+    context = Context(num_players=game.num_players(),
+                      starting_stack_sizes=game.starting_stacks,
+                      total_rewards=results.winnings)
+
     rows = []
 
     # Profits at the end of the game
@@ -191,10 +201,9 @@ def make_rows(
 
         rows.append(Row(
 
-            state=RState(
+            state=Row.State(
                 player_index=a.player_index,
                 action_index=i,
-                num_players=game.num_players(),
                 stack_sizes=game_view.current_stack_sizes(),
                 current_player_mask=current_player_mask,
                 folded_player_mask=game_view.is_folded(),
@@ -221,12 +230,12 @@ def make_rows(
                 current_hand_rank=current_hand_rank,
             ),
 
-            action=RAction(
+            action=Row.Action(
                 action_encoded=a.move.value,
                 amount_added=a.amount_added,
             ),
 
-            reward=RReward(
+            reward=Row.Reward(
                 is_players_last_action=is_last_action[a.player_index],
                 cumulative_reward=cumulative_rewards[a.player_index],
                 instant_reward=instant_reward,
@@ -238,4 +247,4 @@ def make_rows(
 
         is_last_action[a.player_index] = False
 
-    return list(reversed(rows))
+    return context, list(reversed(rows))

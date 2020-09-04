@@ -1,4 +1,4 @@
-from pokermon.data import state
+from pokermon.data import reenforcement_types
 from pokermon.poker import rules
 from pokermon.poker.cards import (
     Board,
@@ -55,7 +55,7 @@ def test_full_game_features():
     evaluator = Evaluator()
     results = rules.get_result(deal, game.view(), evaluator)
 
-    rows = state.make_rows(game, deal, results, evaluator)
+    _, rows = reenforcement_types.make_rows(game, deal, results, evaluator)
 
     # 12 decisions made throughout the hand
     assert len(rows) == 12
@@ -166,7 +166,7 @@ def test_fold_preflop_features():
     evaluator = Evaluator()
     results = rules.get_result(deal, game.view(), evaluator)
 
-    rows = state.make_rows(game, deal, results, evaluator)
+    _, rows = reenforcement_types.make_rows(game, deal, results, evaluator)
 
     assert len(rows) == 3
 
