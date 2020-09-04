@@ -7,7 +7,7 @@ from pokermon.data.examples import make_example, _int64_feature, _float_feature,
 from pokermon.poker import rules
 from pokermon.poker.cards import Board, FullDeal, mkcard, mkflop, mkhand
 from pokermon.poker.evaluation import Evaluator
-from pokermon.poker.game import Game
+from pokermon.poker.game import Game, Street
 
 
 def test_example_to_dict() -> None:
@@ -28,6 +28,7 @@ def test_empty_example() -> None:
 
     game = Game(starting_stacks=[100, 200, 300])
 
+    game.set_street(Street.PREFLOP)
     game.add_action(game.view().small_blind())
     game.add_action(game.view().big_blind())
     game.add_action(game.view().bet_raise(to=10))
@@ -43,7 +44,9 @@ def test_empty_example() -> None:
 
     assert len(example.features.feature) == 33
 
-    # Assert that all features have length:
-    # num_actions or num_actions*num_players
+    # There should be 3 decision points that are made
+    # - 1: The First Bet
+    # - 2: The First Fold
+    # - 3: The Second Fold
     for k, v in example_to_dict(example).items():
-        assert len(v) == 5 or len(v) == 5 * 3
+        assert len(v) == 3 or len(v) == 3 * 3

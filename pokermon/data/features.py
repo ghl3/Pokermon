@@ -4,7 +4,7 @@ from typing import List, Tuple
 from pokermon.poker import rules
 from pokermon.poker.cards import Card, FullDeal
 from pokermon.poker.evaluation import Evaluator
-from pokermon.poker.game import Action, Game, Street
+from pokermon.poker.game import Action, Game, Street, Move
 from pokermon.poker.rules import GameResults
 
 
@@ -14,7 +14,6 @@ def card_order(card: Card) -> Tuple[int, int]:
 
 @dataclass(frozen=True)
 class Row:
-
     #
     # Metadata
     #
@@ -104,13 +103,23 @@ def make_rows(
 
     is_last_action: List[bool] = [True for _ in range(game.num_players())]
 
+    # Iterate in reverse order
     for i, e in reversed(list(enumerate(game.events))):
 
+        # i is the index of this event
+        # game.view(i) is the state of the game at this tme
+        # e is the action that it taken at this time (the action is 'after' the state)
 
-        # What is this?
-        if isinstance(e, Action):
-            a = e
-        else:
+        # Only generate rows where there is an action
+        if isinstance(e, Street):
+            continue
+
+        # We now know the event is an action
+        a: Action = e
+
+        # Since Small/Big blinds are forced actions, we don't generate
+        # rows for them
+        if a.move == Move.SMALL_BLIND or a.move == Move.BIG_BLIND:
             continue
 
         # Subtract the amount lost after taking the given action, which is a part

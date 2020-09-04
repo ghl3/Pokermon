@@ -25,6 +25,7 @@ def test_full_game_features():
 
     game = Game(starting_stacks=[100, 200, 300])
 
+    game.set_street(Street.PREFLOP)
     game.add_action(game.view().small_blind())
     game.add_action(game.view().big_blind())
     game.add_action(game.view().bet_raise(to=10))
@@ -49,15 +50,18 @@ def test_full_game_features():
     game.add_action(game.view().bet_raise(to=30))
     game.add_action(game.view().call())
 
+    game.end_hand()
+
     evaluator = Evaluator()
     results = rules.get_result(deal, game.view(), evaluator)
 
     rows = features.make_rows(game, deal, results, evaluator)
 
-    assert len(rows) == len(game.all_action())
+    # 12 decisions made throughout the hand
+    assert len(rows) == 12
 
     # The row where player 2 bets preflop
-    row = rows[2]
+    row = rows[0]
     assert row.current_player_mask == [0, 0, 1]
     assert row.all_in_player_mask == [0, 0, 0]
     assert row.folded_player_mask == [0, 0, 0]
@@ -75,7 +79,7 @@ def test_full_game_features():
     assert row.is_players_last_action is False
 
     # The row where player 1 folds
-    row = rows[9]
+    row = rows[7]
     assert row.current_player_mask == [0, 1, 0]
     assert row.all_in_player_mask == [0, 0, 0]
     assert row.folded_player_mask == [0, 0, 0]
@@ -150,21 +154,24 @@ def test_fold_preflop_features():
 
     game = Game(starting_stacks=[100, 200, 300])
 
+    game.set_street(Street.PREFLOP)
     game.add_action(game.view().small_blind())
     game.add_action(game.view().big_blind())
     game.add_action(game.view().bet_raise(to=10))
     game.add_action(game.view().fold())
     game.add_action(game.view().fold())
 
+    game.end_hand()
+
     evaluator = Evaluator()
     results = rules.get_result(deal, game.view(), evaluator)
 
     rows = features.make_rows(game, deal, results, evaluator)
 
-    assert len(rows) == 5
+    assert len(rows) == 3
 
     # The row where player 3 raises preflop
-    row = rows[2]
+    row = rows[0]
     assert row.current_player_mask == [0, 0, 1]
     assert row.all_in_player_mask == [0, 0, 0]
     assert row.folded_player_mask == [0, 0, 0]
@@ -183,7 +190,7 @@ def test_fold_preflop_features():
     assert row.is_players_last_action is True
 
     # The row where player 1 folds
-    row = rows[3]
+    row = rows[1]
     assert row.current_player_mask == [1, 0, 0]
     assert row.all_in_player_mask == [0, 0, 0]
     assert row.folded_player_mask == [0, 0, 0]
@@ -201,7 +208,7 @@ def test_fold_preflop_features():
     assert row.is_players_last_action is True
 
     # The row where player 2 folds
-    row = rows[4]
+    row = rows[2]
     assert row.hole_card_0_rank == Rank.ACE.value
     assert row.hole_card_0_suit == Suit.SPADES.value
     assert row.hole_card_1_rank == Rank.KING.value
