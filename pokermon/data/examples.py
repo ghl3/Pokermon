@@ -1,10 +1,10 @@
 import dataclasses
-from collections import defaultdict
+from collections import defaultdict, OrderedDict
 from typing import Any, Dict, List
 
 import tensorflow as tf  # type: ignore
 
-from pokermon.data.features import Row
+from pokermon.data.state import Row, RState, RAction, RReward
 
 
 def _bytes_feature(values: List[str]) -> tf.train.Feature:
@@ -66,17 +66,31 @@ def _make_feature_map(clazz, val_map: Dict[str, Any]) -> Dict[str, tf.train.Feat
     return feature_map
 
 
+def with_prefix(prefix, d):
+    return {f'{prefix}__{k}': v for k, v in d.items()}
+
+
 def make_example(rows: List[Row]) -> tf.train.Example:
     # example: tf.train.Example = tf.train.Example()
 
     feature_values: Dict[str, List[Any]] = defaultdict(lambda: list())
 
+    # Convert to a row-form to a column-form
     for row in rows:
-        for k, v in dataclasses.asdict(row).items():
-            feature_values[k].append(v)
 
-    feature_map = _make_feature_map(Row, feature_values)
+        for k, v in dataclasses.asdict(row.state).items():
+            feature_values[f'{k}'].append(v)
 
+        for k, v in dataclasses.asdict(row.action).items():
+            feature_values[f'{k}'].append(v)
+
+        for k, v in dataclasses.asdict(row.reward).items():
+            feature_values[f'{k}'].append(v)
+
+    feature_map = OrderedDict()
+    feature_map.update(with_prefix('state', _make_feature_map(RState, feature_values)))
+    feature_map.update(with_prefix('action', _make_feature_map(RAction, feature_values)))
+    feature_map.update(with_prefix('reward', _make_feature_map(RReward, feature_values)))
     # Create a Features message using tf.train.Example.
 
     # TODO: Update to sequence example

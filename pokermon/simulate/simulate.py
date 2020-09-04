@@ -4,7 +4,7 @@ from typing import List, Optional, Tuple
 
 import pokermon.poker.rules as rules
 from pokermon.ai.policy import Policy
-from pokermon.data.features import make_rows
+from pokermon.data.state import make_rows
 from pokermon.poker.cards import FullDeal
 from pokermon.poker.evaluation import Evaluator
 from pokermon.poker.game import (

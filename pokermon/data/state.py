@@ -4,7 +4,7 @@ from typing import List, Tuple
 from pokermon.poker import rules
 from pokermon.poker.cards import Card, FullDeal
 from pokermon.poker.evaluation import Evaluator
-from pokermon.poker.game import Action, Game, Street, Move
+from pokermon.poker.game import Game, Action, Street, Move
 from pokermon.poker.rules import GameResults
 
 
@@ -13,17 +13,9 @@ def card_order(card: Card) -> Tuple[int, int]:
 
 
 @dataclass(frozen=True)
-class Row:
-    #
-    # Metadata
-    #
-
+class RState:
     player_index: int
     action_index: int
-
-    #
-    # State Features
-    #
 
     num_players: int
     street: int
@@ -67,17 +59,15 @@ class Row:
     # https://pypi.org/project/PokerSleuth/#history
     # https://github.com/mitpokerbots/pbots_calc
 
-    #
-    # Action Features
-    #
 
+@dataclass(frozen=True)
+class RAction:
     action_encoded: int
     amount_added: int
 
-    #
-    # Targets
-    #
 
+@dataclass(frozen=True)
+class RReward:
     # Is this the last move the player makes in the hand
     is_players_last_action: bool
 
@@ -91,6 +81,13 @@ class Row:
     cumulative_reward: int
 
     won_hand: bool
+
+
+@dataclass(frozen=True)
+class Row:
+    state: RState
+    action: RAction
+    reward: RReward
 
 
 def make_rows(
@@ -192,43 +189,52 @@ def make_rows(
 
         won_hand = a.player_index in set(results.best_hand_index)
 
-        row = Row(
-            player_index=a.player_index,
-            action_index=i,
-            num_players=game.num_players(),
-            stack_sizes=game_view.current_stack_sizes(),
-            current_player_mask=current_player_mask,
-            folded_player_mask=game_view.is_folded(),
-            all_in_player_mask=game_view.is_all_in(),
-            street=game_view.street().value,
-            amount_to_call=game_view.amount_to_call(),
-            min_raise_amount=rules.min_bet_amount(game_view),
-            hole_card_0_rank=hole_card_0_rank,
-            hole_card_0_suit=hole_card_0_suit,
-            hole_card_1_rank=hole_card_1_rank,
-            hole_card_1_suit=hole_card_1_suit,
-            flop_0_rank=flop_0_rank,
-            flop_0_suit=flop_0_suit,
-            flop_1_rank=flop_1_rank,
-            flop_1_suit=flop_1_suit,
-            flop_2_rank=flop_2_rank,
-            flop_2_suit=flop_2_suit,
-            turn_rank=turn_rank,
-            turn_suit=turn_suit,
-            river_rank=river_rank,
-            river_suit=river_suit,
-            current_hand_strength=current_hand_strength,
-            current_hand_type=current_hand_type,
-            current_hand_rank=current_hand_rank,
-            action_encoded=a.move.value,
-            amount_added=a.amount_added,
-            is_players_last_action=is_last_action[a.player_index],
-            cumulative_reward=cumulative_rewards[a.player_index],
-            instant_reward=instant_reward,
-            won_hand=won_hand,
-        )
+        rows.append(Row(
 
-        rows.append(row)
+            state=RState(
+                player_index=a.player_index,
+                action_index=i,
+                num_players=game.num_players(),
+                stack_sizes=game_view.current_stack_sizes(),
+                current_player_mask=current_player_mask,
+                folded_player_mask=game_view.is_folded(),
+                all_in_player_mask=game_view.is_all_in(),
+                street=game_view.street().value,
+                amount_to_call=game_view.amount_to_call(),
+                min_raise_amount=rules.min_bet_amount(game_view),
+                hole_card_0_rank=hole_card_0_rank,
+                hole_card_0_suit=hole_card_0_suit,
+                hole_card_1_rank=hole_card_1_rank,
+                hole_card_1_suit=hole_card_1_suit,
+                flop_0_rank=flop_0_rank,
+                flop_0_suit=flop_0_suit,
+                flop_1_rank=flop_1_rank,
+                flop_1_suit=flop_1_suit,
+                flop_2_rank=flop_2_rank,
+                flop_2_suit=flop_2_suit,
+                turn_rank=turn_rank,
+                turn_suit=turn_suit,
+                river_rank=river_rank,
+                river_suit=river_suit,
+                current_hand_strength=current_hand_strength,
+                current_hand_type=current_hand_type,
+                current_hand_rank=current_hand_rank,
+            ),
+
+            action=RAction(
+                action_encoded=a.move.value,
+                amount_added=a.amount_added,
+            ),
+
+            reward=RReward(
+                is_players_last_action=is_last_action[a.player_index],
+                cumulative_reward=cumulative_rewards[a.player_index],
+                instant_reward=instant_reward,
+                won_hand=won_hand,
+            ),
+
+        )
+        )
 
         is_last_action[a.player_index] = False
 

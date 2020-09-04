@@ -1,7 +1,7 @@
 import pytest
 import tensorflow as tf  # type: ignore
 
-from pokermon.data import features
+from pokermon.data import state
 from pokermon.data.examples import make_example, _int64_feature, _float_feature, _bytes_feature, \
     example_to_dict
 from pokermon.poker import rules
@@ -38,7 +38,7 @@ def test_empty_example() -> None:
 
     evaluator = Evaluator()
     results = rules.get_result(deal, game.view(), evaluator)
-    rows = features.make_rows(game, deal, results, evaluator)
+    rows = state.make_rows(game, deal, results, evaluator)
 
     example = make_example(rows)
 
