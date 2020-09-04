@@ -108,7 +108,7 @@ class Game:
     - At the ith timestamp, a user is deciding the move with index=i (0 indexed)
 
     A timestamp represents different states of the game
-    Returns a view of the game AFTER the timestamp'th action.  Or, equivalantly,
+    Returns a view of the game AFTER the timestamp'th action.  Or, equivalently,
     returns a view of the game when the 0-indexed action is being decided.
 
     So, if timestamp == 0, then no actions have been done.
@@ -381,3 +381,4 @@ class GameView:
         return Action(
             player_id, Move.FOLD, amount_added=0, total_bet=self.current_bet_amount()
         )
+

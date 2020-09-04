@@ -106,6 +106,8 @@ def make_rows(
 
     for i, e in reversed(list(enumerate(game.events))):
 
+
+        # What is this?
         if isinstance(e, Action):
             a = e
         else:
