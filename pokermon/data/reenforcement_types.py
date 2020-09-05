@@ -89,6 +89,7 @@ class Row:
         # the result of the current action (a bet/raise).
         cumulative_reward: int
 
+        # Did the current player eventually win the hand?
         won_hand: bool
 
     state: State
@@ -101,12 +102,12 @@ def make_rows(
 ) -> Tuple[Context, List[Row]]:
     context = Context(num_players=game.num_players(),
                       starting_stack_sizes=game.starting_stacks,
-                      total_rewards=results.winnings)
+                      total_rewards=results.profits)
 
     rows = []
 
     # Profits at the end of the game
-    cumulative_rewards: List[int] = results.winnings
+    cumulative_rewards: List[int] = results.earned_at_showdown
 
     is_last_action: List[bool] = [True for _ in range(game.num_players())]
 
@@ -128,6 +129,10 @@ def make_rows(
         # of the future cumulative winnings / losses
         # print(cumulative_rewards, a.player_index, a.amount_added)
         cumulative_rewards[a.player_index] -= a.amount_added
+
+        instant_reward = a.amount_added
+        if is_last_action[a.player_index]:
+            instant_reward += results.earned_at_showdown[a.player_index]
 
         # Since Small/Big blinds are forced actions, we don't generate
         # rows for them
@@ -192,10 +197,6 @@ def make_rows(
             current_hand_strength = -1
             current_hand_type = -1
             current_hand_rank = -1
-
-        instant_reward = 0
-        if is_last_action[a.player_index]:
-            instant_reward = results.winnings[a.player_index]
 
         won_hand = a.player_index in set(results.best_hand_index)
 

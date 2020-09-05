@@ -30,7 +30,7 @@ def to_decues_card(card: Card) -> DeucesCard:
 
 
 def to_deuces_hand(hole_cards: HoleCards) -> Tuple[DeucesCard, DeucesCard]:
-    return (to_decues_card(hole_cards[0]), to_decues_card(hole_cards[1]))
+    return to_decues_card(hole_cards[0]), to_decues_card(hole_cards[1])
 
 
 def to_deuces_board(

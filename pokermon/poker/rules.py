@@ -21,10 +21,17 @@ class GameResults:
     # If multiple players have the best hand (a tie), return a list of all player indices.
     best_hand_index: List[int]
 
-    hands: Dict[int, EvaluationResult]
+    # A map of the player indices to their final hand (is this for all players
+    # or just players who went to showdown?)
+    hands: List[EvaluationResult]
 
-    # The amount of money won by this player at the end of the hand (not profit)
-    winnings: List[int]
+    # Whether each player went to showdown (or, if they were the last player
+    # after everyone else folded, which we consider to be a 1-player showdown).
+    # In other words, showdown == !folded
+    went_to_showdown: List[bool]
+
+    # The amount of money won by each player at the end of the hand (not profit)
+    earned_at_showdown: List[int]
 
     # The actual profits, in small blinds, won or list by each player during this game
     profits: List[int]
@@ -249,19 +256,22 @@ def pot_per_winning_player(pot_size: int, winning_players: List[int]) -> Dict[in
 def get_result(cards: FullDeal, game: GameView, evaluator: Evaluator) -> GameResults:
     # Calculate who has the best hand
 
-    showdown_hands: Dict[int, EvaluationResult] = {}
+    all_hands: List[EvaluationResult] = []
+
+    went_to_showdown: List[bool] = []
 
     for player_index in range(game.num_players()):
+        hole_cards = cards.hole_cards[player_index]
+        board = cards.board
 
-        if not game.is_folded()[player_index]:
-            hole_cards = cards.hole_cards[player_index]
-            board = cards.board
+        eval_result: EvaluationResult = evaluator.evaluate(hole_cards, board)
 
-            eval_result: EvaluationResult = evaluator.evaluate(hole_cards, board)
+        all_hands.append(eval_result)
 
-            showdown_hands[player_index] = eval_result
+        went_to_showdown.append(not game.is_folded()[player_index])
 
-    winning_players = get_winning_players(showdown_hands)
+    winning_players = get_winning_players({idx: hand for idx, hand in enumerate(all_hands)
+                                           if went_to_showdown[idx]})
 
     profit_per_player = [-1 * amount_bet for amount_bet in game.amount_added_total()]
 
@@ -270,19 +280,17 @@ def get_result(cards: FullDeal, game: GameView, evaluator: Evaluator) -> GameRes
     for amount in game.amount_added_total():
         pot_size += amount
 
-    winnings_per_player = [0 for _ in range(game.num_players())]
-    for player_index, winnings in pot_per_winning_player(
+    earned_at_showdown = [0 for _ in range(game.num_players())]
+    for player_index, earning in pot_per_winning_player(
         pot_size, winning_players
     ).items():
-        winnings_per_player[player_index] += winnings
-        profit_per_player[player_index] += winnings
+        earned_at_showdown[player_index] += earning
+        profit_per_player[player_index] += earning
 
     return GameResults(
         best_hand_index=winning_players,
-        hands=showdown_hands,
-        winnings=winnings_per_player,
-        profits=[
-            profit_per_player[player_index]
-            for player_index in range(game.num_players())
-        ],
+        hands=all_hands,
+        went_to_showdown=went_to_showdown,
+        earned_at_showdown=earned_at_showdown,
+        profits=profit_per_player,
     )
