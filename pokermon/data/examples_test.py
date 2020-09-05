@@ -8,6 +8,7 @@ from pokermon.poker import rules
 from pokermon.poker.cards import Board, FullDeal, mkcard, mkflop, mkhand
 from pokermon.poker.evaluation import Evaluator
 from pokermon.poker.game import Game, Street
+from pokermon.poker.game_runner import GameRunner
 
 
 def test_fold_preflop() -> None:
@@ -17,19 +18,15 @@ def test_fold_preflop() -> None:
         board=Board(flop=mkflop("KsJs3d"), turn=mkcard("7s"), river=mkcard("6s")),
     )
 
-    game = Game(starting_stacks=[100, 200, 300])
-
-    game.set_street(Street.PREFLOP)
-    game.add_action(game.view().small_blind())
-    game.add_action(game.view().big_blind())
-    game.add_action(game.view().bet_raise(to=10))
-    game.add_action(game.view().fold())
-    game.add_action(game.view().fold())
-    game.end_hand()
+    game = GameRunner(starting_stacks=[200, 200, 200])
+    game.start_game()
+    game.bet_raise(to=10)
+    game.fold()
+    game.fold()
 
     evaluator = Evaluator()
-    results = rules.get_result(deal, game.view(), evaluator)
-    context, rows = reenforcement_types.make_rows(game, deal, results, evaluator)
+    results = rules.get_result(deal, game.game_view(), evaluator)
+    context, rows = reenforcement_types.make_rows(game.game, deal, results, evaluator)
 
     example = make_example(context, rows)
 
@@ -37,7 +34,7 @@ def test_fold_preflop() -> None:
 
     # Context Features
     assert example_dict['context']['num_players'] == [3]
-    assert example_dict['context']['starting_stack_sizes'] == [100, 200, 300]
+    assert example_dict['context']['starting_stack_sizes'] == [200, 200, 200]
 
     # Player 3 (UTG) wins the blinds, the others lose their blinds
     assert example_dict['context']['total_rewards'] == [-1, -2, 3]
@@ -49,8 +46,7 @@ def test_fold_preflop() -> None:
     assert example_dict['features']['action__amount_added'] == [[10], [0], [0]]
 
     # These are the states before the action (the blinds have already taken place)
-    assert example_dict['features']['state__stack_sizes'] == [[99, 198, 300], [99, 198, 290],
-                                                              [99, 198, 290]]
+    assert example_dict['features']['state__stack_sizes'] == [[199, 198, 200], [199, 198, 190], [199, 198, 190]]
 
     # Hole Cards 0: Jc Ac As
     # Hole Cards 1: Jh Ad Kh
@@ -70,37 +66,34 @@ def test_full_hand() -> None:
         board=Board(flop=mkflop("KdJs3d"), turn=mkcard("7s"), river=mkcard("6s")),
     )
 
-    game = Game(starting_stacks=[100, 200, 300, 200])
+    game = GameRunner(starting_stacks=[300, 300, 300, 300])
+    game.start_game()
 
-    game.set_street(Street.PREFLOP)
-    game.add_action(game.view().small_blind())
-    game.add_action(game.view().big_blind())
-    game.add_action(game.view().bet_raise(to=10))
-    game.add_action(game.view().fold())
-    game.add_action(game.view().bet_raise(to=25))
-    game.add_action(game.view().call())
-    game.add_action(game.view().call())
+    # Preflop
+    game.bet_raise(to=10)
+    game.fold()
+    game.bet_raise(to=25)
+    game.call()
+    game.call()
 
-    game.set_street(Street.FLOP)
-    game.add_action(game.view().bet_raise(to=40))
-    game.add_action(game.view().call())
-    game.add_action(game.view().fold())
+    # Flop
+    game.bet_raise(to=40)
+    game.call()
+    game.fold()
 
-    game.set_street(Street.TURN)
-    game.add_action(game.view().call())
-    game.add_action(game.view().bet_raise(to=60))
-    game.add_action(game.view().call())
+    # Turn
+    game.check()
+    game.bet_raise(to=60)
+    game.call()
 
-    game.set_street(Street.RIVER)
-    game.add_action(game.view().call())
-    game.add_action(game.view().bet_raise(to=100))
-    game.add_action(game.view().call())
-
-    game.end_hand()
+    # River
+    game.check()
+    game.bet_raise(to=100)
+    game.call()
 
     evaluator = Evaluator()
-    results = rules.get_result(deal, game.view(), evaluator)
-    context, rows = reenforcement_types.make_rows(game, deal, results, evaluator)
+    results = rules.get_result(deal, game.game_view(), evaluator)
+    context, rows = reenforcement_types.make_rows(game.game, deal, results, evaluator)
 
     example = make_example(context, rows)
 
