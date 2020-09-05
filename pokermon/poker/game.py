@@ -313,6 +313,26 @@ class GameView:
             current_stack_size == 0 for current_stack_size in self.current_stack_sizes()
         ]
 
+    #
+    # Actions
+    #
+
+    @functools.lru_cache()
+    def small_blind(self) -> Action:
+        return Action(
+            self.current_player(),
+            Move.SMALL_BLIND,
+            total_bet=SMALL_BLIND_AMOUNT,
+            amount_added=SMALL_BLIND_AMOUNT,
+        )
+
+    @functools.lru_cache()
+    def big_blind(self) -> Action:
+        return Action(
+            self.current_player(), Move.BIG_BLIND, total_bet=BIG_BLIND_AMOUNT,
+            amount_added=BIG_BLIND_AMOUNT
+        )
+
     @functools.lru_cache()
     def call(self) -> Action:
         player_index = self.current_player()

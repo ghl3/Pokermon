@@ -12,6 +12,7 @@ from pokermon.poker.cards import (
 )
 from pokermon.poker.evaluation import Evaluator
 from pokermon.poker.game import Game, Move, Street
+from pokermon.poker.game_runner import GameRunner
 
 
 def test_full_game_features():
@@ -23,39 +24,38 @@ def test_full_game_features():
         board=Board(flop=mkflop("KsJs3d"), turn=mkcard("7s"), river=mkcard("6s")),
     )
 
-    game = Game(starting_stacks=[100, 200, 300])
+    game = GameRunner(starting_stacks=[300, 300, 300])
+    game.start_game()
 
-    game.set_street(Street.PREFLOP)
-    game.add_action(game.view().small_blind())
-    game.add_action(game.view().big_blind())
-    game.add_action(game.view().bet_raise(to=10))
-    game.add_action(game.view().call())
-    game.add_action(game.view().call())
+    # Preflop
+    game.bet_raise(to=10)
+    game.call()
+    game.call()
 
     # Flop
-    game.set_street(Street.FLOP)
-    game.add_action(game.view().call())
-    game.add_action(game.view().call())
-    game.add_action(game.view().call())
+    game.check()
+    game.check()
+    game.check()
 
     # Turn
-    game.set_street(Street.TURN)
-    game.add_action(game.view().bet_raise(to=20))
-    game.add_action(game.view().fold())  # Action Index = 9
-    game.add_action(game.view().call())
+    game.bet_raise(to=20)
+    game.fold()
+    game.call()
 
     # River
-    game.set_street(Street.RIVER)
-    game.add_action(game.view().call())
-    game.add_action(game.view().bet_raise(to=30))
-    game.add_action(game.view().call())
+    game.check()
+    game.bet_raise(to=30)
+    game.call()
 
-    game.end_hand()
+    # Player 0 loses with Aces.  They called 10 on the flop, bet 20 on te turn, and called 30 on
+    # the river. Player 1 called 10 on the flop but folded the turn. Player 2 wins with a flush.
+    # They called 10 on the flop, called 20 on the turn, and bet 30 on the river. Player 2 should
+    # net 2*10 + 20 + 30 = 70 total.  The total pot at the end is 3*10 + 2*20 + 2*30 = 130
 
     evaluator = Evaluator()
-    results = rules.get_result(deal, game.view(), evaluator)
+    results = rules.get_result(deal, game.game_view(), evaluator)
 
-    _, rows = reenforcement_types.make_rows(game, deal, results, evaluator)
+    _, rows = reenforcement_types.make_rows(game.game, deal, results, evaluator)
 
     # 12 decisions made throughout the hand
     assert len(rows) == 12
@@ -65,7 +65,7 @@ def test_full_game_features():
     assert row.state.current_player_mask == [0, 0, 1]
     assert row.state.all_in_player_mask == [0, 0, 0]
     assert row.state.folded_player_mask == [0, 0, 0]
-    assert row.state.stack_sizes == [99, 198, 300]
+    assert row.state.stack_sizes == [299, 298, 300]
     assert row.state.min_raise_amount == 2
     assert row.state.street == Street.PREFLOP.value
     assert row.state.current_hand_type == -1
@@ -73,7 +73,7 @@ def test_full_game_features():
     assert row.state.river_suit == -1
     assert row.action.action_encoded == Move.BET_RAISE.value
     assert row.action.amount_added == 10
-    assert row.reward.instant_reward == 0
+    assert row.reward.instant_reward == -10
     assert row.reward.cumulative_reward == 70
     assert row.reward.won_hand is True
     assert row.reward.is_players_last_action is False
@@ -83,7 +83,7 @@ def test_full_game_features():
     assert row.state.current_player_mask == [0, 1, 0]
     assert row.state.all_in_player_mask == [0, 0, 0]
     assert row.state.folded_player_mask == [0, 0, 0]
-    assert row.state.stack_sizes == [70, 190, 290]
+    assert row.state.stack_sizes == [270, 290, 290]
     assert row.state.min_raise_amount == 20
     assert row.state.street == Street.TURN.value
     assert row.state.current_hand_type == HandType.PAIR.value
@@ -105,7 +105,7 @@ def test_full_game_features():
     assert row.state.current_player_mask == [0, 0, 1]
     assert row.state.all_in_player_mask == [0, 0, 0]
     assert row.state.folded_player_mask == [0, 1, 0]
-    assert row.state.stack_sizes == [70, 190, 270]
+    assert row.state.stack_sizes == [270, 290, 270]
     assert row.state.amount_to_call == [0, 0, 0]
     assert row.state.min_raise_amount == 2
     assert row.state.street == Street.RIVER.value
@@ -128,7 +128,7 @@ def test_full_game_features():
     assert row.state.current_player_mask == [1, 0, 0]
     assert row.state.all_in_player_mask == [0, 0, 0]
     assert row.state.folded_player_mask == [0, 1, 0]
-    assert row.state.stack_sizes == [70, 190, 240]
+    assert row.state.stack_sizes == [270, 290, 240]
     assert row.state.amount_to_call == [30, 30, 0]
     assert row.state.min_raise_amount == 30
     assert row.state.street == Street.RIVER.value
@@ -152,21 +152,16 @@ def test_fold_preflop_features():
         board=Board(flop=mkflop("KsJs3d"), turn=mkcard("7s"), river=mkcard("6s")),
     )
 
-    game = Game(starting_stacks=[100, 200, 300])
-
-    game.set_street(Street.PREFLOP)
-    game.add_action(game.view().small_blind())
-    game.add_action(game.view().big_blind())
-    game.add_action(game.view().bet_raise(to=10))
-    game.add_action(game.view().fold())
-    game.add_action(game.view().fold())
-
-    game.end_hand()
+    game = GameRunner(starting_stacks=[300, 300, 300])
+    game.start_game()
+    game.bet_raise(to=10)
+    game.fold()
+    game.fold()
 
     evaluator = Evaluator()
-    results = rules.get_result(deal, game.view(), evaluator)
+    results = rules.get_result(deal, game.game_view(), evaluator)
 
-    _, rows = reenforcement_types.make_rows(game, deal, results, evaluator)
+    _, rows = reenforcement_types.make_rows(game.game, deal, results, evaluator)
 
     assert len(rows) == 3
 
@@ -175,7 +170,7 @@ def test_fold_preflop_features():
     assert row.state.current_player_mask == [0, 0, 1]
     assert row.state.all_in_player_mask == [0, 0, 0]
     assert row.state.folded_player_mask == [0, 0, 0]
-    assert row.state.stack_sizes == [99, 198, 300]
+    assert row.state.stack_sizes == [299, 298, 300]
     assert row.state.min_raise_amount == 2
     assert row.state.street == Street.PREFLOP.value
     assert row.state.current_hand_type == -1
@@ -194,7 +189,7 @@ def test_fold_preflop_features():
     assert row.state.current_player_mask == [1, 0, 0]
     assert row.state.all_in_player_mask == [0, 0, 0]
     assert row.state.folded_player_mask == [0, 0, 0]
-    assert row.state.stack_sizes == [99, 198, 290]
+    assert row.state.stack_sizes == [299, 298, 290]
     assert row.state.min_raise_amount == 8
     assert row.state.street == Street.PREFLOP.value
     assert row.state.current_hand_type == -1
@@ -216,7 +211,7 @@ def test_fold_preflop_features():
     assert row.state.current_player_mask == [0, 1, 0]
     assert row.state.all_in_player_mask == [0, 0, 0]
     assert row.state.folded_player_mask == [1, 0, 0]
-    assert row.state.stack_sizes == [99, 198, 290]
+    assert row.state.stack_sizes == [299, 298, 290]
     assert row.state.amount_to_call == [9, 8, 0]
     assert row.state.min_raise_amount == 8
     assert row.state.street == Street.PREFLOP.value

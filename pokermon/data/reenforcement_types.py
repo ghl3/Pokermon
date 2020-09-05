@@ -80,13 +80,14 @@ class Row:
         # Is this the last move the player makes in the hand
         is_players_last_action: bool
 
-        # The amount earned as a result of this move.  Will be negative if the player
-        # bets on this turn and it isn't their last turn.  May be negative or positive
-        # if it's their last turn (depending on whether they bet and whether they win).
+        # The amount earned immediately (before this player's next decision) as a result of this
+        # # move.  Will be negative if the player bets on this turn and it isn't their last turn.
+        # May be negative or positive if it's their last turn (depending on whether they bet and
+        # whether they win).
         instant_reward: int
 
         # The net amount the player earns or loses for the rest of the hand, including
-        # the result of the current action (a bet/raise).
+        # the result of the current action (a bet/raise).  Ignores any previous gains/losses.
         cumulative_reward: int
 
         # Did the current player eventually win the hand?
@@ -106,7 +107,7 @@ def make_rows(
 
     rows = []
 
-    # Profits at the end of the game
+    # Profits between now and the end of the hand
     cumulative_rewards: List[int] = results.earned_at_showdown
 
     is_last_action: List[bool] = [True for _ in range(game.num_players())]
@@ -130,9 +131,10 @@ def make_rows(
         # print(cumulative_rewards, a.player_index, a.amount_added)
         cumulative_rewards[a.player_index] -= a.amount_added
 
-        instant_reward = a.amount_added
         if is_last_action[a.player_index]:
-            instant_reward += results.earned_at_showdown[a.player_index]
+            instant_reward = cumulative_rewards[a.player_index]
+        else:
+            instant_reward = -1 * a.amount_added
 
         # Since Small/Big blinds are forced actions, we don't generate
         # rows for them

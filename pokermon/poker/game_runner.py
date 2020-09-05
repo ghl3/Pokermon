@@ -100,18 +100,10 @@ class GameRunner:
                 amount_to_call=self.game_view().amount_to_call()[player_index])
 
     def add_small_blind(self) -> Result:
-        return self.advance(Action(
-            self.game_view().current_player(),
-            Move.SMALL_BLIND,
-            total_bet=SMALL_BLIND_AMOUNT,
-            amount_added=SMALL_BLIND_AMOUNT,
-        ))
+        return self.advance(self.game_view().small_blind())
 
     def add_big_blind(self) -> Result:
-        return self.advance(Action(
-            self.game_view().current_player(), Move.BIG_BLIND, total_bet=BIG_BLIND_AMOUNT,
-            amount_added=BIG_BLIND_AMOUNT
-        ))
+        return self.advance(self.game_view().big_blind())
 
     def call(self) -> Result:
         return self.advance(self.game_view().call())

@@ -246,6 +246,7 @@ def test_blinds():
     assert game.view().small_blind() == Action(
         0, Move.SMALL_BLIND, total_bet=1, amount_added=1
     )
+    game.add_action(game.view().small_blind())
 
     assert game.view().big_blind() == Action(
         1, Move.BIG_BLIND, total_bet=2, amount_added=2
