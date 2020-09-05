@@ -176,7 +176,7 @@ class GameView:
             ) % self.num_players()
 
         for player in self._player_list(starting_player):
-            if not self.is_folded()[player]:
+            if not self.is_folded()[player] and not self.is_all_in()[player]:
                 return player
 
         return -1
@@ -313,72 +313,4 @@ class GameView:
         return [
             current_stack_size == 0 for current_stack_size in self.current_stack_sizes()
         ]
-
-    @functools.lru_cache()
-    def small_blind(self) -> Action:
-        return Action(
-            0,
-            Move.SMALL_BLIND,
-            total_bet=SMALL_BLIND_AMOUNT,
-            amount_added=SMALL_BLIND_AMOUNT,
-        )
-
-    @functools.lru_cache()
-    def big_blind(self) -> Action:
-        return Action(
-            1, Move.BIG_BLIND, total_bet=BIG_BLIND_AMOUNT, amount_added=BIG_BLIND_AMOUNT
-        )
-
-    @functools.lru_cache()
-    def call(self) -> Action:
-        player_index = self.current_player()
-
-        amount_to_call = self.amount_to_call()[player_index]
-        player_stack = self.current_stack_sizes()[player_index]
-
-        if amount_to_call < player_stack:
-            return Action(
-                player_index,
-                Move.CHECK_CALL,
-                amount_added=amount_to_call,
-                total_bet=self.current_bet_amount(),
-            )
-        else:
-            return Action(
-                player_index,
-                Move.CHECK_CALL,
-                amount_added=player_stack,
-                total_bet=self.current_bet_amount(),
-            )
-
-    @functools.lru_cache()
-    def bet_raise(
-        self, to: Optional[int] = None, raise_amount: Optional[int] = None
-    ) -> Action:
-
-        player_id = self.current_player()
-
-        if to is not None and raise_amount is not None:
-            raise Exception()
-
-        elif to is not None:
-            new_bet_size = to
-            amount_to_add = to - self.amount_added_in_street()[player_id]
-
-        elif raise_amount is not None:
-            new_bet_size = self.current_bet_amount() + raise_amount
-            amount_to_add = new_bet_size - self.amount_added_in_street()[player_id]
-
-        else:
-            raise Exception()
-
-        # This may be an invalid raise, but this will be caught downstream
-        return Action(player_id, Move.BET_RAISE, amount_to_add, new_bet_size)
-
-    @functools.lru_cache()
-    def fold(self) -> Action:
-        player_id = self.current_player()
-        return Action(
-            player_id, Move.FOLD, amount_added=0, total_bet=self.current_bet_amount()
-        )
 
