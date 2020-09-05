@@ -1,6 +1,5 @@
-import itertools
 import logging
-from typing import List, Optional, Tuple
+from typing import List, Tuple
 
 import pokermon.poker.rules as rules
 from pokermon.ai.policy import Policy
@@ -8,14 +7,10 @@ from pokermon.data.reenforcement_types import make_rows
 from pokermon.poker.cards import FullDeal
 from pokermon.poker.evaluation import Evaluator
 from pokermon.poker.game import (
-    BIG_BLIND_AMOUNT,
-    SMALL_BLIND_AMOUNT,
-    Action,
     Game,
-    GameView,
-    Move,
     Street,
 )
+from pokermon.poker.game_runner import GameRunner
 from pokermon.poker.rules import GameResults
 
 logger = logging.getLogger(__name__)
@@ -34,105 +29,44 @@ def simulate(
 
     logger.debug("Simulating game with %s players", len(players))
 
-    game = Game(starting_stacks=starting_stacks)
-
-    action_index = 0
-
-    # For now, only support players having the same starting stacks.
-    # This avoids having to implement side pots.
-    # TODO: Support Side Pots
-    assert len(set(starting_stacks)) == 1
+    game_runner = GameRunner(starting_stacks=starting_stacks)
 
     logger.info("Hole Cards: %s", deal.hole_cards)
 
-    for street in [Street.PREFLOP, Street.FLOP, Street.TURN, Street.RIVER]:
+    game_runner.start_game()
 
-        logger.debug("Starting Street: %s", street)
+    while True:
 
-        game.set_street(street)
+        player_index = game_runner.current_player()
+        action_index = game_runner.action_index
+        current_bet_amount = game_runner.game_view().current_bet_amount()
+        amount_to_call = game_runner.game_view().amount_to_call()[player_index]
 
-        if game.current_street() == Street.FLOP:
-            logger.info("Flop: %s", deal.board.flop)
-        elif game.current_street() == Street.TURN:
-            logger.info("Turn: %s", deal.board.turn)
-        elif game.current_street() == Street.RIVER:
-            logger.info("River: %s", deal.board.river)
+        logger.info(f"Street: {game_runner.street()} Player Turn: {player_index} "
+                    f"Total Bet: {current_bet_amount} Amount to call: {amount_to_call}")
 
-        for player_index, player in itertools.cycle(enumerate(players)):
+        # Get the player's move
+        player = players[player_index]
+        hand = deal.hole_cards[player_index]
+        action = player.action(player_index, hand, game_runner.game_view())
 
-            game_view = game.view()
+        if action is None:
+            raise Exception("Invalid Action")
+        logger.debug("Action %s Player %s: %s", action_index, player_index, action)
 
-            if rules.street_over(game_view):
-                break
+        action_result = game_runner.advance(action)
 
-            if game_view.is_folded()[player_index]:
-                logger.debug("Player %s is folded", player_index)
-                continue
-
-            if game_view.is_all_in()[player_index]:
-                logger.debug("Player %s is all in", player_index)
-                continue
-
-            action = _get_action(action_index, player, player_index, game_view, deal)
-
-            # Action is None if the player has already folded or gone all in.
-            if action is None:
-                raise Exception("Invalid Action")
-
-            logger.debug("Action %s Player %s: %s", action_index, player_index, action)
-
-            action_result = rules.action_valid(
-                action_index=action_index,
-                player_index=player_index,
-                action=action,
-                game=game_view,
-            )
-
-            if not action_result.is_valid():
-                logger.error("Action is invalid %s %s", action, action_result)
-                raise Exception("Action is invalid", action, action_result)
-            else:
-                game.add_action(action)
-                action_index += 1
-
-    game.end_hand()
+        if action_result.street == Street.OVER:
+            logger.debug("Hand Over")
+            break
 
     evaluator = Evaluator()
 
-    result = rules.get_result(deal, game.view(), evaluator)
+    result = rules.get_result(deal, game_runner.game_view(), evaluator)
 
     logger.info("Result: %s", result)
 
-    for row in make_rows(game, deal, result, evaluator):
+    for row in make_rows(game_runner.game, deal, result, evaluator):
         print(row)
 
-    return (game, result)
-
-
-def _get_action(
-    action_index: int,
-    player: Policy,
-    player_index: int,
-    game_view: GameView,
-    deal: FullDeal,
-) -> Optional[Action]:
-    # Post the small blind
-    if action_index == 0:
-        return Action(
-            player_index,
-            Move.SMALL_BLIND,
-            amount_added=SMALL_BLIND_AMOUNT,
-            total_bet=SMALL_BLIND_AMOUNT,
-        )
-
-    # Post the big blind
-    if action_index == 1:
-        return Action(
-            player_index,
-            Move.BIG_BLIND,
-            amount_added=BIG_BLIND_AMOUNT,
-            total_bet=BIG_BLIND_AMOUNT,
-        )
-
-    hand = deal.hole_cards[player_index]
-    return player.action(player_index, hand, game_view)
+    return game_runner.game, result
