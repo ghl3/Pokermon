@@ -1,3 +1,5 @@
+# /usr/bin/env python
+
 import argparse
 import logging
 import sys
@@ -23,14 +25,16 @@ def main():
     )
 
     parser.add_argument(
-        "-log", "--log", nargs="+", help="Provide logging level. Example --log debug'"
+        "-log", "--log", help="Provide logging level. Example --log debug'",
+        type=str,
+        default='DEBUG'
     )
 
     args = parser.parse_args()
 
     # Configure the logger
     format = "[%(asctime)s] %(pathname)s:%(lineno)d %(levelname)s - %(message)s"
-    log_level = getattr(logging, args.log[0])
+    log_level = getattr(logging, args.log)
     logging.basicConfig(level=log_level, format=format)
 
     players: List[Policy] = [policies.POLICIES[player] for player in args.player]

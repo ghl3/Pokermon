@@ -7,7 +7,6 @@ from typing import Dict, Iterable, List, Optional, Union
 
 from pokermon.poker.ordered_enum import OrderedEnum
 
-
 """
 An important concept in a game is the timestamp.  A timestamp connects two ideas:
 - An index into events
@@ -164,7 +163,7 @@ class GameView:
         all_players_twice = list(range(self.num_players())) + list(
             range(self.num_players())
         )
-        return all_players_twice[starting_player : starting_player + self.num_players()]
+        return all_players_twice[starting_player: starting_player + self.num_players()]
 
     @functools.lru_cache()
     def current_player(self) -> int:
@@ -172,8 +171,8 @@ class GameView:
             starting_player = 0
         else:
             starting_player = (
-                self.street_action()[-1].player_index + 1
-            ) % self.num_players()
+                                  self.street_action()[-1].player_index + 1
+                              ) % self.num_players()
 
         for player in self._player_list(starting_player):
             if not self.is_folded()[player] and not self.is_all_in()[player]:
@@ -314,3 +313,59 @@ class GameView:
             current_stack_size == 0 for current_stack_size in self.current_stack_sizes()
         ]
 
+    @functools.lru_cache()
+    def call(self) -> Action:
+        player_index = self.current_player()
+
+        amount_to_call = self.amount_to_call()[player_index]
+        player_stack = self.current_stack_sizes()[player_index]
+
+        if amount_to_call < player_stack:
+            return Action(
+                player_index,
+                Move.CHECK_CALL,
+                amount_added=amount_to_call,
+                total_bet=self.current_bet_amount(),
+            )
+        else:
+            return Action(
+                player_index,
+                Move.CHECK_CALL,
+                amount_added=player_stack,
+                total_bet=self.current_bet_amount(),
+            )
+
+    @functools.lru_cache()
+    def check(self) -> Action:
+        return self.call()
+
+    @functools.lru_cache()
+    def bet_raise(
+        self, to: Optional[int] = None, raise_amount: Optional[int] = None
+    ) -> Action:
+
+        player_index = self.current_player()
+
+        if to is not None and raise_amount is not None:
+            raise Exception()
+
+        elif to is not None:
+            new_bet_size = to
+            amount_to_add = to - self.amount_added_in_street()[player_index]
+
+        elif raise_amount is not None:
+            new_bet_size = self.current_bet_amount() + raise_amount
+            amount_to_add = new_bet_size - self.amount_added_in_street()[player_index]
+
+        else:
+            raise Exception()
+
+        # This may be an invalid raise, but this will be caught downstream
+        return Action(player_index, Move.BET_RAISE, amount_to_add, new_bet_size)
+
+    @functools.lru_cache()
+    def fold(self) -> Action:
+        player_index = self.current_player()
+        return Action(
+            player_index, Move.FOLD, amount_added=0, total_bet=self.current_bet_amount()
+        )
