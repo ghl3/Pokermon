@@ -8,18 +8,18 @@ from pokermon.poker.game import Action, Game, Street
 logger = logging.getLogger(__name__)
 
 
+@dataclass(frozen=True)
+class Result:
+    street: Street
+
+    current_player: Optional[int] = None
+
+    total_bet: Optional[int] = None
+
+    amount_to_call: Optional[int] = None
+
+
 class GameRunner:
-    @dataclass(frozen=True)
-    class Result:
-
-        street: Street
-
-        current_player: Optional[int] = None
-
-        total_bet: Optional[int] = None
-
-        amount_to_call: Optional[int] = None
-
     def __init__(self, starting_stacks):
         # For now, only support players having the same starting stacks.
         # This avoids having to implement side pots.
@@ -85,9 +85,9 @@ class GameRunner:
         # Return the current state of the game
 
         if self.game_view().street() == Street.OVER:
-            return GameRunner.Result(street=self.game_view().street())
+            return Result(street=self.game_view().street())
         else:
-            return GameRunner.Result(
+            return Result(
                 street=self.game_view().street(),
                 current_player=self.game_view().current_player(),
                 total_bet=self.game_view().current_bet_amount(),

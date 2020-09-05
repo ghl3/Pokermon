@@ -59,7 +59,7 @@ class Metadata(Enum):
 
 
 @dataclass
-class Result:
+class ValidationResult:
     error: Optional[Error]
 
     metadata: Dict[Metadata, Any]
@@ -68,7 +68,7 @@ class Result:
         return self.error is None
 
 
-MOVE_OK = Result(None, {})
+MOVE_OK = ValidationResult(None, {})
 
 
 def min_bet_amount(game: GameView) -> int:
@@ -79,48 +79,48 @@ def min_bet_amount(game: GameView) -> int:
 
 def action_valid(
     action_index: int, player_index: int, action: Action, game: GameView
-) -> Result:
+) -> ValidationResult:
     amount_to_call = game.amount_to_call()[player_index]
     player_stack = game.current_stack_sizes()[player_index]
     amount_already_addded = game.amount_added_in_street()[player_index]
 
     if action_index == 0:
         if action.move != Move.SMALL_BLIND:
-            return Result(
+            return ValidationResult(
                 Error.SMALL_BLIND_REQUIRED, {Metadata.BLIND_AMOUNT: SMALL_BLIND_AMOUNT}
             )
         if action.amount_added != SMALL_BLIND_AMOUNT:
-            return Result(
+            return ValidationResult(
                 Error.INVALID_AMOUNT_ADDED, {Metadata.BLIND_AMOUNT: SMALL_BLIND_AMOUNT}
             )
         if action.total_bet != SMALL_BLIND_AMOUNT:
-            return Result(
+            return ValidationResult(
                 Error.INVAID_TOTAL_BET, {Metadata.BLIND_AMOUNT: SMALL_BLIND_AMOUNT}
             )
         return MOVE_OK
 
     elif action_index == 1:
         if action.move != Move.BIG_BLIND:
-            return Result(
+            return ValidationResult(
                 Error.BIG_BLIND_REQUIRED, {Metadata.BLIND_AMOUNT: BIG_BLIND_AMOUNT}
             )
         if action.amount_added != BIG_BLIND_AMOUNT:
-            return Result(
+            return ValidationResult(
                 Error.INVALID_AMOUNT_ADDED, {Metadata.BLIND_AMOUNT: BIG_BLIND_AMOUNT}
             )
         if action.total_bet != BIG_BLIND_AMOUNT:
-            return Result(
+            return ValidationResult(
                 Error.INVAID_TOTAL_BET, {Metadata.BLIND_AMOUNT: BIG_BLIND_AMOUNT}
             )
         return MOVE_OK
 
     elif action.move == Move.FOLD:
         if action.amount_added != 0:
-            return Result(
+            return ValidationResult(
                 Error.INVALID_AMOUNT_ADDED, {Metadata.AMOUNT_ADDED_SHOULD_BE: 0}
             )
         if action.total_bet != game.current_bet_amount():
-            return Result(
+            return ValidationResult(
                 Error.INVALID_AMOUNT_ADDED,
                 {Metadata.TOTAL_BET_SHOULD_BE: game.current_bet_amount()},
             )
@@ -131,13 +131,13 @@ def action_valid(
         if amount_to_call <= player_stack:
 
             if action.amount_added != amount_to_call:
-                return Result(
+                return ValidationResult(
                     Error.INVALID_AMOUNT_ADDED,
                     {Metadata.AMOUNT_ADDED_SHOULD_BE: amount_to_call},
                 )
 
             if action.total_bet != game.current_bet_amount():
-                return Result(
+                return ValidationResult(
                     Error.INVAID_TOTAL_BET,
                     {Metadata.TOTAL_BET_SHOULD_BE: game.current_bet_amount()},
                 )
@@ -148,13 +148,13 @@ def action_valid(
             # Player calls all in
 
             if action.amount_added != player_stack:
-                return Result(
+                return ValidationResult(
                     Error.INVALID_AMOUNT_ADDED,
                     {Metadata.AMOUNT_ADDED_SHOULD_BE: player_stack},
                 )
 
             if action.total_bet != game.current_bet_amount():
-                return Result(
+                return ValidationResult(
                     Error.INVAID_TOTAL_BET,
                     {Metadata.TOTAL_BET_SHOULD_BE: game.current_bet_amount()},
                 )
@@ -164,7 +164,7 @@ def action_valid(
     elif action.move == Move.BET_RAISE:
 
         if action.amount_added > player_stack:
-            return Result(
+            return ValidationResult(
                 Error.INVALID_AMOUNT_ADDED,
                 {Metadata.AMOUNT_ADDED_SHOULD_BE_LE: player_stack},
             )
@@ -176,7 +176,7 @@ def action_valid(
             required_total_bet = player_stack + amount_already_addded
 
             if action.total_bet != required_total_bet:
-                return Result(
+                return ValidationResult(
                     Error.INVAID_TOTAL_BET,
                     {Metadata.TOTAL_BET_SHOULD_BE: required_total_bet},
                 )
@@ -191,14 +191,14 @@ def action_valid(
 
             # Player must raise at least as much as the previous raise.
             if action.total_bet - game.current_bet_amount() < min_bet_amount:
-                return Result(
+                return ValidationResult(
                     Error.MIN_RAISE_REQUIRED,
                     {Metadata.RAISE_MUST_BE_GE: min_bet_amount},
                 )
 
             return MOVE_OK
 
-    return Result(Error.UNKNOWN_MOVE, {})
+    return ValidationResult(Error.UNKNOWN_MOVE, {})
 
 
 def street_over(game: GameView) -> bool:

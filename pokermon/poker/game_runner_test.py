@@ -1,5 +1,5 @@
 from pokermon.poker.game import Action, Move, Street
-from pokermon.poker.game_runner import GameRunner
+from pokermon.poker.game_runner import GameRunner, Result
 
 
 def test_call():
@@ -17,40 +17,40 @@ def test_call():
     assert game.current_player() == 2
 
     # Preflop Action
-    assert game.bet_raise(to=25) == GameRunner.Result(
+    assert game.bet_raise(to=25) == Result(
         street=Street.PREFLOP, current_player=0, total_bet=25, amount_to_call=24
     )
-    assert game.call() == GameRunner.Result(
+    assert game.call() == Result(
         street=Street.PREFLOP, current_player=1, total_bet=25, amount_to_call=23
     )
-    assert game.fold() == GameRunner.Result(
+    assert game.fold() == Result(
         street=Street.FLOP, current_player=0, total_bet=0, amount_to_call=0
     )
 
     # Flop Action
-    assert game.bet_raise(to=50) == GameRunner.Result(
+    assert game.bet_raise(to=50) == Result(
         street=Street.FLOP, current_player=2, total_bet=50, amount_to_call=50
     )
-    assert game.call() == GameRunner.Result(
+    assert game.call() == Result(
         street=Street.TURN, current_player=0, total_bet=0, amount_to_call=0
     )
 
     # Turn Action
-    assert game.check() == GameRunner.Result(
+    assert game.check() == Result(
         street=Street.TURN, current_player=2, total_bet=0, amount_to_call=0
     )
-    assert game.check() == GameRunner.Result(
+    assert game.check() == Result(
         street=Street.RIVER, current_player=0, total_bet=0, amount_to_call=0
     )
 
     # River
-    assert game.check() == GameRunner.Result(
+    assert game.check() == Result(
         street=Street.RIVER, current_player=2, total_bet=0, amount_to_call=0
     )
-    assert game.bet_raise(raise_amount=10) == GameRunner.Result(
+    assert game.bet_raise(raise_amount=10) == Result(
         street=Street.RIVER, current_player=0, total_bet=10, amount_to_call=10
     )
-    assert game.call() == GameRunner.Result(street=Street.OVER)
+    assert game.call() == Result(street=Street.OVER)
 
 
 #    call = game.game_view().call()
