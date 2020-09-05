@@ -270,8 +270,9 @@ def get_result(cards: FullDeal, game: GameView, evaluator: Evaluator) -> GameRes
 
         went_to_showdown.append(not game.is_folded()[player_index])
 
-    winning_players = get_winning_players({idx: hand for idx, hand in enumerate(all_hands)
-                                           if went_to_showdown[idx]})
+    winning_players = get_winning_players(
+        {idx: hand for idx, hand in enumerate(all_hands) if went_to_showdown[idx]}
+    )
 
     profit_per_player = [-1 * amount_bet for amount_bet in game.amount_added_total()]
 

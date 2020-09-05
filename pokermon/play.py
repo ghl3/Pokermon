@@ -25,9 +25,11 @@ def main():
     )
 
     parser.add_argument(
-        "-log", "--log", help="Provide logging level. Example --log debug'",
+        "-log",
+        "--log",
+        help="Provide logging level. Example --log debug'",
         type=str,
-        default='DEBUG'
+        default="DEBUG",
     )
 
     args = parser.parse_args()

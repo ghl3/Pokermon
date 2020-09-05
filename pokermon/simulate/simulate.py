@@ -6,10 +6,7 @@ from pokermon.ai.policy import Policy
 from pokermon.data.reenforcement_types import make_rows
 from pokermon.poker.cards import FullDeal
 from pokermon.poker.evaluation import Evaluator
-from pokermon.poker.game import (
-    Game,
-    Street,
-)
+from pokermon.poker.game import Game, Street
 from pokermon.poker.game_runner import GameRunner
 from pokermon.poker.rules import GameResults
 
@@ -42,8 +39,10 @@ def simulate(
         current_bet_amount = game_runner.game_view().current_bet_amount()
         amount_to_call = game_runner.game_view().amount_to_call()[player_index]
 
-        logger.info(f"Street: {game_runner.street()} Player Turn: {player_index} "
-                    f"Total Bet: {current_bet_amount} Amount to call: {amount_to_call}")
+        logger.info(
+            f"Street: {game_runner.street()} Player Turn: {player_index} "
+            f"Total Bet: {current_bet_amount} Amount to call: {amount_to_call}"
+        )
 
         # Get the player's move
         player = players[player_index]

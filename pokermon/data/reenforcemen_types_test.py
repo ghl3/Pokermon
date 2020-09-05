@@ -11,7 +11,7 @@ from pokermon.poker.cards import (
     mkhand,
 )
 from pokermon.poker.evaluation import Evaluator
-from pokermon.poker.game import Game, Move, Street
+from pokermon.poker.game import Move, Street
 from pokermon.poker.game_runner import GameRunner
 
 

@@ -3,12 +3,7 @@ from dataclasses import dataclass
 from typing import Optional
 
 import pokermon.poker.rules as rules
-
-from pokermon.poker.game import (
-    Action,
-    Game,
-    Street, Move, SMALL_BLIND_AMOUNT, BIG_BLIND_AMOUNT,
-)
+from pokermon.poker.game import Action, Game, Street
 
 logger = logging.getLogger(__name__)
 
@@ -90,14 +85,14 @@ class GameRunner:
         # Return the current state of the game
 
         if self.game_view().street() == Street.OVER:
-            return GameRunner.Result(
-                street=self.game_view().street())
+            return GameRunner.Result(street=self.game_view().street())
         else:
             return GameRunner.Result(
                 street=self.game_view().street(),
                 current_player=self.game_view().current_player(),
                 total_bet=self.game_view().current_bet_amount(),
-                amount_to_call=self.game_view().amount_to_call()[player_index])
+                amount_to_call=self.game_view().amount_to_call()[player_index],
+            )
 
     def add_small_blind(self) -> Result:
         return self.advance(self.game_view().small_blind())
@@ -114,7 +109,9 @@ class GameRunner:
     def bet_raise(
         self, to: Optional[int] = None, raise_amount: Optional[int] = None
     ) -> Result:
-        return self.advance(self.game_view().bet_raise(to=to, raise_amount=raise_amount))
+        return self.advance(
+            self.game_view().bet_raise(to=to, raise_amount=raise_amount)
+        )
 
     def fold(self) -> Result:
         return self.advance(self.game_view().fold())
