@@ -254,17 +254,17 @@ def get_ranked_hand_groups(hands: Dict[int, EvaluationResult]) -> List[List[int]
     :return:
     """
 
-    hand_ranks = defaultdict(list)
+    hand_ranks: Dict[int, List[int]] = defaultdict(list)
     for player_idx, res in hands.items():
         hand_ranks[res.rank].append(player_idx)
 
     # The 'lowest' rank is the best hand
-    return list(sorted(hand_ranks.items(), key=lambda x: x[0]))
+    return [players for rank, players in sorted(hand_ranks.items(), key=lambda x: x[0])]
 
 
-def create_tied_player_sidepots(winning_player_ids: List[id],
-                                amount_added_per_player: Dict[int, int]) -> List[
-    Tuple[int, Set[int]]]:
+def create_tied_player_sidepots(
+    winning_player_ids: List[int], amount_added_per_player: Dict[int, int]
+) -> List[Tuple[int, Set[int]]]:
     # Create an ordered list of the distinct amounts contributed by these winners
     amounts = sorted(set([amount_added_per_player[i] for i in winning_player_ids]))
 
@@ -302,8 +302,9 @@ def split_winnings(winnings: int, players: List[int]) -> Dict[int, int]:
     return winnings_per_player
 
 
-def get_pot_payouts(ranked_hand_groups: List[List[int]],
-                    amount_added_per_player: List[int]):
+def get_pot_payouts(
+    ranked_hand_groups: List[List[int]], amount_added_per_player: List[int]
+):
     """
 
     :param ranked_hand_groups: Ordered list of winning player groups, with the first
@@ -320,9 +321,11 @@ def get_pot_payouts(ranked_hand_groups: List[List[int]],
     #
     #
 
-    amount_remaining_per_player: Dict[int, int] = dict(enumerate(amount_added_per_player))
+    amount_remaining_per_player: Dict[int, int] = dict(
+        enumerate(amount_added_per_player)
+    )
 
-    winnings_per_player = defaultdict(lambda: 0)
+    winnings_per_player: Dict[int, int] = defaultdict(lambda: 0)
 
     # Iterate through equivalent groups of winning players
     for winning_players in ranked_hand_groups:
@@ -331,8 +334,9 @@ def get_pot_payouts(ranked_hand_groups: List[List[int]],
         # them.  Create a list of pairs of sidepots (represented by the amount added per player
         # to that sidepot) and the players who are involved  with the sidepot.
         # We then iterate over these in increasing sidepot size order.
-        tied_sidepots = create_tied_player_sidepots(winning_players,
-                                                    amount_remaining_per_player)
+        tied_sidepots = create_tied_player_sidepots(
+            winning_players, amount_remaining_per_player
+        )
 
         for amount_added, winning_player_set in tied_sidepots:
 
@@ -346,7 +350,10 @@ def get_pot_payouts(ranked_hand_groups: List[List[int]],
 
             # Next, we iterate over the non-winning players, take the per-player amount from them,
             # and split it evenly among the winning players
-            for other_player_id, amount_remaining in amount_remaining_per_player.items():
+            for (
+                other_player_id,
+                amount_remaining,
+            ) in amount_remaining_per_player.items():
                 if other_player_id in winning_players:
                     continue
 
@@ -357,8 +364,9 @@ def get_pot_payouts(ranked_hand_groups: List[List[int]],
                 amount_from_other_players += amount_to_subtract
 
             # Split the winnings amount the players
-            for player_to_get, split_amount in split_winnings(amount_from_other_players,
-                                                              list(winning_player_set)).items():
+            for player_to_get, split_amount in split_winnings(
+                amount_from_other_players, list(winning_player_set)
+            ).items():
                 winnings_per_player[player_to_get] += split_amount
 
     return dict(winnings_per_player)
