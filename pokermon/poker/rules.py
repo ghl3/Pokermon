@@ -327,43 +327,39 @@ def get_pot_payouts(ranked_hand_groups: List[List[int]],
     # Iterate through equivalent groups of winning players
     for winning_players in ranked_hand_groups:
 
-        # Create a list of the amount of money contributed by all winning players
-        # amount_added_per_winning_player = sorted(
-        #    set([amount_remaining_per_player[i] for i in winning_players]))
-
-        # For each amount added, we take it from all non-winning players and split it
-        # amount the winning players (starting with the player who contributed the
-        # lowest amount first
-        #
-
+        # All these players have the equivalant hand, but there may be sidepots among
+        # them.  Create a list of pairs of sidepots (represented by the amount added per player
+        # to that sidepot) and the players who are involved  with the sidepot.
+        # We then iterate over these in increasing sidepot size order.
         tied_sidepots = create_tied_player_sidepots(winning_players,
                                                     amount_remaining_per_player)
 
         for amount_added, winning_player_set in tied_sidepots:
 
-
-            # First, we take this amount from the pot from all winning players and move
-            # it into their winnings pile (they get their own money back).
+            # First, we take the per-player amount each of these players added to the sidepot
+            # and add it to their winnings (they get their own money back).
             for player_id in winning_player_set:
                 winnings_per_player[player_id] += amount_added
                 amount_remaining_per_player[player_id] -= amount_added
 
-            # Next, we iterate over the non-winning players, take this amount from them,
-            # and split it evenly among the winning players
+            amount_from_other_players = 0
 
+            # Next, we iterate over the non-winning players, take the per-player amount from them,
+            # and split it evenly among the winning players
             for other_player_id, amount_remaining in amount_remaining_per_player.items():
                 if other_player_id in winning_players:
                     continue
 
                 # Take this player's money from all other player's contributions, up to a
-                # max of the amount this player contributed
+                # max of the amount this player contributed.
                 amount_to_subtract = min(amount_added, amount_remaining)
                 amount_remaining_per_player[other_player_id] -= amount_to_subtract
+                amount_from_other_players += amount_to_subtract
 
-                # Split the winnings amount the players
-                for player_to_get, split_amount in split_winnings(amount_to_subtract,
-                                                                  list(winning_player_set)).items():
-                    winnings_per_player[player_to_get] += split_amount
+            # Split the winnings amount the players
+            for player_to_get, split_amount in split_winnings(amount_from_other_players,
+                                                              list(winning_player_set)).items():
+                winnings_per_player[player_to_get] += split_amount
 
     return dict(winnings_per_player)
 
