@@ -21,10 +21,6 @@ class Result:
 
 class GameRunner:
     def __init__(self, starting_stacks):
-        # For now, only support players having the same starting stacks.
-        # This avoids having to implement side pots.
-        # TODO: Support Side Pots
-        assert len(set(starting_stacks)) == 1
 
         # Must have at least 1 player
         assert len(starting_stacks) > 1

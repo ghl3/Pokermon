@@ -373,7 +373,6 @@ def get_pot_payouts(
 
 
 def get_result(cards: FullDeal, game: GameView, evaluator: Evaluator) -> GameResults:
-    # Calculate who has the best hand
 
     all_hands: List[EvaluationResult] = []
 
@@ -406,18 +405,6 @@ def get_result(cards: FullDeal, game: GameView, evaluator: Evaluator) -> GameRes
         earned_at_showdown[i] - amount_added
         for i, amount_added in enumerate(game.amount_added_total())
     ]
-
-    # TODO: Support side pots
-    # pot_size = 0
-    # for amount in game.amount_added_total():
-    #    pot_size += amount
-
-    # earned_at_showdown = [0 for _ in range(game.num_players())]
-    # for player_index, earning in pot_per_winning_player(
-    #    pot_size, winning_players
-    # ).items():
-    #    earned_at_showdown[player_index] += earning
-    #    profit_per_player[player_index] += earning
 
     return GameResults(
         best_hand_index=winning_players,

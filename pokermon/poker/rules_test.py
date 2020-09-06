@@ -1,8 +1,9 @@
 from pokermon.poker import rules
-from pokermon.poker.cards import Board, FullDeal, mkcard, mkflop, mkhand
-from pokermon.poker.evaluation import Evaluator
+from pokermon.poker.cards import Board, FullDeal, HandType, mkcard, mkflop, mkhand
+from pokermon.poker.evaluation import EvaluationResult, Evaluator
 from pokermon.poker.game import Game, Street
-from pokermon.poker.rules import get_pot_payouts
+from pokermon.poker.game_runner import GameRunner
+from pokermon.poker.rules import GameResults, get_pot_payouts
 
 
 def test_street_over():
@@ -91,34 +92,100 @@ def test_game_result():
         board=Board(flop=mkflop("6dQc2s"), turn=mkcard("6s"), river=mkcard("3c")),
     )
 
-    game = Game(starting_stacks=[100, 200, 300])
+    game = GameRunner(starting_stacks=[100, 200, 300])
+    game.start_game()
 
-    game.add_action(game.view().small_blind())
-    game.add_action(game.view().big_blind())
-    game.add_action(game.view().bet_raise(to=10))
-    game.add_action(game.view().call())
-    game.add_action(game.view().call())
+    # Preflop
+    game.bet_raise(to=10)
+    game.call()
+    game.call()
 
-    game.set_street(Street.FLOP)
-    game.add_action(game.view().bet_raise(to=20))
-    game.add_action(game.view().call())
-    game.add_action(game.view().call())
+    # Flop
+    game.bet_raise(to=20)
+    game.call()
+    game.call()
 
-    game.set_street(Street.TURN)
-    game.add_action(game.view().bet_raise(to=30))
-    game.add_action(game.view().call())
-    game.add_action(game.view().call())
+    # Turn
+    game.bet_raise(to=30)
+    game.call()
+    game.call()
 
-    game.set_street(Street.RIVER)
-    game.add_action(game.view().call())
-    game.add_action(game.view().call())
-    game.add_action(game.view().call())
+    # River
+    game.check()
+    game.check()
+    game.check()
 
-    rules.get_result(deal, game.view(), Evaluator())
+    results = rules.get_result(deal, game.game_view(), Evaluator())
+
+    assert results == GameResults(
+        best_hand_index=[0],
+        hands=[
+            EvaluationResult(
+                hand_type=HandType.TWO_PAIR, rank=2546, percentage=0.6588046100241223
+            ),
+            EvaluationResult(
+                hand_type=HandType.TWO_PAIR, rank=2667, percentage=0.6425891181988743
+            ),
+            EvaluationResult(
+                hand_type=HandType.TWO_PAIR, rank=2877, percentage=0.6144465290806754
+            ),
+        ],
+        went_to_showdown=[True, True, True],
+        earned_at_showdown=[180, 0, 0],
+        profits=[120, -60, -60],
+    )
+
+
+def test_game_with_tie():
+    deal = FullDeal(
+        hole_cards=[mkhand("Ac3h"), mkhand("Ad4s"), mkhand("5s5d")],
+        board=Board(flop=mkflop("AsAhKc"), turn=mkcard("Kd"), river=mkcard("7h")),
+    )
+
+    game = GameRunner(starting_stacks=[100, 200, 300])
+    game.start_game()
+
+    # Preflop
+    game.bet_raise(to=30)
+    game.call()
+    game.call()
+
+    # Flop
+    game.bet_raise(to=50)
+    game.call()
+    game.call()
+
+    # Turn
+    game.bet_raise(to=20)
+    game.call()
+    game.call()
+
+    # River
+    game.bet_raise(to=100)
+    game.call()
+
+    results = rules.get_result(deal, game.game_view(), Evaluator())
+
+    assert results == GameResults(
+        best_hand_index=[0, 1],
+        hands=[
+            EvaluationResult(
+                hand_type=HandType.FULL_HOUSE, rank=167, percentage=0.9776199410345752
+            ),
+            EvaluationResult(
+                hand_type=HandType.FULL_HOUSE, rank=167, percentage=0.9776199410345752
+            ),
+            EvaluationResult(
+                hand_type=HandType.TWO_PAIR, rank=2473, percentage=0.6685875100509246
+            ),
+        ],
+        went_to_showdown=[True, True, True],
+        earned_at_showdown=[150, 350, 0],
+        profits=[50, 150, -200],
+    )
 
 
 def test_pot_payouts():
-
     assert get_pot_payouts([[0], [1]], [20, 20]) == {0: 40, 1: 0}
 
     assert get_pot_payouts([[0], [1], [2]], [10, 25, 25]) == {0: 30, 1: 30, 2: 0}
