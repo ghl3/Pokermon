@@ -118,6 +118,10 @@ def test_game_result():
 
 
 def test_pot_payouts():
+
+    assert get_pot_payouts([[0], [1]],
+                           [20, 20]) == {0: 40, 1: 0}
+
     assert get_pot_payouts([[0], [1], [2]],
                            [10, 25, 25]) == {0: 30, 1: 30, 2: 0}
 
@@ -132,3 +136,6 @@ def test_pot_payouts():
 
     assert get_pot_payouts([[0, 1, 2], [3], [4]],
                            [50, 50, 50, 50, 50]) == {0: 84, 1: 83, 2: 83, 3: 0, 4: 0}
+
+    assert get_pot_payouts([[0, 1, 2], [3], [4]],
+                           [50, 50, 50, 100, 100]) == {0: 84, 1: 83, 2: 83, 3: 100, 4: 0}
