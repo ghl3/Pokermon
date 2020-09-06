@@ -304,7 +304,7 @@ def split_winnings(winnings: int, players: List[int]) -> Dict[int, int]:
 
 def get_pot_payouts(
     ranked_hand_groups: List[List[int]], amount_added_per_player: List[int]
-):
+) -> Dict[int, int]:
     """
 
     :param ranked_hand_groups: Ordered list of winning player groups, with the first
@@ -372,24 +372,6 @@ def get_pot_payouts(
     return dict(winnings_per_player)
 
 
-def pot_per_winning_player(pot_size: int, winning_players: List[int]) -> Dict[int, int]:
-    pot_even_division = pot_size // len(winning_players)
-    leftover = pot_size - pot_even_division
-
-    winning_per_player = {
-        player_index: pot_even_division for player_index in winning_players
-    }
-
-    while leftover > 0:
-        for player_index in sorted(winning_players):
-            winning_per_player[player_index] += 1
-            leftover -= 1
-            if leftover == 0:
-                break
-
-    return winning_per_player
-
-
 def get_result(cards: FullDeal, game: GameView, evaluator: Evaluator) -> GameResults:
     # Calculate who has the best hand
 
@@ -407,23 +389,35 @@ def get_result(cards: FullDeal, game: GameView, evaluator: Evaluator) -> GameRes
 
         went_to_showdown.append(not game.is_folded()[player_index])
 
-    winning_players = get_winning_players(
-        {idx: hand for idx, hand in enumerate(all_hands) if went_to_showdown[idx]}
+    showdown_hands: Dict[int, EvaluationResult] = {
+        idx: hand for idx, hand in enumerate(all_hands) if went_to_showdown[idx]
+    }
+
+    winning_players: List[int] = get_winning_players(showdown_hands)
+
+    pot_per_winning_player: Dict[int, int] = get_pot_payouts(
+        get_ranked_hand_groups(showdown_hands), game.amount_added_total()
     )
 
-    profit_per_player = [-1 * amount_bet for amount_bet in game.amount_added_total()]
+    earned_at_showdown = [
+        pot_per_winning_player.get(i, 0) for i in range(game.num_players())
+    ]
+    profit_per_player = [
+        earned_at_showdown[i] - amount_added
+        for i, amount_added in enumerate(game.amount_added_total())
+    ]
 
     # TODO: Support side pots
-    pot_size = 0
-    for amount in game.amount_added_total():
-        pot_size += amount
+    # pot_size = 0
+    # for amount in game.amount_added_total():
+    #    pot_size += amount
 
-    earned_at_showdown = [0 for _ in range(game.num_players())]
-    for player_index, earning in pot_per_winning_player(
-        pot_size, winning_players
-    ).items():
-        earned_at_showdown[player_index] += earning
-        profit_per_player[player_index] += earning
+    # earned_at_showdown = [0 for _ in range(game.num_players())]
+    # for player_index, earning in pot_per_winning_player(
+    #    pot_size, winning_players
+    # ).items():
+    #    earned_at_showdown[player_index] += earning
+    #    profit_per_player[player_index] += earning
 
     return GameResults(
         best_hand_index=winning_players,
