@@ -1,4 +1,5 @@
 import logging
+from collections import defaultdict
 from dataclasses import dataclass
 from enum import Enum
 from typing import Any, Dict, List, Optional
@@ -230,9 +231,88 @@ def street_over(game: GameView) -> bool:
 
 
 def get_winning_players(hands: Dict[int, EvaluationResult]) -> List[int]:
+    """
+    Returns the order of winning players (among all players who went to showdown) in order (the
+    first player index returned as the best hand, the second the next best, etc)
+    :param hands:
+    :return:
+    """
     # Lower ranks are better
     winning_rank = min([res.rank for _, res in hands.items()])
     return [player_idx for player_idx, h in hands.items() if h.rank == winning_rank]
+
+
+def get_ranked_hand_groups(hands: Dict[int, EvaluationResult]) -> List[List[int]]:
+    """
+    Takes a map of integer players to their evaluation results and returns
+    an ordered list of winning hands.  Each entry in the list represents all players
+    who have the same hand value (usually this is only 1 player unless there is a tie).
+    The first group has the best hand, and the second group has the second best hand,
+    etc.
+    :param hands: A map of player_index to evaluation result for hands that went to
+    showdown.
+    :return:
+    """
+
+    hand_ranks = defaultdict(list)
+    for player_idx, res in hands.items():
+        hand_ranks[res.rank].append(player_idx)
+
+    # The 'lowest' rank is the best hand
+    return list(sorted(hand_ranks.items(), key=lambda x: x[0]))
+
+
+def get_pot_payouts(ranked_hand_groups: List[List[int]],
+                    amount_added_per_player: List[int]):
+    """
+
+    :param ranked_hand_groups: Ordered list of winning player groups, with the first
+     group representing players with the equivalant winning best hand, the second
+     group the second best hand, etc.
+    :param amount_added: The amount that ALL players added to the pot (not just the
+    winning players).
+    :return:
+    """
+
+    # We implement this function by taking the money all players contributed to the
+    # pot and assigning it to winners in descending order.  Any one winner can only
+    # make as much money as they put in per-player.  Ties are split evenly.
+    #
+    #
+
+    amount_remaining_per_player = dict(enumerate(amount_added_per_player))
+
+    winnings_per_player = defaultdict(lambda: 0)
+
+    # Iterate through equivalent groups of winning players
+    for winning_players in ranked_hand_groups:
+
+        # Handle ties later
+        assert len(winning_players) == 1
+
+        player_id = winning_players[0]
+
+        # Get the amount this player contributed to the remaining pot
+        amount_added = amount_remaining_per_player[player_id]
+
+        # Subtract this amount from all players
+
+        # Move the money this player contributed to the winnings map (they get their
+        # own money back)
+        winnings_per_player[player_id] += amount_added
+        amount_remaining_per_player[player_id] -= amount_added
+
+        for other_player_id, amount_remaining in amount_remaining_per_player.items():
+            if other_player_id == player_id:
+                continue
+
+            # Take this player's money from all other player's contributions, up to a
+            # max of the amount this player contributed
+            amount_to_subtract = min(amount_added, amount_remaining)
+            amount_remaining_per_player[other_player_id] -= amount_to_subtract
+            winnings_per_player[player_id] += amount_to_subtract
+
+    return dict(winnings_per_player)
 
 
 def pot_per_winning_player(pot_size: int, winning_players: List[int]) -> Dict[int, int]:

@@ -2,6 +2,7 @@ from pokermon.poker import rules
 from pokermon.poker.cards import Board, FullDeal, mkcard, mkflop, mkhand
 from pokermon.poker.evaluation import Evaluator
 from pokermon.poker.game import Game, Street
+from pokermon.poker.rules import get_pot_payouts
 
 
 def test_street_over():
@@ -114,3 +115,11 @@ def test_game_result():
     game.add_action(game.view().call())
 
     rules.get_result(deal, game.view(), Evaluator())
+
+
+def test_pot_payouts():
+    assert get_pot_payouts([[0], [1], [2]],
+                           [10, 25, 25]) == {0: 30, 1: 30, 2: 0}
+
+    assert get_pot_payouts([[2], [0], [1], [3]],
+                           [0, 10, 10, 10]) == {2: 30, 1:0, 0:0, 3:0}
