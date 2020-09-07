@@ -73,8 +73,7 @@ MOVE_OK = ValidationResult(None, {})
 
 
 def min_bet_amount(game: GameView) -> int:
-    """The minimim amount that can be raised above the last bet
-  """
+    """The minimim amount that can be raised above the last bet"""
     return max(BIG_BLIND_AMOUNT, game.last_raise_amount())
 
 

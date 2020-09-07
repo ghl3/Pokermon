@@ -7,7 +7,6 @@ from typing import Dict, Iterable, List, Optional, Union
 
 from pokermon.poker.ordered_enum import OrderedEnum
 
-
 """
 An important concept in a game is the timestamp.  A timestamp connects two ideas:
 - An index into events
@@ -58,15 +57,15 @@ Event = Union[Action, Street]
 @dataclass
 class Game:
     """
-  All data for a game that is fully known to all players.
+    All data for a game that is fully known to all players.
 
-  An observed game is a snapshot of a game at a given action (or possibly after
-  all actions are complete and the hand is done).
+    An observed game is a snapshot of a game at a given action (or possibly after
+    all actions are complete and the hand is done).
 
-  Each action in an observed game has a timestamp index (integer).  These
-  integers cross streets (so, if the last action on the FLOP is N, then the
-  first action on the TURN is N+1).
-  """
+    Each action in an observed game has a timestamp index (integer).  These
+    integers cross streets (so, if the last action on the FLOP is N, then the
+    first action on the TURN is N+1).
+    """
 
     # A list of starting player stacks
     starting_stacks: List[int]
@@ -103,21 +102,21 @@ class Game:
     def view(self, timestamp: int = None):
         """Return a view of the game at the given timestamp.
 
-    The meaning of a timestamp is defined as follows:
-    - At the ith timestamp, i moves have been made
-    - At the ith timestamp, a user is deciding the move with index=i (0 indexed)
+        The meaning of a timestamp is defined as follows:
+        - At the ith timestamp, i moves have been made
+        - At the ith timestamp, a user is deciding the move with index=i (0 indexed)
 
-    A timestamp represents different states of the game
-    Returns a view of the game AFTER the timestamp'th action.  Or, equivalently,
-    returns a view of the game when the 0-indexed action is being decided.
+        A timestamp represents different states of the game
+        Returns a view of the game AFTER the timestamp'th action.  Or, equivalently,
+        returns a view of the game when the 0-indexed action is being decided.
 
-    So, if timestamp == 0, then no actions have been done.
-    If timestamp==2, then the view is AFTER the big blind is posted.
-    The current view is timestamp=len(action) (in other words, length is one
-    more than the last action index, which is therefore the current move).
-    :param timestamp:
-    :return:
-    """
+        So, if timestamp == 0, then no actions have been done.
+        If timestamp==2, then the view is AFTER the big blind is posted.
+        The current view is timestamp=len(action) (in other words, length is one
+        more than the last action index, which is therefore the current move).
+        :param timestamp:
+        :return:
+        """
 
         if timestamp is None:
             timestamp = self.timestamp()
@@ -131,11 +130,11 @@ class Game:
 @dataclass(frozen=True)
 class GameView:
     """
-  A view of an observed game at a given timestamp.
+    A view of an observed game at a given timestamp.
 
-  Contains methods to get useful information summarizing the state of the game.
+    Contains methods to get useful information summarizing the state of the game.
 
-  """
+    """
 
     _game: Game
 
@@ -221,19 +220,19 @@ class GameView:
     @functools.lru_cache()
     def action(self) -> List[Action]:
         """
-    The list of actions before the given timestamp  on the street containing the given action.
-    :param timestamp:
-    :return:
-    """
+        The list of actions before the given timestamp  on the street containing the given action.
+        :param timestamp:
+        :return:
+        """
 
         return [e for e in self.events() if isinstance(e, Action)]
 
     @functools.lru_cache()
     def amount_added_in_street(self) -> List[int]:
         """
-    Return a dictionary of the total amount bet per player so far.
-    :return:
-    """
+        Return a dictionary of the total amount bet per player so far.
+        :return:
+        """
 
         amount = [0 for _ in range(self.num_players())]
 
@@ -247,9 +246,9 @@ class GameView:
     @functools.lru_cache()
     def amount_added_total(self) -> List[int]:
         """
-    Return a dictionary of the total amount bet per player so far.
-    :return:
-    """
+        Return a dictionary of the total amount bet per player so far.
+        :return:
+        """
 
         amount = [0 for _ in range(self.num_players())]
 
@@ -281,9 +280,9 @@ class GameView:
     @functools.lru_cache()
     def last_raise_amount(self) -> int:
         """
-    The size of the last raise over the previous bet
-    :return:
-    """
+        The size of the last raise over the previous bet
+        :return:
+        """
 
         if len(self.street_action()) == 0:
             return 0

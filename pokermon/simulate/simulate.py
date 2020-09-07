@@ -17,12 +17,12 @@ def simulate(
     players: List[Policy], starting_stacks: List[int], deal: FullDeal
 ) -> Tuple[Game, GameResults]:
     """
-  Players are ordered by Small Blind, Big Blind, ..., Button
-  :param players:
-  :param starting_stacks:
-  :param deal:
-  :return:
-  """
+    Players are ordered by Small Blind, Big Blind, ..., Button
+    :param players:
+    :param starting_stacks:
+    :param deal:
+    :return:
+    """
 
     logger.debug("Simulating game with %s players", len(players))
 

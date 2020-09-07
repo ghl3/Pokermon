@@ -235,7 +235,8 @@ def make_rows(
                     current_hand_rank=current_hand_rank,
                 ),
                 action=Row.Action(
-                    action_encoded=a.move.value, amount_added=a.amount_added,
+                    action_encoded=a.move.value,
+                    amount_added=a.amount_added,
                 ),
                 reward=Row.Reward(
                     is_players_last_action=is_last_action[a.player_index],

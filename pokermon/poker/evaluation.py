@@ -27,3 +27,6 @@ class Evaluator:
         hand_type = deuces_wrapper.from_deuces_hand_type(rank_class)
 
         return EvaluationResult(hand_type=hand_type, rank=rank, percentage=percentage)
+
+
+EVALUATOR = Evaluator()

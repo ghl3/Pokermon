@@ -131,6 +131,27 @@ class Board:
 
         return board
 
+    def __len__(self):
+        if self.flop is None:
+            return 0
+        elif self.turn is None:
+            return 3
+        elif self.river is None:
+            return 4
+        else:
+            return 5
+
+    def __add__(self, cards: Tuple[Card]) -> Board:
+
+        if len(cards) + len(self) > 5:
+            raise Exception("Too many cards")
+
+        return Board(
+            flop=(self.flop if self.flop else tuple(cards[:3])),
+            turn=(self.turn if self.turn else cards[4]),
+            river=(self.river if self.river else cards[5]),
+        )
+
 
 @dataclass(frozen=True)
 class FullDeal:
