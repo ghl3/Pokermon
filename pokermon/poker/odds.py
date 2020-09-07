@@ -3,7 +3,7 @@ from dataclasses import dataclass
 from enum import Enum
 from typing import Optional, Tuple
 
-from pokermon.poker.cards import Card, Board, HoleCards, Rank, Suit
+from pokermon.poker.cards import Board, Card, HoleCards, Rank, Suit
 from pokermon.poker.evaluation import evaluate
 
 ALL_CARDS: Tuple[Card, ...] = tuple(
@@ -56,7 +56,9 @@ def odds_vs_random_hand(
     if board is None:
         board = Board(flop=None, turn=None, river=None)
 
-    remaining_cards = tuple([c for c in ALL_CARDS if c not in hand and c not in board.cards()])
+    remaining_cards = tuple(
+        [c for c in ALL_CARDS if c not in hand and c not in board.cards()]
+    )
 
     board_cards_to_draw = 5 - len(board)
     opponent_hand_to_draw = 0 if other_hand else 2
@@ -67,11 +69,14 @@ def odds_vs_random_hand(
     num_ties = 0
 
     for _ in range(num_draws):
-        drawn_cards: Tuple[Card, ...] = tuple(random.sample(remaining_cards, num_to_draw))
+        drawn_cards: Tuple[Card, ...] = tuple(
+            random.sample(remaining_cards, num_to_draw)
+        )
         simulated_board: Board = board + tuple(drawn_cards[:board_cards_to_draw])
         result: HeadToHeadResult = is_winner(
-            hand, other_hand if other_hand else (drawn_cards[-2], drawn_cards[-1]),
-            simulated_board
+            hand,
+            other_hand if other_hand else (drawn_cards[-2], drawn_cards[-1]),
+            simulated_board,
         )
         if result == HeadToHeadResult.WIN:
             num_wins += 1

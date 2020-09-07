@@ -5,7 +5,6 @@ import pokermon.poker.rules as rules
 from pokermon.ai.policy import Policy
 from pokermon.data.reenforcement_types import make_rows
 from pokermon.poker.cards import FullDeal
-from pokermon.poker.evaluation import Evaluator
 from pokermon.poker.game import Game, Street
 from pokermon.poker.game_runner import GameRunner
 from pokermon.poker.rules import GameResults
@@ -59,13 +58,11 @@ def simulate(
             logger.debug("Hand Over")
             break
 
-    evaluator = Evaluator()
-
-    result = rules.get_result(deal, game_runner.game_view(), evaluator)
+    result = rules.get_result(deal, game_runner.game_view())
 
     logger.info("Result: %s", result)
 
-    for row in make_rows(game_runner.game, deal, result, evaluator):
+    for row in make_rows(game_runner.game, deal, result):
         print(row)
 
     return game_runner.game, result

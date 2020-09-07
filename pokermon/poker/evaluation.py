@@ -15,10 +15,14 @@ class EvaluationResult:
     rank: int
     percentage: float
 
-    def __lt__(self, other: EvaluationResult) -> bool:
+    def __lt__(self, other: object) -> bool:
+        if not isinstance(other, EvaluationResult):
+            raise Exception()
         return self.percentage < other.percentage
 
-    def __eq__(self, other: EvaluationResult) -> bool:
+    def __eq__(self, other: object) -> bool:
+        if not isinstance(other, EvaluationResult):
+            raise Exception()
         return self.rank == other.rank
 
 
