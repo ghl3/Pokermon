@@ -172,7 +172,9 @@ class Board:
         rcards: List[Card] = list(reversed(cards))
 
         return Board(
-            flop=(self.flop if self.flop else (rcards.pop(), rcards.pop(), rcards.pop())),
+            flop=(
+                self.flop if self.flop else (rcards.pop(), rcards.pop(), rcards.pop())
+            ),
             turn=(self.turn if self.turn else rcards.pop()),
             river=(self.river if self.river else rcards.pop()),
         )
