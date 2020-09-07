@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import dataclasses
 from dataclasses import dataclass
-from typing import List, Optional, Tuple
+from typing import List, Optional, Tuple, Sequence
 
 import regex as regex  # type: ignore
 
@@ -133,6 +133,16 @@ class Board:
 
         return board
 
+    def cards(self) -> Tuple[Card, ...]:
+        if self.flop and self.turn and self.river:
+            return self.flop + (self.turn,) + (self.river,)
+        elif self.flop and self.turn:
+            return self.flop + (self.turn,)
+        elif self.flop:
+            return self.flop
+        else:
+            return tuple()
+
     def __len__(self):
         if self.flop is None:
             return 0
@@ -143,13 +153,13 @@ class Board:
         else:
             return 5
 
-    def __add__(self, cards: Tuple[Card]) -> Board:
+    def __add__(self, cards: Sequence[Card]) -> Board:
 
         if len(cards) + len(self) > 5:
             raise Exception("Too many cards")
 
         return Board(
-            flop=(self.flop if self.flop else tuple(cards[:3])),
+            flop=(self.flop if self.flop else (cards[0], cards[1], cards[2])),
             turn=(self.turn if self.turn else cards[4]),
             river=(self.river if self.river else cards[5]),
         )
