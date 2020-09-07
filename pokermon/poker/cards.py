@@ -57,6 +57,7 @@ card_map = {
     "Q": Rank.QUEEN,
     "J": Rank.JACK,
     "10": Rank.TEN,
+    "T": Rank.TEN,
     "9": Rank.NINE,
     "8": Rank.EIGHT,
     "7": Rank.SEVEN,
@@ -69,7 +70,7 @@ card_map = {
 
 suit_map = {"S": Suit.SPADES, "C": Suit.CLUBS, "D": Suit.DIAMONDS, "H": Suit.HEARTS}
 
-_card_regex = regex.compile("^(([AKQJ]|10|[2-9])([SHCD]))+$")
+_card_regex = regex.compile("^(([AKQJT]|10|[2-9])([SHCD]))+$")
 
 
 def mkcards(s: str) -> List[Card]:
@@ -103,6 +104,15 @@ def mkflop(s: str) -> Tuple[Card, Card, Card]:
     cards = mkcards(s)
     assert len(cards) == 3
     return (cards[0], cards[1], cards[2])
+
+
+def mkboard(s: str) -> Board:
+    cards = mkcards(s)
+    assert 3 <= len(cards) <= 5
+    return Board(
+        flop=(cards[0], cards[1], cards[2]),
+        turn=cards[3] if len(cards) > 3 else None,
+        river=cards[4] if len(cards) > 4 else None)
 
 
 HoleCards = Tuple[Card, Card]
@@ -158,10 +168,12 @@ class Board:
         if len(cards) + len(self) > 5:
             raise Exception("Too many cards")
 
+        cards: List[Card] = list(reversed(cards))
+
         return Board(
-            flop=(self.flop if self.flop else (cards[0], cards[1], cards[2])),
-            turn=(self.turn if self.turn else cards[3]),
-            river=(self.river if self.river else cards[4]),
+            flop=(self.flop if self.flop else (cards.pop(), cards.pop(), cards.pop())),
+            turn=(self.turn if self.turn else cards.pop()),
+            river=(self.river if self.river else cards.pop()),
         )
 
 

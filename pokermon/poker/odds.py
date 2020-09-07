@@ -57,7 +57,10 @@ def odds_vs_random_hand(
         board = Board(flop=None, turn=None, river=None)
 
     remaining_cards = tuple(
-        [c for c in ALL_CARDS if c not in hand and c not in board.cards()]
+        [c for c in ALL_CARDS if
+         c not in hand
+         and c not in board.cards()
+         and (other_hand is None or c not in other_hand)]
     )
 
     board_cards_to_draw = 5 - len(board)
