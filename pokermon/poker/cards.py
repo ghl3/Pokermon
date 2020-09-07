@@ -160,8 +160,8 @@ class Board:
 
         return Board(
             flop=(self.flop if self.flop else (cards[0], cards[1], cards[2])),
-            turn=(self.turn if self.turn else cards[4]),
-            river=(self.river if self.river else cards[5]),
+            turn=(self.turn if self.turn else cards[3]),
+            river=(self.river if self.river else cards[4]),
         )
 
 

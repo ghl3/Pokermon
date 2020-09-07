@@ -1,6 +1,6 @@
 from pokermon.poker import rules
 from pokermon.poker.cards import Board, FullDeal, HandType, mkcard, mkflop, mkhand
-from pokermon.poker.evaluation import EvaluationResult, Evaluator
+from pokermon.poker.evaluation import EvaluationResult
 from pokermon.poker.game import Game, Street
 from pokermon.poker.game_runner import GameRunner
 from pokermon.poker.rules import GameResults, get_pot_payouts
@@ -115,7 +115,7 @@ def test_game_result():
     game.check()
     game.check()
 
-    results = rules.get_result(deal, game.game_view(), Evaluator())
+    results = rules.get_result(deal, game.game_view())
 
     assert results == GameResults(
         best_hand_index=[0],
@@ -164,7 +164,7 @@ def test_game_with_tie():
     game.bet_raise(to=100)
     game.call()
 
-    results = rules.get_result(deal, game.game_view(), Evaluator())
+    results = rules.get_result(deal, game.game_view())
 
     assert results == GameResults(
         best_hand_index=[0, 1],

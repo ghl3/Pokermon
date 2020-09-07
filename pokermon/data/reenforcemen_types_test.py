@@ -10,7 +10,6 @@ from pokermon.poker.cards import (
     mkflop,
     mkhand,
 )
-from pokermon.poker.evaluation import Evaluator
 from pokermon.poker.game import Move, Street
 from pokermon.poker.game_runner import GameRunner
 
@@ -52,10 +51,9 @@ def test_full_game_features():
     # They called 10 on the flop, called 20 on the turn, and bet 30 on the river. Player 2 should
     # net 2*10 + 20 + 30 = 70 total.  The total pot at the end is 3*10 + 2*20 + 2*30 = 130
 
-    evaluator = Evaluator()
-    results = rules.get_result(deal, game.game_view(), evaluator)
+    results = rules.get_result(deal, game.game_view())
 
-    _, rows = reenforcement_types.make_rows(game.game, deal, results, evaluator)
+    _, rows = reenforcement_types.make_rows(game.game, deal, results)
 
     # 12 decisions made throughout the hand
     assert len(rows) == 12
@@ -158,10 +156,9 @@ def test_fold_preflop_features():
     game.fold()
     game.fold()
 
-    evaluator = Evaluator()
-    results = rules.get_result(deal, game.game_view(), evaluator)
+    results = rules.get_result(deal, game.game_view())
 
-    _, rows = reenforcement_types.make_rows(game.game, deal, results, evaluator)
+    _, rows = reenforcement_types.make_rows(game.game, deal, results)
 
     assert len(rows) == 3
 

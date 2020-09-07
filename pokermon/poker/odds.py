@@ -3,14 +3,12 @@ from dataclasses import dataclass
 from enum import Enum
 from typing import Optional, Tuple
 
-from deuces import Evaluator
 from pokermon.poker.cards import Card, Board, HoleCards, Rank, Suit
+from pokermon.poker.evaluation import evaluate
 
 ALL_CARDS: Tuple[Card, ...] = tuple(
     [Card(rank=rank, suit=suit) for rank in Rank for suit in Suit]
 )
-
-EVALUATOR = Evaluator()
 
 
 class HeadToHeadResult(Enum):
@@ -20,8 +18,8 @@ class HeadToHeadResult(Enum):
 
 
 def is_winner(hand: HoleCards, other_hand: HoleCards, board: Board) -> HeadToHeadResult:
-    hero_hand = EVALUATOR.evaluate(hand, board)
-    villian_hand = EVALUATOR.evaluate(other_hand, board)
+    hero_hand = evaluate(hand, board)
+    villian_hand = evaluate(other_hand, board)
 
     if hero_hand > villian_hand:
         return HeadToHeadResult.WIN
@@ -46,7 +44,7 @@ class SimulationResult:
 
 def odds_vs_random_hand(
     hand: HoleCards,
-    board: Board,
+    board: Board = None,
     other_hand: Optional[HoleCards] = None,
     num_draws=1000,
 ):
@@ -54,6 +52,10 @@ def odds_vs_random_hand(
 
     :type board: object
     """
+
+    if board is None:
+        board = Board(flop=None, turn=None, river=None)
+
     remaining_cards = tuple([c for c in ALL_CARDS if c not in hand and c not in board.cards()])
 
     board_cards_to_draw = 5 - len(board)
@@ -65,10 +67,11 @@ def odds_vs_random_hand(
     num_ties = 0
 
     for _ in range(num_draws):
-        drawn_cards: Tuple[Card, ...] = tuple(random.choices(remaining_cards, k=num_to_draw))
+        drawn_cards: Tuple[Card, ...] = tuple(random.sample(remaining_cards, num_to_draw))
         simulated_board: Board = board + tuple(drawn_cards[:board_cards_to_draw])
         result: HeadToHeadResult = is_winner(
-            hand, other_hand if other_hand else (drawn_cards[-2], drawn_cards[-1]), simulated_board
+            hand, other_hand if other_hand else (drawn_cards[-2], drawn_cards[-1]),
+            simulated_board
         )
         if result == HeadToHeadResult.WIN:
             num_wins += 1

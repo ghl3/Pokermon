@@ -2,7 +2,6 @@ from pokermon.data import reenforcement_types
 from pokermon.data.examples import make_example, seq_example_to_dict
 from pokermon.poker import rules
 from pokermon.poker.cards import Board, FullDeal, mkcard, mkflop, mkhand
-from pokermon.poker.evaluation import Evaluator
 from pokermon.poker.game_runner import GameRunner
 
 
@@ -19,9 +18,8 @@ def test_fold_preflop() -> None:
     game.fold()
     game.fold()
 
-    evaluator = Evaluator()
-    results = rules.get_result(deal, game.game_view(), evaluator)
-    context, rows = reenforcement_types.make_rows(game.game, deal, results, evaluator)
+    results = rules.get_result(deal, game.game_view())
+    context, rows = reenforcement_types.make_rows(game.game, deal, results)
 
     example = make_example(context, rows)
 
@@ -90,9 +88,8 @@ def test_full_hand() -> None:
     game.bet_raise(to=100)
     game.call()
 
-    evaluator = Evaluator()
-    results = rules.get_result(deal, game.game_view(), evaluator)
-    context, rows = reenforcement_types.make_rows(game.game, deal, results, evaluator)
+    results = rules.get_result(deal, game.game_view())
+    context, rows = reenforcement_types.make_rows(game.game, deal, results)
 
     example = make_example(context, rows)
 

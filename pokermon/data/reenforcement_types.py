@@ -3,7 +3,7 @@ from typing import List, Tuple
 
 from pokermon.poker import rules
 from pokermon.poker.cards import Card, FullDeal
-from pokermon.poker.evaluation import Evaluator
+from pokermon.poker.evaluation import evaluate
 from pokermon.poker.game import Action, Game, Move, Street
 from pokermon.poker.rules import GameResults
 
@@ -99,7 +99,7 @@ class Row:
 
 
 def make_rows(
-    game: Game, deal: FullDeal, results: GameResults, evaluator: Evaluator
+    game: Game, deal: FullDeal, results: GameResults
 ) -> Tuple[Context, List[Row]]:
     context = Context(
         num_players=game.num_players(),
@@ -191,8 +191,8 @@ def make_rows(
         board_at_street = deal.board.at_street(game_view.street())
 
         if game_view.street() >= Street.FLOP:
-            evaluation_result = evaluator.evaluate(
-                deal.hole_cards[a.player_index], board_at_street
+            evaluation_result = evaluate(
+                hole_cards=deal.hole_cards[a.player_index], board=board_at_street
             )
             current_hand_strength = evaluation_result.percentage
             current_hand_type = evaluation_result.hand_type.value
