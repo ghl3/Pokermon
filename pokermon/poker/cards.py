@@ -112,7 +112,8 @@ def mkboard(s: str) -> Board:
     return Board(
         flop=(cards[0], cards[1], cards[2]),
         turn=cards[3] if len(cards) > 3 else None,
-        river=cards[4] if len(cards) > 4 else None)
+        river=cards[4] if len(cards) > 4 else None,
+    )
 
 
 HoleCards = Tuple[Card, Card]
@@ -168,12 +169,12 @@ class Board:
         if len(cards) + len(self) > 5:
             raise Exception("Too many cards")
 
-        cards: List[Card] = list(reversed(cards))
+        rcards: List[Card] = list(reversed(cards))
 
         return Board(
-            flop=(self.flop if self.flop else (cards.pop(), cards.pop(), cards.pop())),
-            turn=(self.turn if self.turn else cards.pop()),
-            river=(self.river if self.river else cards.pop()),
+            flop=(self.flop if self.flop else (rcards.pop(), rcards.pop(), rcards.pop())),
+            turn=(self.turn if self.turn else rcards.pop()),
+            river=(self.river if self.river else rcards.pop()),
         )
 
 
