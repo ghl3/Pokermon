@@ -1,8 +1,7 @@
-from typing import Tuple, Iterable
+from typing import Iterable, Tuple
 
-from deuces import Card
-from pokermon.poker.cards import HoleCards
-from pokermon.poker.game import Game, Action, Street, Move
+from pokermon.poker.cards import Card, HoleCards
+from pokermon.poker.game import Action, Game, Move, Street
 
 
 def card_order(card: Card) -> Tuple[int, int]:
@@ -10,11 +9,14 @@ def card_order(card: Card) -> Tuple[int, int]:
 
 
 def get_hole_cards_as_int(hole_cards: HoleCards):
-    cards: Tuple[Card, Card] = (hole_cards[0], hole_cards[1]) if hole_cards[0] > hole_cards[
-        1] else (hole_cards[1], hole_cards[0])
+    cards: Tuple[Card, Card] = (
+        (hole_cards[0], hole_cards[1])
+        if hole_cards[0] > hole_cards[1]
+        else (hole_cards[1], hole_cards[0])
+    )
 
-    suited = (cards[0].suit == cards[1].suit)
-    paired = (cards[0].rank == cards[1].rank)
+    suited = cards[0].suit == cards[1].suit
+    paired = cards[0].rank == cards[1].rank
 
     # The first 13 indices are pairs
     if paired:
@@ -34,7 +36,7 @@ def get_hole_cards_as_int(hole_cards: HoleCards):
     # If the card is a 5, I want to start with N=2
     # ...
 
-    N = (cards[0].rank.value - 1 - 2)
+    N = cards[0].rank.value - 1 - 2
     offset = 13 + 2 * ((N) * (N + 1) // 2)
     second_rank = cards[1].rank.value - 2
     # We then do all unpaired hands with suited/unsuited as the fastest dimension

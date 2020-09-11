@@ -1,7 +1,7 @@
 from dataclasses import dataclass
 from typing import List
 
-from pokermon.data.utils import iter_actions, get_hole_cards_as_int
+from pokermon.data.utils import get_hole_cards_as_int, iter_actions
 from pokermon.poker.cards import FullDeal
 from pokermon.poker.game import Game
 from pokermon.poker.rules import GameResults
@@ -37,8 +37,10 @@ class Reward:
 
 
 def make_target(deal: FullDeal, result: GameResults) -> Target:
-    return Target(total_rewards=result.profits,
-                  hole_cards=[get_hole_cards_as_int(hc) for hc in deal.hole_cards])
+    return Target(
+        total_rewards=result.profits,
+        hole_cards=[get_hole_cards_as_int(hc) for hc in deal.hole_cards],
+    )
 
 
 def make_rewards(game: Game, result: GameResults):
@@ -68,12 +70,14 @@ def make_rewards(game: Game, result: GameResults):
         else:
             instant_reward = -1 * a.amount_added
 
-        rewards.append(Reward(
-            is_players_last_action=is_last_action[a.player_index],
-            cumulative_reward=cumulative_rewards[a.player_index],
-            instant_reward=instant_reward,
-            won_hand=won_hand,
-        ))
+        rewards.append(
+            Reward(
+                is_players_last_action=is_last_action[a.player_index],
+                cumulative_reward=cumulative_rewards[a.player_index],
+                instant_reward=instant_reward,
+                won_hand=won_hand,
+            )
+        )
 
         is_last_action[a.player_index] = False
 

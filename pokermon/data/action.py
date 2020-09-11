@@ -15,10 +15,12 @@ def make_actions(game: Game):
     actions = []
 
     for i, a in iter_actions(game):
-        actions.append(Action(
-            action_index = i,
-            action_encoded=a.move.value,
-            amount_added=a.amount_added,
-        ))
+        actions.append(
+            Action(
+                action_index=i,
+                action_encoded=a.move.value,
+                amount_added=a.amount_added,
+            )
+        )
 
     return actions

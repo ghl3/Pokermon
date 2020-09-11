@@ -3,7 +3,6 @@ from typing import List, Tuple
 
 import pokermon.poker.rules as rules
 from pokermon.ai.policy import Policy
-from pokermon.data.reenforcement_types import make_rows
 from pokermon.poker.cards import FullDeal
 from pokermon.poker.game import Game, Street
 from pokermon.poker.game_runner import GameRunner
@@ -61,8 +60,5 @@ def simulate(
     result = rules.get_result(deal, game_runner.game_view())
 
     logger.info("Result: %s", result)
-
-    for row in make_rows(game_runner.game, deal, result):
-        print(row)
 
     return game_runner.game, result

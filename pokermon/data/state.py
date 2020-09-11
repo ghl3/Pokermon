@@ -5,7 +5,7 @@
 from dataclasses import dataclass
 from typing import List, Optional
 
-from pokermon.data.utils import iter_actions, card_order
+from pokermon.data.utils import card_order, iter_actions
 from pokermon.poker.cards import Board
 from pokermon.poker.game import Game, Street
 
@@ -93,38 +93,38 @@ def make_public_states(game: Game, board: Board):
             river_rank = None
             river_suit = None
 
-        public_states.append(PublicState(
-            current_player_index=a.player_index,
-            street=game_view.street().value,
-
-            current_player_mask=current_player_mask,
-            folded_player_mask=game_view.is_folded(),
-            all_in_player_mask=game_view.is_all_in(),
-            stack_sizes=game_view.current_stack_sizes(),
-
-            amount_to_call=game_view.amount_to_call(),
-            min_raise_amount=game_view.min_bet_amount(),
-
-            flop_0_rank=flop_0_rank,
-            flop_0_suit=flop_0_suit,
-            flop_1_rank=flop_1_rank,
-            flop_1_suit=flop_1_suit,
-            flop_2_rank=flop_2_rank,
-            flop_2_suit=flop_2_suit,
-            turn_rank=turn_rank,
-            turn_suit=turn_suit,
-            river_rank=river_rank,
-            river_suit=river_suit,
-        ))
+        public_states.append(
+            PublicState(
+                current_player_index=a.player_index,
+                street=game_view.street().value,
+                current_player_mask=current_player_mask,
+                folded_player_mask=game_view.is_folded(),
+                all_in_player_mask=game_view.is_all_in(),
+                stack_sizes=game_view.current_stack_sizes(),
+                amount_to_call=game_view.amount_to_call(),
+                min_raise_amount=game_view.min_bet_amount(),
+                flop_0_rank=flop_0_rank,
+                flop_0_suit=flop_0_suit,
+                flop_1_rank=flop_1_rank,
+                flop_1_suit=flop_1_suit,
+                flop_2_rank=flop_2_rank,
+                flop_2_suit=flop_2_suit,
+                turn_rank=turn_rank,
+                turn_suit=turn_suit,
+                river_rank=river_rank,
+                river_suit=river_suit,
+            )
+        )
 
     return public_states
+
 
 def make_private_states(game: Game, board: Board):
     private_states = []
 
     for i, a in iter_actions(game):
         game_view = game.view(i)
-        current_board = board.at_street(game_view.street())
+        # current_board = board.at_street(game_view.street())
 
         # TODO: Implement this
         private_states.append(PrivateState(-1, -1, -1))

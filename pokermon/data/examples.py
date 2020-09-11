@@ -1,14 +1,14 @@
 import dataclasses
+import typing
 from collections import OrderedDict, defaultdict
-from typing import Any, Dict, List, Optional, Union
+from typing import Any, Dict, List, Optional
 
 import tensorflow as tf  # type: ignore
-import typing
 
 from pokermon.data.action import Action
-from pokermon.data.context import PublicContext, PrivateContext
-from pokermon.data.rewards import Target, Reward
-from pokermon.data.state import PublicState, PrivateState
+from pokermon.data.context import PrivateContext, PublicContext
+from pokermon.data.rewards import Reward, Target
+from pokermon.data.state import PrivateState, PublicState
 
 
 def _bytes_feature(values: List[str]) -> tf.train.Feature:
@@ -76,7 +76,7 @@ def _make_feature_map(clazz, val: Any, default_val=-1) -> Dict[str, tf.train.Fea
 
         if typing.get_origin(field_type) == typing.Union:
             first_type, second_type = typing.get_args(field_type)
-            if second_type != type(None):
+            if second_type != type(None):  # noqa: E721
                 raise Exception()
             field_type = first_type
             if val is None:
@@ -108,66 +108,79 @@ def with_prefix(prefix, d):
 def zip_or_none(*lists_or_none):
     length = None
 
-    for l in lists_or_none:
-        if l is not None and length is None:
-            length = len(l)
-        if l is not None:
-            if len(l) != length:
+    for lst in lists_or_none:
+        if lst is not None and length is None:
+            length = len(lst)
+        if lst is not None:
+            if len(lst) != length:
                 raise Exception()
 
     if length is None:
         raise Exception()
 
     for i in range(length):
-        yield tuple(l[i] if l else None for l in lists_or_none)
+        yield tuple(lst[i] if lst else None for lst in lists_or_none)
 
 
-def make_example(public_context: Optional[PublicContext] = None,
-                 private_context: Optional[PrivateContext] = None,
-                 target: Optional[Target] = None,
-                 public_states: Optional[List[PublicState]] = None,
-                 private_states: Optional[List[PrivateState]] = None,
-                 actions: Optional[List[Action]] = None,
-                 rewards: Optional[List[Reward]] = None) -> tf.train.SequenceExample:
+def make_example(
+    public_context: Optional[PublicContext] = None,
+    private_context: Optional[PrivateContext] = None,
+    target: Optional[Target] = None,
+    public_states: Optional[List[PublicState]] = None,
+    private_states: Optional[List[PrivateState]] = None,
+    actions: Optional[List[Action]] = None,
+    rewards: Optional[List[Reward]] = None,
+) -> tf.train.SequenceExample:
     context_features: Dict[str, tf.train.Feature] = OrderedDict()
 
     # First, make any context features, if necessary
     if public_context:
-        context_features.update(with_prefix("public_context",
-                                            _make_feature_map(PublicContext, public_context)))
+        context_features.update(
+            with_prefix(
+                "public_context", _make_feature_map(PublicContext, public_context)
+            )
+        )
 
     if private_context:
-        context_features.update(with_prefix("private_context",
-                                            _make_feature_map(PrivateContext, private_context)))
+        context_features.update(
+            with_prefix(
+                "private_context", _make_feature_map(PrivateContext, private_context)
+            )
+        )
 
     if target:
-        context_features.update(with_prefix("target",
-                                            _make_feature_map(Target, target)))
+        context_features.update(
+            with_prefix("target", _make_feature_map(Target, target))
+        )
 
     timestamp_features: Dict[str, List[tf.train.Feature]] = defaultdict(list)
 
     if public_states:
         for public_state in public_states:
-            for k, v in with_prefix("public_state",
-                                    _make_feature_map(PublicState, public_state)).items():
+            for k, v in with_prefix(
+                "public_state", _make_feature_map(PublicState, public_state)
+            ).items():
                 timestamp_features[k].append(v)
 
     if private_states:
         for private_state in private_states:
-            for k, v in with_prefix("private_state",
-                                    _make_feature_map(PrivateState, private_state)).items():
+            for k, v in with_prefix(
+                "private_state", _make_feature_map(PrivateState, private_state)
+            ).items():
                 timestamp_features[k].append(v)
 
     if actions:
         for action in actions:
-            for k, v in with_prefix("action",
-                                    _make_feature_map(Action, action)).items():
+            for k, v in with_prefix(
+                "action", _make_feature_map(Action, action)
+            ).items():
                 timestamp_features[k].append(v)
 
     if rewards:
         for reward in rewards:
-            for k, v in with_prefix("reward",
-                                    _make_feature_map(Reward, reward)).items():
+            for k, v in with_prefix(
+                "reward", _make_feature_map(Reward, reward)
+            ).items():
                 timestamp_features[k].append(v)
 
     seq_ex = tf.train.SequenceExample(
