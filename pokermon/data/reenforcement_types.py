@@ -1,8 +1,8 @@
 from dataclasses import dataclass
-from typing import List, Tuple
+from typing import List, Tuple, Optional, Iterable
 
 from pokermon.poker import rules
-from pokermon.poker.cards import Card, FullDeal
+from pokermon.poker.cards import Card, FullDeal, HoleCards
 from pokermon.poker.evaluation import evaluate
 from pokermon.poker.game import Action, Game, Move, Street
 from pokermon.poker.rules import GameResults
@@ -12,109 +12,146 @@ def card_order(card: Card) -> Tuple[int, int]:
     return 0 - card.rank.value, card.suit.value
 
 
+def get_hole_cards_as_int(hole_cards: HoleCards):
+    cards: Tuple[Card, Card] = (hole_cards[0], hole_cards[1]) if hole_cards[0] > hole_cards[
+        1] else (hole_cards[1], hole_cards[0])
+
+    suited = (cards[0].suit == cards[1].suit)
+    paired = (cards[0].rank == cards[1].rank)
+
+    # The first 13 indices are pairs
+    if paired:
+        return cards[0].rank.value - 2
+
+    # If they're not paired, then the lowest hands are
+    # 32s, 32o, 42s, 42o, 43s, 43o, ...
+
+    # 32, 42, 43
+    # The total length of the first rank is:
+    # Let N = first_rank-2
+    # total = 2*sum(i=1 to N, inclusive, of i)
+    # So, the offset is
+
+    # If the card is a 3, I want to start with 0
+    # If the card is a 4, I want to start with N=1
+    # If the card is a 5, I want to start with N=2
+    # ...
+
+    N = (cards[0].rank.value - 1 - 2)
+    offset = 13 + 2 * ((N) * (N + 1) // 2)
+    second_rank = cards[1].rank.value - 2
+    # We then do all unpaired hands with suited/unsuited as the fastest dimension
+    return offset + 2 * second_rank + (0 if suited else 1)
+
+
 @dataclass(frozen=True)
 class Context:
     num_players: int
 
     starting_stack_sizes: List[int]
 
+
+@dataclass(frozen=True)
+class Target:
     # The total reward this player will earn throughout this hand
     total_rewards: List[int]
 
+    # Each player's hole cards (or -1 if they're unknown), represented
+    # as an integer, where the mapping is defined
+    hole_cards: List[int]
+
+
+
 
 @dataclass(frozen=True)
-class Row:
-    @dataclass(frozen=True)
-    class State:
-        player_index: int
-        action_index: int
+class State:
+    player_index: int
+    action_index: int
 
-        street: int
-        current_player_mask: List[int]
-        folded_player_mask: List[int]
-        all_in_player_mask: List[int]
-        stack_sizes: List[int]
+    street: int
+    current_player_mask: List[int]
+    folded_player_mask: List[int]
+    all_in_player_mask: List[int]
+    stack_sizes: List[int]
 
-        amount_to_call: List[int]
-        min_raise_amount: int
+    amount_to_call: List[int]
+    min_raise_amount: int
 
-        # Cards are ordered by:
-        # Rank, [S, C, D, H]
-        hole_card_0_rank: int
-        hole_card_0_suit: int
-        hole_card_1_rank: int
-        hole_card_1_suit: int
+    # Cards are ordered by:
+    # Rank, [S, C, D, H]
+    hole_card_0_rank: int
+    hole_card_0_suit: int
+    hole_card_1_rank: int
+    hole_card_1_suit: int
 
-        flop_0_rank: int
-        flop_0_suit: int
-        flop_1_rank: int
-        flop_1_suit: int
-        flop_2_rank: int
-        flop_2_suit: int
-        turn_rank: int
-        turn_suit: int
-        river_rank: int
-        river_suit: int
+    flop_0_rank: int
+    flop_0_suit: int
+    flop_1_rank: int
+    flop_1_suit: int
+    flop_2_rank: int
+    flop_2_suit: int
+    turn_rank: int
+    turn_suit: int
+    river_rank: int
+    river_suit: int
 
-        current_hand_type: int
-        current_hand_strength: float
-        current_hand_rank: int
+    current_hand_type: int
+    current_hand_strength: float
+    current_hand_rank: int
 
-        # Desired Features:
-        # Post Flop Best Hand index (eg is nuts, etc)
-        # Though, I guess current rank doesn't really matter, only equity.
-        # Equity % against random hand
-        # Possible Solutions:
-        # treys
-        # https://github.com/ktseng/holdem_calc
-        # https://pypi.org/project/PokerSleuth/#history
-        # https://github.com/mitpokerbots/pbots_calc
-
-    @dataclass(frozen=True)
-    class Action:
-        action_encoded: int
-        amount_added: int
-
-    @dataclass(frozen=True)
-    class Reward:
-        # Is this the last move the player makes in the hand
-        is_players_last_action: bool
-
-        # The amount earned immediately (before this player's next decision) as a result of this
-        # # move.  Will be negative if the player bets on this turn and it isn't their last turn.
-        # May be negative or positive if it's their last turn (depending on whether they bet and
-        # whether they win).
-        instant_reward: int
-
-        # The net amount the player earns or loses for the rest of the hand, including
-        # the result of the current action (a bet/raise).  Ignores any previous gains/losses.
-        cumulative_reward: int
-
-        # Did the current player eventually win the hand?
-        won_hand: bool
-
-    state: State
-    action: Action
-    reward: Reward
+    # Desired Features:
+    # Post Flop Best Hand index (eg is nuts, etc)
+    # Though, I guess current rank doesn't really matter, only equity.
+    # Equity % against random hand
+    # Possible Solutions:
+    # treys
+    # https://github.com/ktseng/holdem_calc
+    # https://pypi.org/project/PokerSleuth/#history
+    # https://github.com/mitpokerbots/pbots_calc
 
 
-def make_rows(
-    game: Game, deal: FullDeal, results: GameResults
-) -> Tuple[Context, List[Row]]:
-    context = Context(
-        num_players=game.num_players(),
-        starting_stack_sizes=game.starting_stacks,
-        total_rewards=results.profits,
-    )
+@dataclass(frozen=True)
+class Action:
+    action_encoded: int
+    amount_added: int
 
-    rows = []
 
-    # Profits between now and the end of the hand
-    cumulative_rewards: List[int] = results.earned_at_showdown
+@dataclass(frozen=True)
+class Reward:
+    # Is this the last move the player makes in the hand
+    is_players_last_action: bool
 
-    is_last_action: List[bool] = [True for _ in range(game.num_players())]
+    # The amount earned immediately (before this player's next decision) as a result of this
+    # # move.  Will be negative if the player bets on this turn and it isn't their last turn.
+    # May be negative or positive if it's their last turn (depending on whether they bet and
+    # whether they win).
+    instant_reward: int
 
-    # Iterate in reverse order
+    # The net amount the player earns or loses for the rest of the hand, including
+    # the result of the current action (a bet/raise).  Ignores any previous gains/losses.
+    cumulative_reward: int
+
+    # Did the current player eventually win the hand?
+    won_hand: bool
+
+
+def make_context(game: Game) -> Context:
+    pass
+
+
+def make_target(game: Game, deal: FullDeal) -> Targets:
+    pass
+
+
+def make_state_action(game: Game) -> List[Tuple[State, Action]]:
+    pass
+
+
+def make_state_action_rewards(game: Game, deal: FullDeal) -> List[Tuple[State, Action, Reward]]:
+    pass
+
+
+def iter_actions(game: Game) -> Iterable[Tuple[int, Action]]:
     for i, e in reversed(list(enumerate(game.events))):
 
         # i is the index of this event
@@ -128,6 +165,29 @@ def make_rows(
         # We now know the event is an action
         a: Action = e
 
+        # Since Small/Big blinds are forced actions, we don't generate
+        # rows for them
+        if a.move == Move.SMALL_BLIND or a.move == Move.BIG_BLIND:
+            continue
+
+        yield i, e
+
+
+def make_rewards(game: Game, deal: FullDeal):
+    results = rules.get_result(deal, game.view())
+
+    rewards = []
+
+    # Profits between now and the end of the hand
+    cumulative_rewards: List[int] = results.earned_at_showdown
+
+    is_last_action: List[bool] = [True for _ in range(game.num_players())]
+
+    # Iterate in reverse order
+    for i, a in reversed(iter_actions(game)):
+
+        won_hand = a.player_index in set(results.best_hand_index)
+
         # Subtract the amount lost after taking the given action, which is a part
         # of the future cumulative winnings / losses
         # print(cumulative_rewards, a.player_index, a.amount_added)
@@ -138,10 +198,24 @@ def make_rows(
         else:
             instant_reward = -1 * a.amount_added
 
-        # Since Small/Big blinds are forced actions, we don't generate
-        # rows for them
-        if a.move == Move.SMALL_BLIND or a.move == Move.BIG_BLIND:
-            continue
+        rewards.append(Reward(
+            is_players_last_action=is_last_action[a.player_index],
+            cumulative_reward=cumulative_rewards[a.player_index],
+            instant_reward=instant_reward,
+            won_hand=won_hand,
+        ))
+
+        is_last_action[a.player_index] = False
+
+    return list(reversed(rewards))
+
+
+def make_state_actions(game: Game) -> List[Tuple[State, Action]]:
+
+    rows = []
+
+    # Iterate in reverse order
+    for i, a in iter_actions(game):
 
         game_view = game.view(i)
 

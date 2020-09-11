@@ -1,10 +1,14 @@
 import dataclasses
 from collections import OrderedDict, defaultdict
-from typing import Any, Dict, List
+from typing import Any, Dict, List, Optional, Union
 
 import tensorflow as tf  # type: ignore
+import typing
 
-from pokermon.data.reenforcement_types import Context, Row
+from pokermon.data.action import Action
+from pokermon.data.context import PublicContext, PrivateContext
+from pokermon.data.rewards import Target, Reward
+from pokermon.data.state import PublicState, PrivateState
 
 
 def _bytes_feature(values: List[str]) -> tf.train.Feature:
@@ -59,7 +63,7 @@ def seq_example_to_dict(example: tf.train.SequenceExample) -> Dict[str, Any]:
     return feature_map
 
 
-def _make_feature_map(clazz, val: Any) -> Dict[str, tf.train.Feature]:
+def _make_feature_map(clazz, val: Any, default_val=-1) -> Dict[str, tf.train.Feature]:
     feature_map = {}
 
     val_map = dataclasses.asdict(val)
@@ -67,17 +71,27 @@ def _make_feature_map(clazz, val: Any) -> Dict[str, tf.train.Feature]:
     for field in dataclasses.fields(clazz):
 
         name = field.name
+        val = val_map[name]
+        field_type = field.type
 
-        if field.type == List[int]:
-            feature_map[name] = _int64_feature(val_map[name])
-        elif field.type == List[float]:
-            feature_map[name] = _float_feature(val_map[name])
-        elif field.type == int:
-            feature_map[name] = _int64_feature([val_map[name]])
-        elif field.type == float:
-            feature_map[name] = _float_feature([val_map[name]])
-        elif field.type == bool:
-            feature_map[name] = _int64_feature([int(val_map[name])])
+        if typing.get_origin(field_type) == typing.Union:
+            first_type, second_type = typing.get_args(field_type)
+            if second_type != type(None):
+                raise Exception()
+            field_type = first_type
+            if val is None:
+                val = default_val
+
+        if field_type == List[int]:
+            feature_map[name] = _int64_feature(val)
+        elif field_type == List[float]:
+            feature_map[name] = _float_feature(val)
+        elif field_type == int:
+            feature_map[name] = _int64_feature([val])
+        elif field_type == float:
+            feature_map[name] = _float_feature([val])
+        elif field_type == bool:
+            feature_map[name] = _int64_feature([int(val)])
         else:
             raise Exception("Unexpected type %s", field.type)
 
@@ -91,32 +105,76 @@ def with_prefix(prefix, d):
 # dataclass to Dict of Features tf.Example
 
 
-def make_example(context: Context, rows: List[Row]) -> tf.train.Example:
-    # Map of feature name to repeated field of features
-    feature_values: Dict[str, List[Any]] = defaultdict(lambda: list())
+def zip_or_none(*lists_or_none):
+    length = None
 
-    # Convert to a row-form to a column-form
-    for row in rows:
-        feature_map: Dict[str, tf.train.Feature] = OrderedDict()
-        feature_map.update(
-            with_prefix("state", _make_feature_map(Row.State, row.state))
-        )
-        feature_map.update(
-            with_prefix("action", _make_feature_map(Row.Action, row.action))
-        )
-        feature_map.update(
-            with_prefix("reward", _make_feature_map(Row.Reward, row.reward))
-        )
+    for l in lists_or_none:
+        if l is not None and length is None:
+            length = len(l)
+        if l is not None:
+            if len(l) != length:
+                raise Exception()
 
-        for k, v in feature_map.items():
-            feature_values[k].append(v)
+    if length is None:
+        raise Exception()
 
-    # TODO: Update to sequence example
+    for i in range(length):
+        yield tuple(l[i] if l else None for l in lists_or_none)
+
+
+def make_example(public_context: Optional[PublicContext] = None,
+                 private_context: Optional[PrivateContext] = None,
+                 target: Optional[Target] = None,
+                 public_states: Optional[List[PublicState]] = None,
+                 private_states: Optional[List[PrivateState]] = None,
+                 actions: Optional[List[Action]] = None,
+                 rewards: Optional[List[Reward]] = None) -> tf.train.SequenceExample:
+    context_features: Dict[str, tf.train.Feature] = OrderedDict()
+
+    # First, make any context features, if necessary
+    if public_context:
+        context_features.update(with_prefix("public_context",
+                                            _make_feature_map(PublicContext, public_context)))
+
+    if private_context:
+        context_features.update(with_prefix("private_context",
+                                            _make_feature_map(PrivateContext, private_context)))
+
+    if target:
+        context_features.update(with_prefix("target",
+                                            _make_feature_map(Target, target)))
+
+    timestamp_features: Dict[str, List[tf.train.Feature]] = defaultdict(list)
+
+    if public_states:
+        for public_state in public_states:
+            for k, v in with_prefix("public_state",
+                                    _make_feature_map(PublicState, public_state)).items():
+                timestamp_features[k].append(v)
+
+    if private_states:
+        for private_state in private_states:
+            for k, v in with_prefix("private_state",
+                                    _make_feature_map(PrivateState, private_state)).items():
+                timestamp_features[k].append(v)
+
+    if actions:
+        for action in actions:
+            for k, v in with_prefix("action",
+                                    _make_feature_map(Action, action)).items():
+                timestamp_features[k].append(v)
+
+    if rewards:
+        for reward in rewards:
+            for k, v in with_prefix("reward",
+                                    _make_feature_map(Reward, reward)).items():
+                timestamp_features[k].append(v)
+
     seq_ex = tf.train.SequenceExample(
-        context=tf.train.Features(feature=_make_feature_map(Context, context))
+        context=tf.train.Features(feature=context_features)
     )
 
-    for feature_name, feature_list in feature_values.items():
+    for feature_name, feature_list in timestamp_features.items():
         for feature in feature_list:
             seq_ex.feature_lists.feature_list[feature_name].feature.append(feature)
 

@@ -54,7 +54,7 @@ def make_rewards(game: Game, result: GameResults):
     is_last_action: List[bool] = [True for _ in range(game.num_players())]
 
     # Iterate in reverse order
-    for i, a in reversed(iter_actions(game)):
+    for i, a in reversed(list(iter_actions(game))):
 
         won_hand = a.player_index in set(result.best_hand_index)
 

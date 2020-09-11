@@ -313,6 +313,11 @@ class GameView:
             current_stack_size == 0 for current_stack_size in self.current_stack_sizes()
         ]
 
+    @functools.lru_cache()
+    def min_bet_amount(self) -> int:
+        """The minimim amount that can be raised above the last bet"""
+        return max(BIG_BLIND_AMOUNT, self.last_raise_amount())
+
     #
     # Actions
     #
