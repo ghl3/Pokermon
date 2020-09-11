@@ -7,8 +7,9 @@ import tensorflow as tf  # type: ignore
 
 from pokermon.data.action import Action
 from pokermon.data.context import PrivateContext, PublicContext
-from pokermon.data.rewards import Reward, Target
+from pokermon.data.rewards import Reward
 from pokermon.data.state import PrivateState, PublicState
+from pokermon.data.target import Target
 
 
 def _bytes_feature(values: List[str]) -> tf.train.Feature:
