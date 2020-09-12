@@ -120,13 +120,13 @@ def test_fold_preflop() -> None:
     results = rules.get_result(deal, game.game_view())
 
     example = make_example(
-        public_context=make_public_context(game.game),
+        public_context=make_public_context(game.game_view()),
         private_context=make_private_context(deal.hole_cards[1]),
         target=make_target(deal, results),
-        public_states=make_public_states(game.game, deal.board),
+        public_states=make_public_states(game.game_view(), deal.board),
         private_states=None,
-        actions=make_actions(game.game),
-        rewards=make_rewards(game.game, results),
+        actions=make_actions(game.game_view()),
+        rewards=make_rewards(game.game_view(), results),
     )
     example_dict = seq_example_to_dict(example)
 
@@ -239,13 +239,13 @@ def test_full_hand() -> None:
     results = rules.get_result(deal, game.game_view())
 
     example = make_example(
-        public_context=make_public_context(game.game),
+        public_context=make_public_context(game.game_view()),
         private_context=make_private_context(deal.hole_cards[1]),
         target=make_target(deal, results),
-        public_states=make_public_states(game.game, deal.board),
+        public_states=make_public_states(game.game_view(), deal.board),
         private_states=None,
-        actions=make_actions(game.game),
-        rewards=make_rewards(game.game, results),
+        actions=make_actions(game.game_view()),
+        rewards=make_rewards(game.game_view(), results),
     )
     example_dict = seq_example_to_dict(example)
 

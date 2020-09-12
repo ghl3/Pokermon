@@ -6,7 +6,7 @@ from dataclasses import dataclass
 from typing import List
 
 from pokermon.poker.cards import HoleCards
-from pokermon.poker.game import Game
+from pokermon.poker.game import GameView
 
 
 @dataclass(frozen=True)
@@ -26,10 +26,10 @@ class PrivateContext:
     hole_card_1_suit: int
 
 
-def make_public_context(game: Game) -> PublicContext:
+def make_public_context(game: GameView) -> PublicContext:
     return PublicContext(
         num_players=game.num_players(),
-        starting_stack_sizes=game.starting_stacks,
+        starting_stack_sizes=game.starting_stacks()
     )
 
 

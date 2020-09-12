@@ -1,7 +1,7 @@
 from dataclasses import dataclass
 
 from pokermon.data.utils import iter_actions
-from pokermon.poker.game import Game
+from pokermon.poker.game import GameView
 
 
 @dataclass(frozen=True)
@@ -11,7 +11,7 @@ class Action:
     amount_added: int
 
 
-def make_actions(game: Game):
+def make_actions(game: GameView):
     actions = []
 
     for i, a in iter_actions(game):

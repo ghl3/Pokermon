@@ -1,9 +1,9 @@
-from typing import Iterable, Tuple
+from typing import Iterable, Tuple, Union
 
 import stringcase
 
 from pokermon.poker.cards import Card, HoleCards
-from pokermon.poker.game import Action, Game, Move, Street
+from pokermon.poker.game import Action, Game, Move, Street, GameView
 
 
 def feature_name(clazz, field) -> str:
@@ -49,11 +49,11 @@ def get_hole_cards_as_int(hole_cards: HoleCards):
     return offset + 2 * second_rank + (0 if suited else 1)
 
 
-def iter_actions(game: Game) -> Iterable[Tuple[int, Action]]:
+def iter_actions(game: GameView) -> Iterable[Tuple[int, Action]]:
     """
     Iterate over all non-voluntary actions
     """
-    for i, e in list(enumerate(game.events)):
+    for i, e in list(enumerate(game.events())):
 
         # i is the index of this event
         # game.view(i) is the state of the game at this tme

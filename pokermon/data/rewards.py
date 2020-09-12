@@ -3,10 +3,8 @@ from typing import List
 
 from pokermon.data.utils import get_hole_cards_as_int, iter_actions
 from pokermon.poker.cards import FullDeal
-from pokermon.poker.game import Game
+from pokermon.poker.game import Game, GameView, Street
 from pokermon.poker.rules import GameResults
-
-
 
 
 @dataclass(frozen=True)
@@ -28,12 +26,13 @@ class Reward:
     won_hand: bool
 
 
-
-
-def make_rewards(game: Game, result: GameResults):
+def make_rewards(game: GameView, result: GameResults):
     """
     Generate a list of rewards for every non-voluntary action
     """
+
+    # This only makes sense at the end of the game
+    assert game.street() == Street.OVER
 
     rewards = []
 

@@ -158,6 +158,9 @@ class GameView:
 
     # Nothing below these methods should reference the underlying game
 
+    def view(self, timestamp: int = None):
+        return self._game.view(timestamp)
+
     @functools.lru_cache()
     def _player_list(self, starting_player: int = 0) -> List[int]:
         all_players_twice = list(range(self.num_players())) + list(

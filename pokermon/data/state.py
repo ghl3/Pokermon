@@ -7,7 +7,7 @@ from typing import List, Optional
 
 from pokermon.data.utils import card_order, iter_actions
 from pokermon.poker.cards import Board
-from pokermon.poker.game import Game, Street
+from pokermon.poker.game import Game, Street, GameView
 
 
 @dataclass(frozen=True)
@@ -51,7 +51,7 @@ class PrivateState:
     # https://github.com/mitpokerbots/pbots_calc
 
 
-def make_public_states(game: Game, board: Optional[Board]):
+def make_public_states(game: GameView, board: Optional[Board]):
     public_states = []
 
     for i, a in iter_actions(game):
@@ -123,7 +123,7 @@ def make_public_states(game: Game, board: Optional[Board]):
     return public_states
 
 
-def make_private_states(game: Game, board: Board):
+def make_private_states(game: GameView, board: Board):
     private_states = []
 
     for i, a in iter_actions(game):
