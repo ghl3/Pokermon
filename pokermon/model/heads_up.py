@@ -3,8 +3,7 @@ import numpy as np
 
 from pokermon.data import features
 from pokermon.data.action import make_last_actions, LastAction
-from pokermon.data.context import make_public_context, make_private_context, PublicContext, \
-    PrivateContext
+from pokermon.data.context import make_public_context, make_private_context
 from pokermon.data.examples import make_example
 from pokermon.data.state import make_public_states, make_private_states, PublicState, PrivateState
 from pokermon.model import utils
@@ -22,10 +21,6 @@ class HeadsUpModel(ActionPolicyModel):
         self.num_bet_bins = num_bet_bins
 
         self.context_feature_columns = {}
-#        self.context_feature_columns.update(
-#            features.make_feature_config(PublicContext, is_sequence=False))
-#        self.context_feature_columns.update(
-#            features.make_feature_config(PrivateContext, is_sequence=False))
 
         self.sequence_feature_columns = {}
         self.sequence_feature_columns.update(
@@ -36,7 +31,8 @@ class HeadsUpModel(ActionPolicyModel):
             features.make_feature_config(LastAction, is_sequence=True))
 
         self.model = tf.keras.Sequential(name=name)
-        self.model.add(tf.keras.layers.LSTM(input_dim=self.num_features(), units=32))
+        self.model.add(tf.keras.layers.LSTM(input_dim=self.num_features(),  return_sequences=True,
+                                            units=32))
         self.model.add(tf.keras.layers.Dense(64))
         self.model.add(tf.keras.layers.Dense(self.policy_vector_size()))
         self.model.add(tf.keras.layers.Softmax(axis=-1))
@@ -45,7 +41,7 @@ class HeadsUpModel(ActionPolicyModel):
 
         num = 0
 
-        for _, feature_col in self.sequence_feature_columns:
+        for _, feature_col in self.sequence_feature_columns.items():
             if isinstance(feature_col, tf.io.FixedLenSequenceFeature):
                 num += 1
             elif isinstance(feature_col, tf.io.VarLenFeature):
@@ -58,6 +54,9 @@ class HeadsUpModel(ActionPolicyModel):
         return self.num_bet_bins + 2
 
     def generate_policy(self, game: GameView, hole_cards: HoleCards, board: Board) -> np.array:
+
+        assert game.num_players() == self.num_players
+
         example = make_example(
             public_context=make_public_context(game),
             private_context=make_private_context(hole_cards),
