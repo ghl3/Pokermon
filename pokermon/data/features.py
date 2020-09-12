@@ -40,3 +40,25 @@ def make_feature_config(clazz, is_sequence=False) -> Dict[str, tf.train.Feature]
             raise Exception("Unexpected type %s", field.type)
 
     return feature_map
+
+
+def make_fixed_player_context_tensor(context_val_map):
+    sequence_tensors = []
+
+    for name, val in context_val_map.items():
+        if val.shape == []:
+            val = tf.expand_dims(val, 0)
+        sequence_tensors.append(val)
+
+    return tf.concat(sequence_tensors, axis=0)
+
+
+def make_fixed_player_sequence_tensor(sequence_val_map):
+    sequence_tensors = []
+
+    for name, val in sequence_val_map.items():
+        if len(val.shape) == 1:
+            val = tf.expand_dims(val, -1)
+        sequence_tensors.append(val)
+
+    return tf.concat(sequence_tensors, axis=-1)
