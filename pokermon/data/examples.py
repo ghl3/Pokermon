@@ -10,6 +10,7 @@ from pokermon.data.context import PrivateContext, PublicContext
 from pokermon.data.rewards import Reward
 from pokermon.data.state import PrivateState, PublicState
 from pokermon.data.target import Target
+from pokermon.data.utils import feature_name
 
 
 def _bytes_feature(values: List[str]) -> tf.train.Feature:
@@ -71,8 +72,9 @@ def _make_feature_map(clazz, val: Any, default_val=-1) -> Dict[str, tf.train.Fea
 
     for field in dataclasses.fields(clazz):
 
-        name = field.name
-        val = val_map[name]
+        name = feature_name(clazz, field) #f'{stringcase.snakecase(clazz.__name__)}__{field.name}'
+
+        val = val_map[field.name]
         field_type = field.type
 
         if typing.get_origin(field_type) == typing.Union:
@@ -137,51 +139,41 @@ def make_example(
     # First, make any context features, if necessary
     if public_context:
         context_features.update(
-            with_prefix(
-                "public_context", _make_feature_map(PublicContext, public_context)
-            )
+            _make_feature_map(PublicContext, public_context)
+
         )
 
     if private_context:
         context_features.update(
-            with_prefix(
-                "private_context", _make_feature_map(PrivateContext, private_context)
-            )
+            _make_feature_map(PrivateContext, private_context)
+
         )
 
     if target:
         context_features.update(
-            with_prefix("target", _make_feature_map(Target, target))
+            _make_feature_map(Target, target)
         )
 
     timestamp_features: Dict[str, List[tf.train.Feature]] = defaultdict(list)
 
     if public_states:
         for public_state in public_states:
-            for k, v in with_prefix(
-                "public_state", _make_feature_map(PublicState, public_state)
-            ).items():
+            for k, v in _make_feature_map(PublicState, public_state).items():
                 timestamp_features[k].append(v)
 
     if private_states:
         for private_state in private_states:
-            for k, v in with_prefix(
-                "private_state", _make_feature_map(PrivateState, private_state)
-            ).items():
+            for k, v in _make_feature_map(PrivateState, private_state).items():
                 timestamp_features[k].append(v)
 
     if actions:
         for action in actions:
-            for k, v in with_prefix(
-                "action", _make_feature_map(Action, action)
-            ).items():
+            for k, v in _make_feature_map(Action, action).items():
                 timestamp_features[k].append(v)
 
     if rewards:
         for reward in rewards:
-            for k, v in with_prefix(
-                "reward", _make_feature_map(Reward, reward)
-            ).items():
+            for k, v in _make_feature_map(Reward, reward).items():
                 timestamp_features[k].append(v)
 
     seq_ex = tf.train.SequenceExample(

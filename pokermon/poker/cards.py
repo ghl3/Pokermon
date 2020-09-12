@@ -125,9 +125,9 @@ class Board:
     A board of cards, which may be partially or fully rolled out.
     """
 
-    flop: Optional[Tuple[Card, Card, Card]]
-    turn: Optional[Card]
-    river: Optional[Card]
+    flop: Optional[Tuple[Card, Card, Card]] = None
+    turn: Optional[Card] = None
+    river: Optional[Card] = None
 
     def at_street(self, street: Street):
 

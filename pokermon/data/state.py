@@ -51,12 +51,16 @@ class PrivateState:
     # https://github.com/mitpokerbots/pbots_calc
 
 
-def make_public_states(game: Game, board: Board):
+def make_public_states(game: Game, board: Optional[Board]):
     public_states = []
 
     for i, a in iter_actions(game):
         game_view = game.view(i)
-        current_board = board.at_street(game_view.street())
+
+        if board is None:
+            current_board = Board(flop=None, turn=None, river=None)
+        else:
+            current_board = board.at_street(game_view.street())
 
         current_player_mask = [0 for _ in range(game_view.num_players())]
         current_player_mask[a.player_index] = 1
