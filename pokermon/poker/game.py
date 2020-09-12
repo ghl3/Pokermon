@@ -166,7 +166,7 @@ class GameView:
         all_players_twice = list(range(self.num_players())) + list(
             range(self.num_players())
         )
-        return all_players_twice[starting_player : starting_player + self.num_players()]
+        return all_players_twice[starting_player: starting_player + self.num_players()]
 
     @functools.lru_cache()
     def current_player(self) -> int:
@@ -174,8 +174,8 @@ class GameView:
             starting_player = 0
         else:
             starting_player = (
-                self.street_action()[-1].player_index + 1
-            ) % self.num_players()
+                                  self.street_action()[-1].player_index + 1
+                              ) % self.num_players()
 
         for player in self._player_list(starting_player):
             if not self.is_folded()[player] and not self.is_all_in()[player]:
@@ -261,6 +261,13 @@ class GameView:
             amount[player_id] += action.amount_added
 
         return amount
+
+    @functools.lru_cache()
+    def pot_size(self) -> int:
+        pot = 0
+        for amount in self.amount_added_total():
+            pot += amount
+        return pot
 
     @functools.lru_cache()
     def current_stack_sizes(self) -> List[int]:
@@ -392,6 +399,16 @@ class GameView:
 
         # This may be an invalid raise, but this will be caught downstream
         return Action(player_index, Move.BET_RAISE, amount_to_add, new_bet_size)
+
+    # TODO: Ensure these work
+    @functools.lru_cache()
+    def min_raise(self) -> Action:
+        current_stack_size = self.current_stack_sizes()[self.current_player()]
+        return self.bet_raise(raise_amount=min(self.min_bet_amount(), current_stack_size))
+
+    @functools.lru_cache()
+    def go_all_in(self) -> Action:
+        return self.bet_raise(raise_amount=self.current_stack_sizes()[self.current_player()])
 
     @functools.lru_cache()
     def fold(self) -> Action:

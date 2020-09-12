@@ -5,7 +5,7 @@ from typing import Any, Dict, List, Optional
 
 import tensorflow as tf  # type: ignore
 
-from pokermon.data.action import Action
+from pokermon.data.action import LastAction, CurrentAction
 from pokermon.data.context import PrivateContext, PublicContext
 from pokermon.data.rewards import Reward
 from pokermon.data.state import PrivateState, PublicState
@@ -72,7 +72,7 @@ def _make_feature_map(clazz, val: Any, default_val=-1) -> Dict[str, tf.train.Fea
 
     for field in dataclasses.fields(clazz):
 
-        name = feature_name(clazz, field) #f'{stringcase.snakecase(clazz.__name__)}__{field.name}'
+        name = feature_name(clazz, field)
 
         val = val_map[field.name]
         field_type = field.type
@@ -131,7 +131,8 @@ def make_example(
     target: Optional[Target] = None,
     public_states: Optional[List[PublicState]] = None,
     private_states: Optional[List[PrivateState]] = None,
-    actions: Optional[List[Action]] = None,
+    last_actions: Optional[List[LastAction]] = None,
+    current_actions: Optional[List[CurrentAction]] = None,
     rewards: Optional[List[Reward]] = None,
 ) -> tf.train.SequenceExample:
     context_features: Dict[str, tf.train.Feature] = OrderedDict()
@@ -166,9 +167,14 @@ def make_example(
             for k, v in _make_feature_map(PrivateState, private_state).items():
                 timestamp_features[k].append(v)
 
-    if actions:
-        for action in actions:
-            for k, v in _make_feature_map(Action, action).items():
+    if last_actions:
+        for action in last_actions:
+            for k, v in _make_feature_map(LastAction, action).items():
+                timestamp_features[k].append(v)
+
+    if current_actions:
+        for action in current_actions:
+            for k, v in _make_feature_map(CurrentAction, action).items():
                 timestamp_features[k].append(v)
 
     if rewards:
