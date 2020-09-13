@@ -1,3 +1,5 @@
+from typing import Dict
+
 import numpy as np
 import tensorflow as tf
 
@@ -15,28 +17,44 @@ def ensure_dense(t):
         return t
 
 
-def make_fixed_player_context_tensor(context_val_map):
-    sequence_tensors = []
+def make_sequence_dict_of_dense(tensor_dict: Dict[str, tf.Tensor]) -> Dict[str, tf.Tensor]:
+    """
+    All tensors have shape [time, 1 OR num_players]
+    """
+    updated_dict = {}
 
-    for name, val in context_val_map.items():
-        val = ensure_dense(val)
+    for name, t in tensor_dict.items():
+        t = ensure_dense(t)
+        if len(t.shape) == 1:
+            t = tf.expand_dims(t, -1)
+
+        updated_dict[name] = t
+
+    return updated_dict
+
+
+def make_context_dict_of_dense(tensor_dict: Dict[str, tf.Tensor]) -> Dict[str, tf.Tensor]:
+    """
+    All tensors have shape [1 OR num_players]
+    """
+    updated_dict = {}
+
+    for name, t in tensor_dict.items():
+        t = ensure_dense(t)
+        if t.shape == []:
+            t = tf.expand_dims(t, 0)
+
+        updated_dict[name] = t
+
+    return updated_dict
+
+
+def concat_feature_tensors(tensor_dict):
+    tensors = []
+
+    for name, val in tensor_dict.items():
         val = tf.cast(val, dtype=tf.float32)
-        if val.shape == []:
-            val = tf.expand_dims(val, 0)
-        sequence_tensors.append(val)
+        tensors.append(val)
 
-    return tf.expand_dims(tf.concat(sequence_tensors, axis=0), 0)
+    return tf.expand_dims(tf.concat(tensors, axis=-1), 0)
 
-
-def make_fixed_player_sequence_tensor(sequence_val_map):
-    sequence_tensors = []
-
-    for name, val in sequence_val_map.items():
-        val = ensure_dense(val)
-        val = tf.cast(val, dtype=tf.float32)
-        if len(val.shape) == 1:
-            val = tf.expand_dims(val, -1)
-        sequence_tensors.append(val)
-
-    # Concatenate the tensors, add a dummy batch dimension
-    return tf.expand_dims(tf.concat(sequence_tensors, axis=-1), 0)
