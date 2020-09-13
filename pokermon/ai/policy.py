@@ -1,12 +1,14 @@
 from abc import ABC, abstractmethod
 
-from pokermon.poker.cards import HoleCards
+from pokermon.poker.cards import Board, HoleCards
 from pokermon.poker.game import Action, GameView
 
 
 class Policy(ABC):
     @abstractmethod
-    def action(self, player_index: int, hand: HoleCards, game: GameView) -> Action:
+    def select_action(
+        self, player_index: int, game: GameView, hand: HoleCards, board: Board
+    ) -> Action:
         """
         Given the state of a game, return a
 

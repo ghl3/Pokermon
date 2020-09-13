@@ -45,7 +45,9 @@ def simulate(
         # Get the player's move
         player = players[player_index]
         hand = deal.hole_cards[player_index]
-        action = player.action(player_index, hand, game_runner.game_view())
+        action = player.select_action(
+            player_index, game_runner.game_view(), hand, deal.board
+        )
 
         if action is None:
             raise Exception("Invalid Action")

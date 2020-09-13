@@ -1,9 +1,16 @@
 from typing import Dict
 
+import numpy as np
 import tensorflow as tf
 
+from pokermon.ai.policy import Policy
 from pokermon.data import features
-from pokermon.data.action import LastAction, make_last_actions
+from pokermon.data.action import (
+    NUM_ACTION_BET_BINS,
+    LastAction,
+    make_action_from_encoded,
+    make_last_actions,
+)
 from pokermon.data.context import make_private_context, make_public_context
 from pokermon.data.examples import make_example
 from pokermon.data.state import (
@@ -13,12 +20,16 @@ from pokermon.data.state import (
     make_public_states,
 )
 from pokermon.model import utils
-from pokermon.model.action_policy_model import ActionPolicyModel, policy_vector_size
+from pokermon.model.utils import select_proportionally
 from pokermon.poker.cards import Board, HoleCards
-from pokermon.poker.game import GameView
+from pokermon.poker.game import Action, GameView
 
 
-class HeadsUpModel(ActionPolicyModel):
+def policy_vector_size():
+    return NUM_ACTION_BET_BINS + 2
+
+
+class HeadsUpModel(Policy):
     def __init__(
         self,
         name,
@@ -50,6 +61,24 @@ class HeadsUpModel(ActionPolicyModel):
         )
         self.model.add(tf.keras.layers.Dense(64))
         self.model.add(tf.keras.layers.Dense(policy_vector_size()))
+
+    def select_action(
+        self, player_index: int, game: GameView, hole_cards: HoleCards, board: Board
+    ) -> Action:
+        """
+        Select the next action to take.  This can be a stocastic choice.
+        """
+        assert game.current_player() == self.player_id
+        assert player_index == self.player_id
+        board = board.at_street(game.street())
+        action_probs: np.Array = self.action_probs(game, hole_cards, board)
+        action_index = select_proportionally(action_probs)
+        return make_action_from_encoded(action_index=action_index, game=game)
+
+    def action_probs(
+        self, game: GameView, hole_cards: HoleCards, board: Board
+    ) -> tf.Tensor:
+        pass
 
     def num_features(self):
 

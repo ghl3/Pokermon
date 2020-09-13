@@ -4,7 +4,7 @@ from typing import Optional, Tuple
 
 from pokermon.ai.policy import Policy
 from pokermon.poker import rules
-from pokermon.poker.cards import HoleCards
+from pokermon.poker.cards import Board, HoleCards
 from pokermon.poker.game import Action, GameView, Move
 
 logger = logging.getLogger(__name__)
@@ -14,7 +14,9 @@ class Human(Policy):
     _parser_call_fold = re.compile(r"\s*(check|call|fold)\s*")
     _parser_bet_raise = re.compile(r"\s*(bet|raise to)\s+([0-9]+)\s*")
 
-    def action(self, player_index: int, hand: HoleCards, game: GameView) -> Action:
+    def select_action(
+        self, player_index: int, game: GameView, hand: HoleCards, board: Board
+    ) -> Action:
         amount_to_call = game.amount_to_call()[player_index]
 
         stack_size = game.current_stack_sizes()[player_index]

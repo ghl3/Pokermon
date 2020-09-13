@@ -3,14 +3,16 @@ import random
 
 import pokermon.poker.rules as rules
 from pokermon.ai.policy import Policy
-from pokermon.poker.cards import HoleCards
+from pokermon.poker.cards import Board, HoleCards
 from pokermon.poker.game import Action, GameView, Move
 
 logger = logging.getLogger(__name__)
 
 
 class RandomPolicy(Policy):
-    def action(self, player_index: int, _: HoleCards, game: GameView) -> Action:
+    def select_action(
+        self, player_index: int, game: GameView, hand: HoleCards, board: Board
+    ) -> Action:
 
         amount_to_call = game.amount_to_call()[player_index]
         remaining_stack = game.current_stack_sizes()[player_index]
