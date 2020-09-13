@@ -139,21 +139,13 @@ def make_example(
 
     # First, make any context features, if necessary
     if public_context:
-        context_features.update(
-            _make_feature_map(PublicContext, public_context)
-
-        )
+        context_features.update(_make_feature_map(PublicContext, public_context))
 
     if private_context:
-        context_features.update(
-            _make_feature_map(PrivateContext, private_context)
-
-        )
+        context_features.update(_make_feature_map(PrivateContext, private_context))
 
     if target:
-        context_features.update(
-            _make_feature_map(Target, target)
-        )
+        context_features.update(_make_feature_map(Target, target))
 
     timestamp_features: Dict[str, List[tf.train.Feature]] = defaultdict(list)
 

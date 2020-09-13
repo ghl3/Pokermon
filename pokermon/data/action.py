@@ -3,7 +3,7 @@ from dataclasses import dataclass
 from typing import List
 
 from pokermon.data.utils import iter_actions
-from pokermon.poker.game import GameView, Action, Move
+from pokermon.poker.game import Action, GameView, Move
 
 NUM_ACTION_BET_BINS = 20
 
@@ -45,7 +45,7 @@ def encode_action(action: Action, game: GameView) -> int:
     else:
         min_raise = game.min_bet_amount()
         remaining_stack = game.current_stack_sizes()[game.current_player()]
-        range = (remaining_stack - min_raise)
+        range = remaining_stack - min_raise
         delta = range / NUM_ACTION_BET_BINS
         amount_raised = action.amount_added
         num_deltas = int(math.floor((amount_raised - min_raise) / delta))
@@ -83,19 +83,23 @@ def make_action_from_encoded(action_index: int, game: GameView) -> Action:
         max_add = game.current_stack_sizes()[game.current_player()]
         min_add = min(max_add, game.min_bet_amount())
         delta = (max_add - min_add) / NUM_ACTION_BET_BINS
-        num_deltas = (action_index - 2)
+        num_deltas = action_index - 2
         amount_to_add = int(math.floor(min_add + num_deltas * delta))
         return game.bet_raise(amount_to_add=amount_to_add)
 
 
 def make_last_actions(game: GameView) -> List[LastAction]:
     # We need a dummy entry for the first voluntary action
-    actions = [LastAction(move=-1,
-                          action_encoded=-1,
-                          amount_added=-1,
-                          amount_added_percent_of_remaining=-1,
-                          amount_raised=-1,
-                          amount_raised_percent_of_pot=-1)]
+    actions = [
+        LastAction(
+            move=-1,
+            action_encoded=-1,
+            amount_added=-1,
+            amount_added_percent_of_remaining=-1,
+            amount_raised=-1,
+            amount_raised_percent_of_pot=-1,
+        )
+    ]
 
     for i, a in list(iter_actions(game))[:-1]:
         game_view = game.view(i)
@@ -112,7 +116,7 @@ def make_last_actions(game: GameView) -> List[LastAction]:
                 amount_added=a.amount_added,
                 amount_added_percent_of_remaining=100 * a.amount_added // stack_size,
                 amount_raised=raise_amount,
-                amount_raised_percent_of_pot=100 * raise_amount // pot_size
+                amount_raised_percent_of_pot=100 * raise_amount // pot_size,
             )
         )
 
@@ -134,7 +138,7 @@ def make_next_actions(game: GameView) -> List[NextAction]:
                 action_encoded=encode_action(a, game),
                 amount_added=a.amount_added,
                 new_total_bet=a.total_bet,
-                amount_raised=raise_amount
+                amount_raised=raise_amount,
             )
         )
 

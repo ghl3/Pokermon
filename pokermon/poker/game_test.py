@@ -258,5 +258,6 @@ def test_go_all_in():
     game = GameRunner(starting_stacks=[200, 250, 100])
     game.start_game()
     game.bet_raise(to=10)
-    assert game.game_view().go_all_in() == Action(player_index=0, move=Move.BET_RAISE,
-                                                  amount_added=199, total_bet=200)
+    assert game.game_view().go_all_in() == Action(
+        player_index=0, move=Move.BET_RAISE, amount_added=199, total_bet=200
+    )

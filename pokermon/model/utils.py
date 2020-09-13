@@ -1,12 +1,15 @@
 import math
+
 import numpy as np
 import tensorflow as tf
 
-from pokermon.poker.game import GameView, Action
+from pokermon.poker.game import Action, GameView
 
 
 def select_proportionally(policy_probabilities: np.array) -> int:
-    return np.random.choice(len(policy_probabilities), size=1, p=policy_probabilities)[0]
+    return np.random.choice(len(policy_probabilities), size=1, p=policy_probabilities)[
+        0
+    ]
 
 
 def ensure_dense(t):

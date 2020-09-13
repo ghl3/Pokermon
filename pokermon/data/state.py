@@ -7,7 +7,7 @@ from typing import List, Optional
 
 from pokermon.data.utils import card_order, iter_actions
 from pokermon.poker.cards import Board
-from pokermon.poker.game import Game, Street, GameView
+from pokermon.poker.game import Game, GameView, Street
 
 
 @dataclass(frozen=True)

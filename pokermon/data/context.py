@@ -28,8 +28,7 @@ class PrivateContext:
 
 def make_public_context(game: GameView) -> PublicContext:
     return PublicContext(
-        num_players=game.num_players(),
-        starting_stack_sizes=game.starting_stacks()
+        num_players=game.num_players(), starting_stack_sizes=game.starting_stacks()
     )
 
 

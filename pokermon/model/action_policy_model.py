@@ -1,12 +1,12 @@
+from abc import ABCMeta, abstractmethod
 
 import numpy as np
 import tensorflow as tf
 
-from pokermon.data.action import make_action_from_encoded, NUM_ACTION_BET_BINS
+from pokermon.data.action import NUM_ACTION_BET_BINS, make_action_from_encoded
 from pokermon.model.utils import select_proportionally
-from pokermon.poker.cards import HoleCards, Board
-from pokermon.poker.game import GameView, Action
-from abc import ABCMeta, abstractmethod
+from pokermon.poker.cards import Board, HoleCards
+from pokermon.poker.game import Action, GameView
 
 
 def policy_vector_size():
@@ -18,10 +18,14 @@ class ActionPolicyModel(metaclass=ABCMeta):
         self.player_id = player_id
 
     @abstractmethod
-    def action_probs(self, game: GameView, hole_cards: HoleCards, board: Board) -> tf.Tensor:
+    def action_probs(
+        self, game: GameView, hole_cards: HoleCards, board: Board
+    ) -> tf.Tensor:
         pass
 
-    def select_next_action(self, game: GameView, hole_cards: HoleCards, board: Board) -> Action:
+    def select_next_action(
+        self, game: GameView, hole_cards: HoleCards, board: Board
+    ) -> Action:
         """
         Select the next action to take.  This can be a stocastic choice.
         """

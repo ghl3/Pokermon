@@ -3,11 +3,11 @@ from typing import Iterable, Tuple, Union
 import stringcase
 
 from pokermon.poker.cards import Card, HoleCards
-from pokermon.poker.game import Action, Game, Move, Street, GameView
+from pokermon.poker.game import Action, Game, GameView, Move, Street
 
 
 def feature_name(clazz, field) -> str:
-    return f'{stringcase.snakecase(clazz.__name__)}__{field.name}'
+    return f"{stringcase.snakecase(clazz.__name__)}__{field.name}"
 
 
 def card_order(card: Card) -> Tuple[int, int]:

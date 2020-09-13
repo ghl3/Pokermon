@@ -1,8 +1,8 @@
 import dataclasses
-from typing import Dict
-import tensorflow as tf
 import typing
-from typing import List
+from typing import Dict, List
+
+import tensorflow as tf
 
 from pokermon.data.utils import feature_name
 
@@ -40,4 +40,3 @@ def make_feature_config(clazz, is_sequence=False) -> Dict[str, tf.train.Feature]
             raise Exception(f"Unexpected type {field_type} on class {clazz}")
 
     return feature_map
-
