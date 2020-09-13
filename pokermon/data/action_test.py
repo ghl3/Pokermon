@@ -69,14 +69,18 @@ def test_fold_preflop() -> None:
 
     last_actions = make_last_actions(game.game_view())
     assert last_actions == [LastAction(move=-1, action_encoded=-1, amount_added=-1,
-                                       amount_added_percent_of_remaining=-1),
-                            LastAction(move=5, action_encoded=0, amount_added=10,
-                                       amount_added_percent_of_remaining=10),
+                                       amount_added_percent_of_remaining=-1, amount_raised=-1,
+                                       amount_raised_percent_of_pot=-1),
+                            LastAction(move=5, action_encoded=3, amount_added=10,
+                                       amount_added_percent_of_remaining=10, amount_raised=8,
+                                       amount_raised_percent_of_pot=266),
                             LastAction(move=3, action_encoded=0, amount_added=0,
-                                       amount_added_percent_of_remaining=0)
-                            ]
+                                       amount_added_percent_of_remaining=0, amount_raised=0,
+                                       amount_raised_percent_of_pot=0)]
 
     next_actions = make_next_actions(game.game_view())
-    assert next_actions == [NextAction(move=5, action_encoded=0, amount_added=10),
-                            NextAction(move=3, action_encoded=0, amount_added=0),
-                            NextAction(move=3, action_encoded=0, amount_added=0)]
+
+    assert next_actions == [
+        NextAction(move=5, action_encoded=3, amount_added=10, amount_raised=8, new_total_bet=10),
+        NextAction(move=3, action_encoded=0, amount_added=0, amount_raised=0, new_total_bet=10),
+        NextAction(move=3, action_encoded=0, amount_added=0, amount_raised=0, new_total_bet=10)]

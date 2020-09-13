@@ -15,6 +15,8 @@ class LastAction:
     action_encoded: int
     amount_added: int
     amount_added_percent_of_remaining: int
+    amount_raised: int
+    amount_raised_percent_of_pot: int
 
 
 # At timestamp i, the action that will be made
@@ -23,10 +25,11 @@ class NextAction:
     move: int
     action_encoded: int
     amount_added: int
+    amount_raised: int
+    new_total_bet: int
 
 
 def encode_action(action: Action, game: GameView) -> int:
-
     # 0 = Fold
     # 1 = Call
     # 2 = Min Raise (+ 0 * delta)
@@ -50,7 +53,6 @@ def encode_action(action: Action, game: GameView) -> int:
 
 
 def make_action_from_encoded(action_index: int, game: GameView) -> Action:
-
     # Example with
     # NUM_ACTION_BET_BINS = 20:
     # Amount_remaining = 82
@@ -91,19 +93,26 @@ def make_last_actions(game: GameView) -> List[LastAction]:
     actions = [LastAction(move=-1,
                           action_encoded=-1,
                           amount_added=-1,
-                          amount_added_percent_of_remaining=-1)]
+                          amount_added_percent_of_remaining=-1,
+                          amount_raised=-1,
+                          amount_raised_percent_of_pot=-1)]
 
     for i, a in list(iter_actions(game))[:-1]:
         game_view = game.view(i)
 
         stack_size = game_view.current_stack_sizes()[game_view.current_player()]
+        pot_size = game_view.pot_size()
+        current_bet = game_view.current_bet_amount()
+        raise_amount = a.total_bet - current_bet
 
         actions.append(
             LastAction(
                 move=a.move.value,
                 action_encoded=encode_action(a, game),
                 amount_added=a.amount_added,
-                amount_added_percent_of_remaining=100 * a.amount_added // stack_size
+                amount_added_percent_of_remaining=100 * a.amount_added // stack_size,
+                amount_raised=raise_amount,
+                amount_raised_percent_of_pot=100 * raise_amount // pot_size
             )
         )
 
@@ -114,11 +123,18 @@ def make_next_actions(game: GameView) -> List[NextAction]:
     actions = []
 
     for i, a in iter_actions(game):
+        game_view = game.view(i)
+
+        current_bet = game_view.current_bet_amount()
+        raise_amount = a.total_bet - current_bet
+
         actions.append(
             NextAction(
                 move=a.move.value,
                 action_encoded=encode_action(a, game),
                 amount_added=a.amount_added,
+                new_total_bet=a.total_bet,
+                amount_raised=raise_amount
             )
         )
 
