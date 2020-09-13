@@ -5,7 +5,7 @@ from typing import Any, Dict, List, Optional
 
 import tensorflow as tf  # type: ignore
 
-from pokermon.data.action import LastAction, CurrentAction
+from pokermon.data.action import LastAction, NextAction
 from pokermon.data.context import PrivateContext, PublicContext
 from pokermon.data.rewards import Reward
 from pokermon.data.state import PrivateState, PublicState
@@ -132,7 +132,7 @@ def make_example(
     public_states: Optional[List[PublicState]] = None,
     private_states: Optional[List[PrivateState]] = None,
     last_actions: Optional[List[LastAction]] = None,
-    current_actions: Optional[List[CurrentAction]] = None,
+    next_actions: Optional[List[NextAction]] = None,
     rewards: Optional[List[Reward]] = None,
 ) -> tf.train.SequenceExample:
     context_features: Dict[str, tf.train.Feature] = OrderedDict()
@@ -172,9 +172,9 @@ def make_example(
             for k, v in _make_feature_map(LastAction, action).items():
                 timestamp_features[k].append(v)
 
-    if current_actions:
-        for action in current_actions:
-            for k, v in _make_feature_map(CurrentAction, action).items():
+    if next_actions:
+        for action in next_actions:
+            for k, v in _make_feature_map(NextAction, action).items():
                 timestamp_features[k].append(v)
 
     if rewards:

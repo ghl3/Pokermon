@@ -378,13 +378,36 @@ class GameView:
 
     @functools.lru_cache()
     def bet_raise(
-        self, to: Optional[int] = None, raise_amount: Optional[int] = None
+        self, to: Optional[int] = None, raise_amount: Optional[int] = None,
+        amount_to_add: Optional[int] = None
     ) -> Action:
+        """
+        to: The new total bet
+        raise_amount: The amount raised OVER the previous bet amount
+        amount_to_add: The amount that the player adds to the pot
+
+        Example:
+            player A: Bet 5
+            player B: Raise To 20
+            Player A: Raise to 30
+
+        Before the last move, player A has already put 5 in the pot.  The bet is at 20,
+        and they raise it to 50 (30 more than the last bet amount).  This is the same as:
+
+        bet_raise(to=50)
+        bet_raise(raise_amount=30)
+        bet_raise(amount_to_add=45)
+
+        """
 
         player_index = self.current_player()
 
-        if to is not None and raise_amount is not None:
+        if sum(bool(x is not None) for x in [to, raise_amount, amount_to_add]) != 1:
             raise Exception()
+
+        elif amount_to_add is not None:
+            amount_already_added = self.amount_added_in_street()[player_index]
+            new_bet_size = amount_already_added + amount_to_add
 
         elif to is not None:
             new_bet_size = to
@@ -408,7 +431,7 @@ class GameView:
 
     @functools.lru_cache()
     def go_all_in(self) -> Action:
-        return self.bet_raise(raise_amount=self.current_stack_sizes()[self.current_player()])
+        return self.bet_raise(amount_to_add=self.current_stack_sizes()[self.current_player()])
 
     @functools.lru_cache()
     def fold(self) -> Action:

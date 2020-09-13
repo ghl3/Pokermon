@@ -1,4 +1,5 @@
 from pokermon.poker.game import Action, Game, Move, Street
+from pokermon.poker.game_runner import GameRunner
 
 
 def test_num_players():
@@ -251,3 +252,11 @@ def test_blinds():
     assert game.view().big_blind() == Action(
         1, Move.BIG_BLIND, total_bet=2, amount_added=2
     )
+
+
+def test_go_all_in():
+    game = GameRunner(starting_stacks=[200, 250, 100])
+    game.start_game()
+    game.bet_raise(to=10)
+    assert game.game_view().go_all_in() == Action(player_index=0, move=Move.BET_RAISE,
+                                                  amount_added=199, total_bet=200)

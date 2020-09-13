@@ -1,5 +1,5 @@
 # from pokermon.data import reenforcement_types
-from pokermon.data.action import make_last_actions, make_current_actions
+from pokermon.data.action import make_last_actions, make_next_actions
 from pokermon.data.context import (
     PublicContext,
     make_private_context,
@@ -126,7 +126,7 @@ def test_fold_preflop() -> None:
         public_states=make_public_states(game.game_view(), deal.board),
         private_states=None,
         last_actions=make_last_actions(game.game_view()),
-        current_actions=make_current_actions(game.game_view()),
+        next_actions=make_next_actions(game.game_view()),
         rewards=make_rewards(game.game_view(), results),
     )
     example_dict = seq_example_to_dict(example)
@@ -156,11 +156,11 @@ def test_fold_preflop() -> None:
             "public_state__folded_player_mask": [[0, 0, 0], [0, 0, 0], [1, 0, 0]],
             "public_state__flop_1_rank": [[-1], [-1], [-1]],
 
-            'current_action__amount_added': [[10], [0], [0]],
-            "current_action__action_encoded": [[5], [3], [3]],
+            'next_action__amount_added': [[10], [0], [0]],
+            "next_action__move": [[5], [3], [3]],
 
             'last_action__amount_added': [[-1], [10], [0]],
-            "last_action__action_encoded": [[-1], [5], [3]],
+            "last_action__move": [[-1], [5], [3]],
             'last_action__amount_added_percent_of_remaining': [[-1], [10], [0]],
 
             "reward__instant_reward": [[3], [0], [0]],
@@ -253,7 +253,7 @@ def test_full_hand() -> None:
         public_states=make_public_states(game.game_view(), deal.board),
         private_states=None,
         last_actions=make_last_actions(game.game_view()),
-        current_actions=make_current_actions(game.game_view()),
+        next_actions=make_next_actions(game.game_view()),
         rewards=make_rewards(game.game_view(), results),
     )
     example_dict = seq_example_to_dict(example)
@@ -497,7 +497,7 @@ def test_full_hand() -> None:
                 [175, 175, 275, 300],
                 [175, 75, 275, 300],
             ],
-            "current_action__action_encoded": [
+            "next_action__move": [
                 [5],
                 [3],
                 [5],
@@ -513,7 +513,7 @@ def test_full_hand() -> None:
                 [5],
                 [4],
             ],
-            "current_action__amount_added": [
+            "next_action__amount_added": [
                 [10],
                 [0],
                 [24],
@@ -530,7 +530,7 @@ def test_full_hand() -> None:
                 [100],
             ],
 
-            'last_action__action_encoded': [[-1],
+            'last_action__move': [[-1],
                                             [5],
                                             [3],
                                             [5],
