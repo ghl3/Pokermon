@@ -1,4 +1,3 @@
-from dataclasses import dataclass
 from typing import Dict
 
 import numpy as np
@@ -172,9 +171,9 @@ class HeadsUpModel(Policy):
         #            next_actions, depth=policy_vector_size(), axis=-1
         #        )
 
-        next_actions_one_hot = tf.squeeze(tf.one_hot(
-            next_actions, depth=policy_vector_size()
-        ), axis=2)
+        next_actions_one_hot = tf.squeeze(
+            tf.one_hot(next_actions, depth=policy_vector_size()), axis=2
+        )
 
         policy_logits = self.make_action_logits(feature_tensors)
         reward = tf.cast(target_tensors["reward__cumulative_reward"], tf.float32)
@@ -190,10 +189,16 @@ class HeadsUpModel(Policy):
         # calculate this loss using the following term (noting that we include a
         # negative sign to counter-act the negative sign in from the definition
         # of cross entropy):
-        return (
-            -1
-            * tf.squeeze(reward, -1)
-            * tf.nn.softmax_cross_entropy_with_logits(
+        cross_entropy = tf.nn.softmax_cross_entropy_with_logits(
             labels=next_actions_one_hot, logits=policy_logits
         )
+
+        player_mask = tf.squeeze(
+            feature_tensors["public_state__current_player_index"] == self.player_id, -1
+        )
+
+        return tf.where(
+            player_mask,
+            -1 * tf.squeeze(reward, -1) * cross_entropy,
+            tf.zeros_like(cross_entropy),
         )
