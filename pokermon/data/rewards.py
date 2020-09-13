@@ -1,9 +1,8 @@
 from dataclasses import dataclass
 from typing import List
 
-from pokermon.data.utils import get_hole_cards_as_int, iter_actions
-from pokermon.poker.cards import FullDeal
-from pokermon.poker.game import Game, GameView, Street
+from pokermon.data.utils import iter_actions
+from pokermon.poker.game import GameView, Street
 from pokermon.poker.rules import GameResults
 
 

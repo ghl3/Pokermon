@@ -10,7 +10,7 @@ from pokermon.data.context import PrivateContext, PublicContext
 from pokermon.data.rewards import Reward
 from pokermon.data.state import PrivateState, PublicState
 from pokermon.data.target import Target
-from pokermon.data.utils import feature_name
+from pokermon.data.utils import field_feature_name
 
 
 def _bytes_feature(values: List[str]) -> tf.train.Feature:
@@ -72,7 +72,7 @@ def _make_feature_map(clazz, val: Any, default_val=-1) -> Dict[str, tf.train.Fea
 
     for field in dataclasses.fields(clazz):
 
-        name = feature_name(clazz, field)
+        name = field_feature_name(clazz, field)
 
         val = val_map[field.name]
         field_type = field.type
@@ -160,13 +160,13 @@ def make_example(
                 timestamp_features[k].append(v)
 
     if last_actions:
-        for action in last_actions:
-            for k, v in _make_feature_map(LastAction, action).items():
+        for last_action in last_actions:
+            for k, v in _make_feature_map(LastAction, last_action).items():
                 timestamp_features[k].append(v)
 
     if next_actions:
-        for action in next_actions:
-            for k, v in _make_feature_map(NextAction, action).items():
+        for next_action in next_actions:
+            for k, v in _make_feature_map(NextAction, next_action).items():
                 timestamp_features[k].append(v)
 
     if rewards:

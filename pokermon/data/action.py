@@ -124,7 +124,7 @@ def make_last_actions(game: GameView) -> List[LastAction]:
 
 
 def make_next_actions(game: GameView) -> List[NextAction]:
-    actions = []
+    actions: List[NextAction] = []
 
     for i, a in iter_actions(game):
         game_view = game.view(i)

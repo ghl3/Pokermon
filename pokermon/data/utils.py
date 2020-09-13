@@ -1,12 +1,12 @@
-from typing import Iterable, Tuple, Union
+from typing import Iterable, Tuple
 
-import stringcase
+import stringcase  # type: ignore
 
 from pokermon.poker.cards import Card, HoleCards
-from pokermon.poker.game import Action, Game, GameView, Move, Street
+from pokermon.poker.game import Action, GameView, Move, Street
 
 
-def feature_name(clazz, field) -> str:
+def field_feature_name(clazz, field) -> str:
     return f"{stringcase.snakecase(clazz.__name__)}__{field.name}"
 
 

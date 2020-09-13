@@ -2,9 +2,9 @@ import dataclasses
 import typing
 from typing import Dict, List
 
-import tensorflow as tf
+import tensorflow as tf  # type: ignore
 
-from pokermon.data.utils import feature_name
+from pokermon.data.utils import field_feature_name
 
 
 def make_feature_config(clazz, is_sequence=False) -> Dict[str, tf.train.Feature]:
@@ -17,7 +17,7 @@ def make_feature_config(clazz, is_sequence=False) -> Dict[str, tf.train.Feature]
 
     for field in dataclasses.fields(clazz):
 
-        name = feature_name(clazz, field)
+        name = field_feature_name(clazz, field)
         field_type = field.type
 
         if typing.get_origin(field_type) == typing.Union:

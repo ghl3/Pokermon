@@ -1,9 +1,5 @@
-import math
-
 import numpy as np
 import tensorflow as tf
-
-from pokermon.poker.game import Action, GameView
 
 
 def select_proportionally(policy_probabilities: np.array) -> int:
