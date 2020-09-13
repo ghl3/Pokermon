@@ -9,8 +9,10 @@ from pokermon.data import features
 from pokermon.data.action import (
     NUM_ACTION_BET_BINS,
     LastAction,
+    NextAction,
     make_action_from_encoded,
-    make_last_actions, NextAction, make_next_actions,
+    make_last_actions,
+    make_next_actions,
 )
 from pokermon.data.examples import make_example
 from pokermon.data.rewards import Reward, make_rewards
@@ -21,8 +23,7 @@ from pokermon.data.state import (
     make_public_states,
 )
 from pokermon.model import utils
-from pokermon.model.utils import select_proportionally, \
-     make_sequence_dict_of_dense
+from pokermon.model.utils import make_sequence_dict_of_dense, select_proportionally
 from pokermon.poker.cards import Board, HoleCards
 from pokermon.poker.game import Action, GameView, Street
 from pokermon.poker.rules import GameResults
@@ -54,17 +55,11 @@ class HeadsUpModel(Policy):
         self.features.update(
             features.make_feature_config(PrivateState, is_sequence=True)
         )
-        self.features.update(
-            features.make_feature_config(LastAction, is_sequence=True)
-        )
+        self.features.update(features.make_feature_config(LastAction, is_sequence=True))
 
         self.targets = {}
-        self.targets.update(
-            features.make_feature_config(NextAction, is_sequence=True)
-        )
-        self.targets.update(
-            features.make_feature_config(Reward, is_sequence=True)
-        )
+        self.targets.update(features.make_feature_config(NextAction, is_sequence=True))
+        self.targets.update(features.make_feature_config(Reward, is_sequence=True))
 
         self.model = tf.keras.Sequential(name=name)
         self.model.add(
@@ -115,13 +110,13 @@ class HeadsUpModel(Policy):
         assert game.num_players() == self.num_players
 
         example = make_example(
-            #public_context=make_public_context(game),
-            #private_context=make_private_context(hole_cards),
+            # public_context=make_public_context(game),
+            # private_context=make_private_context(hole_cards),
             public_states=make_public_states(game, board=board),
             private_states=make_private_states(game, board=board),
             last_actions=make_last_actions(game),
-            #next_actions=make_next_actions(game),
-            #rewards=make_rewards(game)
+            # next_actions=make_next_actions(game),
+            # rewards=make_rewards(game)
         )
 
         context_dict, sequence_dict = tf.io.parse_single_sequence_example(
@@ -135,8 +130,7 @@ class HeadsUpModel(Policy):
         return make_sequence_dict_of_dense(sequence_dict)
 
     def make_target_tensors(
-        self, game: GameView,     results: GameResults
-
+        self, game: GameView, results: GameResults
     ) -> TargetTensors:
         """
         All tensors have shape:
@@ -147,8 +141,7 @@ class HeadsUpModel(Policy):
         assert game.street() == Street.OVER
 
         example = make_example(
-            next_actions=make_next_actions(game),
-            rewards=make_rewards(game, results)
+            next_actions=make_next_actions(game), rewards=make_rewards(game, results)
         )
 
         context_dict, sequence_dict = tf.io.parse_single_sequence_example(
@@ -161,7 +154,6 @@ class HeadsUpModel(Policy):
 
         return make_sequence_dict_of_dense(sequence_dict)
 
-
     def action_probs(self, feature_tensors: FeatureTensors) -> tf.Tensor:
         return tf.nn.softmax(self.make_action_logits(feature_tensors))
 
@@ -169,13 +161,21 @@ class HeadsUpModel(Policy):
         return self.model(utils.concat_feature_tensors(feature_tensors))
 
     def loss(self, feature_tensors: FeatureTensors, target_tensors: TargetTensors):
+        """
+        Returns the loss for each batch element and each timestep.
+        [batch_size, time]
+        """
 
         # [batch, time]
-        next_actions = target_tensors[
-            "next_action__action_encoded"]
-        next_actions_one_hot = tf.one_hot(
-            next_actions, depth=policy_vector_size(), axis=-1
-        )
+        next_actions = target_tensors["next_action__action_encoded"]
+        #        next_actions_one_hot = tf.one_hot(
+        #            next_actions, depth=policy_vector_size(), axis=-1
+        #        )
+
+        next_actions_one_hot = tf.squeeze(tf.one_hot(
+            next_actions, depth=policy_vector_size()
+        ), axis=2)
+
         policy_logits = self.make_action_logits(feature_tensors)
         reward = tf.cast(target_tensors["reward__cumulative_reward"], tf.float32)
 
@@ -192,7 +192,8 @@ class HeadsUpModel(Policy):
         # of cross entropy):
         return (
             -1
-            * reward
+            * tf.squeeze(reward, -1)
             * tf.nn.softmax_cross_entropy_with_logits(
             labels=next_actions_one_hot, logits=policy_logits
-        ))
+        )
+        )

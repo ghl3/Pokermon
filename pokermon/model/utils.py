@@ -17,7 +17,9 @@ def ensure_dense(t):
         return t
 
 
-def make_sequence_dict_of_dense(tensor_dict: Dict[str, tf.Tensor]) -> Dict[str, tf.Tensor]:
+def make_sequence_dict_of_dense(
+    tensor_dict: Dict[str, tf.Tensor]
+) -> Dict[str, tf.Tensor]:
     """
     All tensors have shape [time, 1 OR num_players]
     """
@@ -28,12 +30,14 @@ def make_sequence_dict_of_dense(tensor_dict: Dict[str, tf.Tensor]) -> Dict[str, 
         if len(t.shape) == 1:
             t = tf.expand_dims(t, -1)
 
-        updated_dict[name] = t
+        updated_dict[name] = tf.expand_dims(t, 0)
 
     return updated_dict
 
 
-def make_context_dict_of_dense(tensor_dict: Dict[str, tf.Tensor]) -> Dict[str, tf.Tensor]:
+def make_context_dict_of_dense(
+    tensor_dict: Dict[str, tf.Tensor]
+) -> Dict[str, tf.Tensor]:
     """
     All tensors have shape [1 OR num_players]
     """
@@ -44,7 +48,7 @@ def make_context_dict_of_dense(tensor_dict: Dict[str, tf.Tensor]) -> Dict[str, t
         if t.shape == []:
             t = tf.expand_dims(t, 0)
 
-        updated_dict[name] = t
+        updated_dict[name] = tf.expand_dims(t, 0)
 
     return updated_dict
 
@@ -56,5 +60,4 @@ def concat_feature_tensors(tensor_dict):
         val = tf.cast(val, dtype=tf.float32)
         tensors.append(val)
 
-    return tf.expand_dims(tf.concat(tensors, axis=-1), 0)
-
+    return tf.concat(tensors, axis=-1)
