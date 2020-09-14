@@ -4,12 +4,9 @@ from dataclasses import dataclass
 from enum import Enum
 from typing import List, Optional, Tuple
 
+from pokermon.poker import cards
 from pokermon.poker.cards import Board, Card, HoleCards, Rank, Suit
 from pokermon.poker.evaluation import evaluate_hand
-
-ALL_CARDS: Tuple[Card, ...] = tuple(
-    [Card(rank=rank, suit=suit) for rank in Rank for suit in Suit]
-)
 
 
 class HeadToHeadResult(Enum):
@@ -90,10 +87,10 @@ def odds_vs_random_hand(
     remaining_cards = tuple(
         [
             c
-            for c in ALL_CARDS
+            for c in cards.ALL_CARDS
             if c not in hand
-            and c not in board.cards()
-            and (other_hand is None or c not in other_hand)
+               and c not in board.cards()
+               and (other_hand is None or c not in other_hand)
         ]
     )
 

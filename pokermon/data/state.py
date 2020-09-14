@@ -9,7 +9,7 @@ from typing import List, Optional
 
 from pokermon.data.utils import card_order, iter_actions
 from pokermon.poker.cards import Board, HoleCards
-from pokermon.poker.evaluation import evaluate_hand
+from pokermon.poker.evaluation import evaluate_hand, make_nut_result
 from pokermon.poker.game import GameView, Street
 from pokermon.poker.odds import odds_vs_random_hand
 
@@ -43,6 +43,9 @@ class PrivateState:
     current_hand_type: Optional[int]
     current_hand_strength: Optional[float]
     current_hand_rank: Optional[int]
+    num_hands_better: Optional[int]
+    num_hands_tied: Optional[int]
+    num_hands_worse: Optional[int]
     win_prob_vs_random: Optional[float]
     # TODO: Can we get the "nut index" of this hand?
 
@@ -137,17 +140,23 @@ def make_private_states(game: GameView, hole_cards: HoleCards, board: Board):
         current_board = board.at_street(game_view.street())
 
         if game_view.street() == Street.PREFLOP:
-            private_states.append(PrivateState(None, None, None, None))
+            private_states.append(PrivateState(None, None, None, None, None, None, None))
         else:
             hand_eval = evaluate_hand(hole_cards, current_board)
             # These odds are deterministic if we don't pass an explicit rng
             win_odds = odds_vs_random_hand(hole_cards, current_board, num_draws=1000)
+
+            nut_result = make_nut_result(hole_cards, current_board)
+
             private_states.append(
                 PrivateState(
                     current_hand_type=hand_eval.hand_type.value,
                     current_hand_strength=hand_eval.percentage,
                     current_hand_rank=hand_eval.rank,
                     win_prob_vs_random=win_odds.win_rate(),
+                    num_hands_better=nut_result.num_better,
+                    num_hands_tied=nut_result.num_tied,
+                    num_hands_worse=nut_result.num_worse
                 )
             )
 

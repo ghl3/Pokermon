@@ -5,14 +5,18 @@ from functools import total_ordering
 
 import deuces
 from pokermon.poker import deuces_wrapper
-from pokermon.poker.cards import Board, HandType, HoleCards
+from pokermon.poker.cards import Board, HandType, HoleCards, ALL_HANDS, sorted_hole_cards
 
 
 @total_ordering
 @dataclass
 class EvaluationResult:
     hand_type: HandType
+
+    # Lower is better
     rank: int
+
+    # Higher is better
     percentage: float
 
     def __lt__(self, other: object) -> bool:
@@ -40,3 +44,46 @@ def evaluate_hand(hole_cards: HoleCards, board: Board) -> EvaluationResult:
     hand_type = deuces_wrapper.from_deuces_hand_type(rank_class)
 
     return EvaluationResult(hand_type=hand_type, rank=rank, percentage=percentage)
+
+
+@dataclass(frozen=True)
+class NutResult:
+    num_better: int
+    num_tied: int
+    num_worse: int
+
+    def rank(self):
+        return 1 + self.num_better
+
+
+def make_nut_result(hole_cards: HoleCards, board: Board) -> NutResult:
+    """
+    1 = The current nuts
+    2 = The current second nuts
+    ..
+    1326 = The worst hand possible
+    """
+    hole_cards = sorted_hole_cards(hole_cards)
+
+    my_result = evaluate_hand(hole_cards, board)
+
+    all_evals = [(hc, evaluate_hand(hc, board)) for hc in ALL_HANDS
+                 if hc[0] not in board.cards() and hc[1] not in board.cards()]
+
+    num_better = 0
+    num_tied = 0
+    num_worse = 0
+
+    for hand, result in all_evals:
+        if hand == hole_cards:
+            continue
+        elif result.rank < my_result.rank:
+            num_better += 1
+        elif result.rank == my_result.rank:
+            num_tied += 1
+        else:
+            num_worse += 1
+
+    return NutResult(num_better=num_better,
+                     num_tied=num_tied,
+                     num_worse=num_worse)

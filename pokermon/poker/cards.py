@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import dataclasses
+import itertools
 from dataclasses import dataclass
 from typing import List, Optional, Sequence, Tuple
 
@@ -50,6 +51,10 @@ class Card:
     rank: Rank
     suit: Suit
 
+
+ALL_CARDS: Tuple[Card, ...] = tuple(
+    [Card(rank=rank, suit=suit) for rank in Rank for suit in Suit]
+)
 
 card_map = {
     "A": Rank.ACE,
@@ -134,6 +139,11 @@ def mkboard(s: str) -> Board:
         turn=cards[3] if len(cards) > 3 else None,
         river=cards[4] if len(cards) > 4 else None,
     )
+
+
+ALL_HANDS: Tuple[HoleCards, ...] = tuple([make_hole_cards(comb[0], comb[1])
+                                          for comb in
+                                          itertools.combinations(ALL_CARDS, 2)])
 
 
 @dataclass(frozen=True)
