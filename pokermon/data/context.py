@@ -44,5 +44,5 @@ def make_private_context(hole_cards: HoleCards):
         hole_card_0_suit=hole_cards[0].suit.value,
         hole_card_1_rank=hole_cards[1].rank.value,
         hole_card_1_suit=hole_cards[1].suit.value,
-        hand_encoded=get_hole_cards_as_int(hole_cards)
+        hand_encoded=get_hole_cards_as_int(hole_cards),
     )

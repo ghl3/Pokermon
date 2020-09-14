@@ -69,4 +69,3 @@ def iter_actions(game: GameView) -> Iterable[Tuple[int, Action]]:
             continue
 
         yield i, e
-

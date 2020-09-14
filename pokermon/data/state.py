@@ -142,10 +142,13 @@ def make_private_states(game: GameView, hole_cards: HoleCards, board: Board):
             hand_eval = evaluate_hand(hole_cards, current_board)
             # These odds are deterministic if we don't pass an explicit rng
             win_odds = odds_vs_random_hand(hole_cards, current_board, num_draws=1000)
-            private_states.append(PrivateState(
-                current_hand_type=hand_eval.hand_type.value,
-                current_hand_strength=hand_eval.percentage,
-                current_hand_rank=hand_eval.rank,
-                win_prob_vs_random=win_odds.win_rate()))
+            private_states.append(
+                PrivateState(
+                    current_hand_type=hand_eval.hand_type.value,
+                    current_hand_strength=hand_eval.percentage,
+                    current_hand_rank=hand_eval.rank,
+                    win_prob_vs_random=win_odds.win_rate(),
+                )
+            )
 
     return private_states
