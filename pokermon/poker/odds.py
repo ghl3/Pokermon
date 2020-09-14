@@ -1,10 +1,11 @@
 import random
+import zlib
 from dataclasses import dataclass
 from enum import Enum
-from typing import Optional, Tuple
+from typing import Optional, Tuple, List
 
 from pokermon.poker.cards import Board, Card, HoleCards, Rank, Suit
-from pokermon.poker.evaluation import evaluate
+from pokermon.poker.evaluation import evaluate_hand
 
 ALL_CARDS: Tuple[Card, ...] = tuple(
     [Card(rank=rank, suit=suit) for rank in Rank for suit in Suit]
@@ -18,8 +19,8 @@ class HeadToHeadResult(Enum):
 
 
 def is_winner(hand: HoleCards, other_hand: HoleCards, board: Board) -> HeadToHeadResult:
-    hero_hand = evaluate(hand, board)
-    villian_hand = evaluate(other_hand, board)
+    hero_hand = evaluate_hand(hand, board)
+    villian_hand = evaluate_hand(other_hand, board)
 
     if hero_hand > villian_hand:
         return HeadToHeadResult.WIN
@@ -42,11 +43,35 @@ class SimulationResult:
         return self.num_wins / self.num_simulations()
 
 
+def int_to_bytes(i: int, *, signed: bool = False) -> bytes:
+    length = ((i + ((i * signed) < 0)).bit_length() + 7 + signed) // 8
+    return i.to_bytes(length, byteorder='big', signed=signed)
+
+
+def make_seed(num_draws, hand: HoleCards,
+              board: Board = None,
+              other_hand: Optional[HoleCards] = None) -> int:
+    cards: List[Card] = list(hand)
+    if board:
+        for c in board.cards():
+            cards.append(c)
+    if other_hand:
+        cards.extend(list(other_hand))
+
+    bytes = b''
+    bytes += int_to_bytes(num_draws)
+    for card in cards:
+        bytes += int_to_bytes(card.rank.value) + int_to_bytes(card.suit.value)
+
+    return zlib.adler32(bytes)
+
+
 def odds_vs_random_hand(
     hand: HoleCards,
-    board: Board = None,
+    board: Optional[Board] = None,
     other_hand: Optional[HoleCards] = None,
     num_draws=1000,
+    rng=None
 ):
     """
 
@@ -56,13 +81,17 @@ def odds_vs_random_hand(
     if board is None:
         board = Board(flop=None, turn=None, river=None)
 
+
+    if rng is None:
+        rng = random.Random(make_seed(num_draws, hand, board, other_hand))
+
     remaining_cards = tuple(
         [
             c
             for c in ALL_CARDS
             if c not in hand
-            and c not in board.cards()
-            and (other_hand is None or c not in other_hand)
+               and c not in board.cards()
+               and (other_hand is None or c not in other_hand)
         ]
     )
 
@@ -74,9 +103,10 @@ def odds_vs_random_hand(
     num_losses = 0
     num_ties = 0
 
+    # Make odds deterministic
     for _ in range(num_draws):
         drawn_cards: Tuple[Card, ...] = tuple(
-            random.sample(remaining_cards, num_to_draw)
+            rng.sample(remaining_cards, num_to_draw)
         )
         simulated_board: Board = board + tuple(drawn_cards[:board_cards_to_draw])
         result: HeadToHeadResult = is_winner(

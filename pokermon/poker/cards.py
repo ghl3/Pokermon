@@ -72,6 +72,26 @@ suit_map = {"S": Suit.SPADES, "C": Suit.CLUBS, "D": Suit.DIAMONDS, "H": Suit.HEA
 
 _card_regex = regex.compile("^(([AKQJT]|10|[2-9])([SHCD]))+$")
 
+HoleCards = Tuple[Card, Card]
+
+
+def make_hole_cards(first: Card, second: Card) -> HoleCards:
+    if first > second:
+        return first, second
+    else:
+        return second, first
+
+
+def sorted_cards(cards: Tuple[Card, ...]) -> Tuple[Card, ...]:
+    return tuple(sorted(cards, reverse=True))
+
+
+def sorted_hole_cards(hole_cards: HoleCards) -> HoleCards:
+    if hole_cards[0] > hole_cards[1]:
+        return hole_cards[0], hole_cards[1]
+    else:
+        return hole_cards[1], hole_cards[0]
+
 
 def mkcards(s: str) -> List[Card]:
     s = s.upper()
@@ -94,29 +114,26 @@ def mkcard(s: str) -> Card:
     return cards[0]
 
 
-def mkhand(s: str) -> Tuple[Card, Card]:
+def mkhand(s: str) -> HoleCards:
     cards = mkcards(s)
     assert len(cards) == 2
-    return (cards[0], cards[1])
+    return sorted_hole_cards(cards)
 
 
 def mkflop(s: str) -> Tuple[Card, Card, Card]:
     cards = mkcards(s)
     assert len(cards) == 3
-    return (cards[0], cards[1], cards[2])
+    return sorted_cards((cards[0], cards[1], cards[2]))
 
 
 def mkboard(s: str) -> Board:
     cards = mkcards(s)
     assert 3 <= len(cards) <= 5
     return Board(
-        flop=(cards[0], cards[1], cards[2]),
+        flop=sorted_cards((cards[0], cards[1], cards[2])),
         turn=cards[3] if len(cards) > 3 else None,
         river=cards[4] if len(cards) > 4 else None,
     )
-
-
-HoleCards = Tuple[Card, Card]
 
 
 @dataclass(frozen=True)

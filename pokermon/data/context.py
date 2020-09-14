@@ -5,7 +5,8 @@
 from dataclasses import dataclass
 from typing import List
 
-from pokermon.poker.cards import HoleCards
+from pokermon.data.utils import get_hole_cards_as_int
+from pokermon.poker.cards import HoleCards, sorted_hole_cards
 from pokermon.poker.game import GameView
 
 
@@ -25,6 +26,8 @@ class PrivateContext:
     hole_card_1_rank: int
     hole_card_1_suit: int
 
+    hand_encoded: int
+
 
 def make_public_context(game: GameView) -> PublicContext:
     return PublicContext(
@@ -33,9 +36,13 @@ def make_public_context(game: GameView) -> PublicContext:
 
 
 def make_private_context(hole_cards: HoleCards):
+
+    hole_cards: HoleCards = sorted_hole_cards(hole_cards)
+
     return PrivateContext(
         hole_card_0_rank=hole_cards[0].rank.value,
         hole_card_0_suit=hole_cards[0].suit.value,
         hole_card_1_rank=hole_cards[1].rank.value,
         hole_card_1_suit=hole_cards[1].suit.value,
+        hand_encoded=get_hole_cards_as_int(hole_cards)
     )

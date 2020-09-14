@@ -134,6 +134,7 @@ def test_fold_preflop() -> None:
     assert example_dict == {
         "context": {
             "public_context__num_players": [3],
+            'private_context__hand_encoded': [168],
             "private_context__hole_card_0_rank": [14],
             "target__hole_cards": [12, 168, 9],
             "private_context__hole_card_1_rank": [13],
@@ -263,6 +264,7 @@ def test_full_hand() -> None:
 
     assert example_dict == {
         "context": {
+            'private_context__hand_encoded': [140],
             "private_context__hole_card_0_rank": [13],
             "private_context__hole_card_0_suit": [2],
             "private_context__hole_card_1_rank": [10],

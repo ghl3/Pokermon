@@ -29,7 +29,7 @@ class EvaluationResult:
 _EVALUATOR = deuces.Evaluator()
 
 
-def evaluate(hole_cards: HoleCards, board: Board) -> EvaluationResult:
+def evaluate_hand(hole_cards: HoleCards, board: Board) -> EvaluationResult:
     d_hand = deuces_wrapper.to_deuces_hand(hole_cards)
     d_board = deuces_wrapper.to_deuces_board(board)
 

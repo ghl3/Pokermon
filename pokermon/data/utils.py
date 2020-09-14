@@ -1,8 +1,9 @@
+import zlib
 from typing import Iterable, Tuple
 
 import stringcase  # type: ignore
 
-from pokermon.poker.cards import Card, HoleCards
+from pokermon.poker.cards import Card, HoleCards, sorted_hole_cards
 from pokermon.poker.game import Action, GameView, Move, Street
 
 
@@ -15,11 +16,7 @@ def card_order(card: Card) -> Tuple[int, int]:
 
 
 def get_hole_cards_as_int(hole_cards: HoleCards):
-    cards: Tuple[Card, Card] = (
-        (hole_cards[0], hole_cards[1])
-        if hole_cards[0] > hole_cards[1]
-        else (hole_cards[1], hole_cards[0])
-    )
+    cards: HoleCards = sorted_hole_cards(hole_cards)
 
     suited = cards[0].suit == cards[1].suit
     paired = cards[0].rank == cards[1].rank
@@ -72,3 +69,4 @@ def iter_actions(game: GameView) -> Iterable[Tuple[int, Action]]:
             continue
 
         yield i, e
+

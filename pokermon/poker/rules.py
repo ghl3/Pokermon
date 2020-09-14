@@ -5,7 +5,7 @@ from enum import Enum
 from typing import Any, Dict, List, Optional, Set, Tuple
 
 from pokermon.poker.cards import FullDeal
-from pokermon.poker.evaluation import EvaluationResult, evaluate
+from pokermon.poker.evaluation import EvaluationResult, evaluate_hand
 from pokermon.poker.game import (
     BIG_BLIND_AMOUNT,
     SMALL_BLIND_AMOUNT,
@@ -381,7 +381,7 @@ def get_result(cards: FullDeal, game: GameView) -> GameResults:
         hole_cards = cards.hole_cards[player_index]
         board = cards.board
 
-        eval_result: EvaluationResult = evaluate(hole_cards, board)
+        eval_result: EvaluationResult = evaluate_hand(hole_cards, board)
 
         all_hands.append(eval_result)
 

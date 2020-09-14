@@ -2,12 +2,16 @@
 # There are two types of state:
 # - Public State: The state anyone watching the game would know
 # - Private State: The state that requires knowing someone's hole cards
+import hashlib
+import random
 from dataclasses import dataclass
 from typing import List, Optional
 
 from pokermon.data.utils import card_order, iter_actions
-from pokermon.poker.cards import Board
+from pokermon.poker.cards import Board, HoleCards
+from pokermon.poker.evaluation import evaluate_hand
 from pokermon.poker.game import GameView, Street
+from pokermon.poker.odds import odds_vs_random_hand
 
 
 @dataclass(frozen=True)
@@ -36,9 +40,11 @@ class PublicState:
 
 @dataclass(frozen=True)
 class PrivateState:
-    current_hand_type: int
-    current_hand_strength: float
-    current_hand_rank: int
+    current_hand_type: Optional[int]
+    current_hand_strength: Optional[float]
+    current_hand_rank: Optional[int]
+    win_prob_vs_random: Optional[float]
+    # TODO: Can we get the "nut index" of this hand?
 
     # Desired Features:
     # Post Flop Best Hand index (eg is nuts, etc)
@@ -123,14 +129,23 @@ def make_public_states(game: GameView, board: Optional[Board]):
     return public_states
 
 
-def make_private_states(game: GameView, board: Board):
+def make_private_states(game: GameView, hole_cards: HoleCards, board: Board):
     private_states = []
 
     for i, a in iter_actions(game):
         game_view = game.view(i)
-        # current_board = board.at_street(game_view.street())
+        current_board = board.at_street(game_view.street())
 
-        # TODO: Implement this
-        private_states.append(PrivateState(-1, -1, -1))
+        if game_view.street() == Street.PREFLOP:
+            private_states.append(PrivateState(None, None, None, None))
+        else:
+            hand_eval = evaluate_hand(hole_cards, current_board)
+            # These odds are deterministic if we don't pass an explicit rng
+            win_odds = odds_vs_random_hand(hole_cards, current_board, num_draws=1000)
+            private_states.append(PrivateState(
+                current_hand_type=hand_eval.hand_type.value,
+                current_hand_strength=hand_eval.percentage,
+                current_hand_rank=hand_eval.rank,
+                win_prob_vs_random=win_odds.win_rate()))
 
     return private_states
