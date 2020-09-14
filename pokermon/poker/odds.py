@@ -89,8 +89,8 @@ def odds_vs_random_hand(
             c
             for c in cards.ALL_CARDS
             if c not in hand
-               and c not in board.cards()
-               and (other_hand is None or c not in other_hand)
+            and c not in board.cards()
+            and (other_hand is None or c not in other_hand)
         ]
     )
 

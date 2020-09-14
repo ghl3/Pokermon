@@ -141,9 +141,9 @@ def mkboard(s: str) -> Board:
     )
 
 
-ALL_HANDS: Tuple[HoleCards, ...] = tuple([make_hole_cards(comb[0], comb[1])
-                                          for comb in
-                                          itertools.combinations(ALL_CARDS, 2)])
+ALL_HANDS: Tuple[HoleCards, ...] = tuple(
+    [make_hole_cards(comb[0], comb[1]) for comb in itertools.combinations(ALL_CARDS, 2)]
+)
 
 
 @dataclass(frozen=True)

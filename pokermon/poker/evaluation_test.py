@@ -1,7 +1,11 @@
 import deuces
 from pokermon.poker.cards import Board, HandType, mkcard, mkflop, mkhand
-from pokermon.poker.evaluation import evaluate_hand, EvaluationResult, NutResult, \
-    make_nut_result
+from pokermon.poker.evaluation import (
+    EvaluationResult,
+    NutResult,
+    evaluate_hand,
+    make_nut_result,
+)
 
 
 def test_deck() -> None:
@@ -16,10 +20,13 @@ def test_royal() -> None:
 
     eval_result = evaluate_hand(hole_cards, board)
 
-    assert eval_result == EvaluationResult(hand_type=HandType.STRAIGHT_FLUSH,
-                                           rank=1, percentage=0.9998659876708658)
+    assert eval_result == EvaluationResult(
+        hand_type=HandType.STRAIGHT_FLUSH, rank=1, percentage=0.9998659876708658
+    )
 
-    assert make_nut_result(hole_cards, board) == NutResult(num_better=0, num_tied=0, num_worse=1175)
+    assert make_nut_result(hole_cards, board) == NutResult(
+        num_better=0, num_tied=0, num_worse=1175
+    )
 
 
 def test_wheel() -> None:
@@ -28,11 +35,13 @@ def test_wheel() -> None:
 
     eval_result = evaluate_hand(hole_cards, board)
 
-    assert eval_result == EvaluationResult(hand_type=HandType.HIGH,
-                                           rank=7462, percentage=0.0)
+    assert eval_result == EvaluationResult(
+        hand_type=HandType.HIGH, rank=7462, percentage=0.0
+    )
 
-    assert make_nut_result(hole_cards, board) == NutResult(num_better=1160, num_tied=15,
-                                                           num_worse=0)
+    assert make_nut_result(hole_cards, board) == NutResult(
+        num_better=1160, num_tied=15, num_worse=0
+    )
 
 
 def test_winner() -> None:
@@ -41,8 +50,10 @@ def test_winner() -> None:
 
     eval_result = evaluate_hand(hole_cards, board)
 
-    assert eval_result == EvaluationResult(hand_type=HandType.TRIPS, rank=1615,
-                                           percentage=0.7835700884481372)
+    assert eval_result == EvaluationResult(
+        hand_type=HandType.TRIPS, rank=1615, percentage=0.7835700884481372
+    )
 
-    assert make_nut_result(hole_cards, board) == NutResult(num_better=32, num_tied=3,
-                                                           num_worse=1046)
+    assert make_nut_result(hole_cards, board) == NutResult(
+        num_better=32, num_tied=3, num_worse=1046
+    )

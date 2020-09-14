@@ -5,7 +5,13 @@ from functools import total_ordering
 
 import deuces
 from pokermon.poker import deuces_wrapper
-from pokermon.poker.cards import Board, HandType, HoleCards, ALL_HANDS, sorted_hole_cards
+from pokermon.poker.cards import (
+    ALL_HANDS,
+    Board,
+    HandType,
+    HoleCards,
+    sorted_hole_cards,
+)
 
 
 @total_ordering
@@ -67,8 +73,11 @@ def make_nut_result(hole_cards: HoleCards, board: Board) -> NutResult:
 
     my_result = evaluate_hand(hole_cards, board)
 
-    all_evals = [(hc, evaluate_hand(hc, board)) for hc in ALL_HANDS
-                 if hc[0] not in board.cards() and hc[1] not in board.cards()]
+    all_evals = [
+        (hc, evaluate_hand(hc, board))
+        for hc in ALL_HANDS
+        if hc[0] not in board.cards() and hc[1] not in board.cards()
+    ]
 
     num_better = 0
     num_tied = 0
@@ -84,6 +93,4 @@ def make_nut_result(hole_cards: HoleCards, board: Board) -> NutResult:
         else:
             num_worse += 1
 
-    return NutResult(num_better=num_better,
-                     num_tied=num_tied,
-                     num_worse=num_worse)
+    return NutResult(num_better=num_better, num_tied=num_tied, num_worse=num_worse)
