@@ -12,9 +12,21 @@ An important concept in a game is the timestamp.  A timestamp connects two ideas
 - An index into events
 - An index for the state of the game BEFORE the ith action was made
 
-So, game.view(0) is the state of the game before any action, and action[0] is
-the very first action.  Similarly, game.view(i) is the state of the game when
-a player is contemplating what will become the ith action.
+
+
+So, game.view(i) is the state of the game before the ith event (when only i events have
+been made), and action[i] is the action made after the state game_view(i).
+ 
+For example, say the events are the following:
+  0 = PREFLOP
+  1 = SMALL BLIND
+  2 = BIG BLIND
+  3 = BET 10
+  4 = RAISE TO 25
+  5 = ?
+  
+The current state of the game is game.view(5).  There have already been 5 events.
+The next action will be action_index = 5 (making it the 6th action total).
 """
 
 
@@ -156,10 +168,10 @@ class GameView:
     def starting_stacks(self) -> List[int]:
         return self._game.starting_stacks
 
-    # Nothing below these methods should reference the underlying game
-
     def view(self, timestamp: int = None):
         return self._game.view(timestamp)
+
+    # Nothing below these methods should reference the underlying game
 
     @functools.lru_cache()
     def _player_list(self, starting_player: int = 0) -> List[int]:
@@ -221,7 +233,7 @@ class GameView:
         return len(self.street_action())
 
     @functools.lru_cache()
-    def action(self) -> List[Action]:
+    def all_actions(self) -> List[Action]:
         """
         The list of actions before the given timestamp  on the street containing the given action.
         :param timestamp:
@@ -255,7 +267,7 @@ class GameView:
 
         amount = [0 for _ in range(self.num_players())]
 
-        for action in self.action():
+        for action in self.all_actions():
             player_id = action.player_index
 
             amount[player_id] += action.amount_added
@@ -311,7 +323,7 @@ class GameView:
 
         folded = [False for _ in range(self.num_players())]
 
-        for a in self.action():
+        for a in self.all_actions():
             if a.move == Move.FOLD:
                 folded[a.player_index] = True
 

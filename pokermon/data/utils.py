@@ -1,5 +1,5 @@
 import zlib
-from typing import Iterable, Tuple
+from typing import Iterable, Optional, Tuple
 
 import stringcase  # type: ignore
 
@@ -46,7 +46,7 @@ def get_hole_cards_as_int(hole_cards: HoleCards):
     return offset + 2 * second_rank + (0 if suited else 1)
 
 
-def iter_actions(game: GameView) -> Iterable[Tuple[int, Action]]:
+def iter_game_states(game: GameView) -> Iterable[int]:
     """
     Iterate over all non-voluntary actions
     """
@@ -68,4 +68,11 @@ def iter_actions(game: GameView) -> Iterable[Tuple[int, Action]]:
         if a.move == Move.SMALL_BLIND or a.move == Move.BIG_BLIND:
             continue
 
-        yield i, e
+        yield i
+
+    # If the game isn't over, we yield the current state.  We don't know the next action,
+    # so we yield None for it
+    if game.street() == Street.OVER:
+        return
+    else:
+        yield game.timestamp

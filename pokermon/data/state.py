@@ -6,7 +6,7 @@
 from dataclasses import dataclass
 from typing import List, Optional
 
-from pokermon.data.utils import card_order, iter_actions
+from pokermon.data.utils import card_order, iter_game_states
 from pokermon.poker.cards import Board, HoleCards
 from pokermon.poker.evaluation import evaluate_hand, make_nut_result
 from pokermon.poker.game import GameView, Street
@@ -62,7 +62,7 @@ class PrivateState:
 def make_public_states(game: GameView, board: Optional[Board]):
     public_states = []
 
-    for i, a in iter_actions(game):
+    for i in iter_game_states(game):
         game_view = game.view(i)
 
         if board is None:
@@ -71,7 +71,7 @@ def make_public_states(game: GameView, board: Optional[Board]):
             current_board = board.at_street(game_view.street())
 
         current_player_mask = [0 for _ in range(game_view.num_players())]
-        current_player_mask[a.player_index] = 1
+        current_player_mask[game_view.current_player()] = 1
 
         if game_view.street() >= Street.FLOP and current_board.flop is not None:
             flop_0, flop_1, flop_2 = sorted(current_board.flop, key=card_order)
@@ -107,7 +107,7 @@ def make_public_states(game: GameView, board: Optional[Board]):
 
         public_states.append(
             PublicState(
-                current_player_index=a.player_index,
+                current_player_index=game_view.current_player(),
                 street=game_view.street().value,
                 current_player_mask=current_player_mask,
                 folded_player_mask=game_view.is_folded(),
@@ -134,7 +134,7 @@ def make_public_states(game: GameView, board: Optional[Board]):
 def make_private_states(game: GameView, hole_cards: HoleCards, board: Board):
     private_states = []
 
-    for i, a in iter_actions(game):
+    for i in iter_game_states(game):
         game_view = game.view(i)
         current_board = board.at_street(game_view.street())
 

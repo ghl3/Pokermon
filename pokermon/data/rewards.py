@@ -1,8 +1,8 @@
 from dataclasses import dataclass
 from typing import List
 
-from pokermon.data.utils import iter_actions
-from pokermon.poker.game import GameView, Street
+from pokermon.data.utils import iter_game_states
+from pokermon.poker.game import Action, GameView, Street
 from pokermon.poker.rules import GameResults
 
 
@@ -41,7 +41,9 @@ def make_rewards(game: GameView, result: GameResults):
     is_last_action: List[bool] = [True for _ in range(game.num_players())]
 
     # Iterate in reverse order
-    for i, a in reversed(list(iter_actions(game))):
+    for i in reversed(list(iter_game_states(game))):
+
+        a: Action = game._game.events[i]
 
         won_hand = a.player_index in set(result.best_hand_index)
 

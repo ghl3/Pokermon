@@ -28,7 +28,7 @@ def test_action_views():
 
     preflop_view = game.view()
     assert preflop_view.street_action() == preflop_action
-    assert preflop_view.action() == preflop_action
+    assert preflop_view.all_actions() == preflop_action
 
     game.set_street(Street.FLOP)
 
@@ -47,17 +47,17 @@ def test_action_views():
 
     # assert preflop_view.timestamp ==
     assert preflop_view.street_action() == preflop_action
-    assert preflop_view.action() == preflop_action
+    assert preflop_view.all_actions() == preflop_action
 
     # Recreate the preflop view
     preflop_view = game.view(timestamp=5)
     assert preflop_view.street_action() == preflop_action
-    assert preflop_view.action() == preflop_action
+    assert preflop_view.all_actions() == preflop_action
 
     flop_view = game.view()
 
     assert flop_view.street_action() == flop_action
-    assert flop_view.action() == preflop_action + flop_action
+    assert flop_view.all_actions() == preflop_action + flop_action
 
     # Test a view in the middle of the preflop
 

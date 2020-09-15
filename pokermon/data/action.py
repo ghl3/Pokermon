@@ -2,7 +2,7 @@ import math
 from dataclasses import dataclass
 from typing import List
 
-from pokermon.data.utils import iter_actions
+from pokermon.data.utils import iter_game_states
 from pokermon.poker.game import Action, GameView, Move
 
 NUM_ACTION_BET_BINS = 20
@@ -101,8 +101,9 @@ def make_last_actions(game: GameView) -> List[LastAction]:
         )
     ]
 
-    for i, a in list(iter_actions(game))[:-1]:
+    for i in list(iter_game_states(game))[:-1]:
         game_view = game.view(i)
+        a: Action = game._game.events[i]
 
         stack_size = game_view.current_stack_sizes()[game_view.current_player()]
         pot_size = game_view.pot_size()
@@ -126,8 +127,10 @@ def make_last_actions(game: GameView) -> List[LastAction]:
 def make_next_actions(game: GameView) -> List[NextAction]:
     actions: List[NextAction] = []
 
-    for i, a in iter_actions(game):
+    for i in iter_game_states(game):
         game_view = game.view(i)
+        # TODO: Clean this up
+        a: Action = game._game.events[i]
 
         current_bet = game_view.current_bet_amount()
         raise_amount = a.total_bet - current_bet

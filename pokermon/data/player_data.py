@@ -6,7 +6,7 @@ from dataclasses import dataclass
 # current_player: The player whose turn it is
 from typing import List
 
-from pokermon.data.utils import iter_actions
+from pokermon.data.utils import iter_game_states
 from pokermon.poker.game import GameView
 
 
@@ -25,7 +25,7 @@ class PlayerData:
 def make_player_data(player_index: int, game: GameView) -> List[PlayerData]:
     player_data = []
 
-    for i, a in iter_actions(game):
+    for i in iter_game_states(game):
         game_view = game.view(i)
 
         player_data.append(
