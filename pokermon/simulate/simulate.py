@@ -33,16 +33,6 @@ def simulate(
     while True:
 
         player_index = game_runner.current_player()
-        action_index = game_runner.action_index
-        current_bet_amount = game_runner.game_view().current_bet_amount()
-        amount_to_call = game_runner.game_view().amount_to_call()[player_index]
-
-        logger.info(
-            f"Street: {game_runner.street()} Player Turn: {player_index} "
-            f"Total Bet: {current_bet_amount} Amount to call: {amount_to_call}"
-        )
-
-        # Get the player's move
         player = players[player_index]
         hand = deal.hole_cards[player_index]
         action = player.select_action(
@@ -51,7 +41,6 @@ def simulate(
 
         if action is None:
             raise Exception("Invalid Action")
-        logger.debug("Action %s Player %s: %s", action_index, player_index, action)
 
         action_result = game_runner.advance(action)
 

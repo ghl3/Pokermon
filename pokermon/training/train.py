@@ -1,6 +1,6 @@
 import logging
 from random import randint
-from typing import List, Tuple
+from typing import List
 
 import pokermon.poker.rules as rules
 from pokermon.model.heads_up import HeadsUpModel
