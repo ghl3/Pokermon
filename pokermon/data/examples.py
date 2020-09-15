@@ -7,6 +7,7 @@ import tensorflow as tf  # type: ignore
 
 from pokermon.data.action import LastAction, NextAction
 from pokermon.data.context import PrivateContext, PublicContext
+from pokermon.data.player_data import PlayerData
 from pokermon.data.rewards import Reward
 from pokermon.data.state import PrivateState, PublicState
 from pokermon.data.target import Target
@@ -129,6 +130,7 @@ def make_example(
     public_context: Optional[PublicContext] = None,
     private_context: Optional[PrivateContext] = None,
     target: Optional[Target] = None,
+    player_data: Optional[List[PlayerData]] = None,
     public_states: Optional[List[PublicState]] = None,
     private_states: Optional[List[PrivateState]] = None,
     last_actions: Optional[List[LastAction]] = None,
@@ -148,6 +150,11 @@ def make_example(
         context_features.update(_make_feature_map(Target, target))
 
     timestamp_features: Dict[str, List[tf.train.Feature]] = defaultdict(list)
+
+    if player_data:
+        for data in player_data:
+            for k, v in _make_feature_map(PlayerData, data).items():
+                timestamp_features[k].append(v)
 
     if public_states:
         for public_state in public_states:
