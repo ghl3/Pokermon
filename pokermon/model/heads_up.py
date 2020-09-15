@@ -1,4 +1,4 @@
-from typing import Dict
+from typing import Dict, Tuple
 
 import numpy as np
 import tensorflow as tf
@@ -69,17 +69,22 @@ class HeadsUpModel(Policy):
         self.model.add(tf.keras.layers.Dense(64))
         self.model.add(tf.keras.layers.Dense(policy_vector_size()))
 
+        self.optimizer = None
+
     def select_action(
         self, player_index: int, game: GameView, hole_cards: HoleCards, board: Board
     ) -> Action:
         """
         Select the next action to take.  This can be a stocastic choice.
         """
+        assert game.street() != Street.OVER
         assert game.current_player() == self.player_id
         assert player_index == self.player_id
         board = board.at_street(game.street())
 
-        feature_tensors = self.make_feature_tensors(game, hole_cards, board)
+        example: tf.train.SequenceExample = self.make_forward_example(game, hole_cards, board)
+
+        feature_tensors = self.make_feature_tensors(example.SerializeToString())
         # Create the action probabilities at the last timestep
         action_probs: np.Array = self.action_probs(feature_tensors)[0, -1, :].numpy()
         action_index = select_proportionally(action_probs)
@@ -98,9 +103,9 @@ class HeadsUpModel(Policy):
                 raise Exception()
         return num
 
-    def make_feature_tensors(
+    def make_forward_example(
         self, game: GameView, hole_cards: HoleCards, board: Board
-    ) -> FeatureTensors:
+    ) -> tf.train.SequenceExample:
         """
         All tensors have shape:
         [batch_size=1, time, 1 OR num_players=2]
@@ -108,18 +113,15 @@ class HeadsUpModel(Policy):
 
         assert game.num_players() == self.num_players
 
-        example = make_example(
-            # public_context=make_public_context(game),
-            # private_context=make_private_context(hole_cards),
+        return make_example(
             public_states=make_public_states(game, board=board),
-            private_states=make_private_states(game, board=board),
+            private_states=make_private_states(game, board=board, hole_cards=hole_cards),
             last_actions=make_last_actions(game),
-            # next_actions=make_next_actions(game),
-            # rewards=make_rewards(game)
         )
 
+    def make_feature_tensors(self, serialized_example: str) -> FeatureTensors:
         context_dict, sequence_dict = tf.io.parse_single_sequence_example(
-            example.SerializeToString(),
+            serialized_example,
             context_features={},
             sequence_features=self.features,
             example_name=None,
@@ -128,9 +130,9 @@ class HeadsUpModel(Policy):
 
         return make_sequence_dict_of_dense(sequence_dict)
 
-    def make_target_tensors(
-        self, game: GameView, results: GameResults
-    ) -> TargetTensors:
+    def make_forward_backward_example(
+        self, game: GameView, hole_cards: HoleCards, board: Board, results: GameResults
+    ) -> tf.train.SequenceExample:
         """
         All tensors have shape:
         [batch_size=1, time, 1 OR num_players=2]
@@ -139,19 +141,41 @@ class HeadsUpModel(Policy):
         assert game.num_players() == self.num_players
         assert game.street() == Street.OVER
 
-        example = make_example(
+        return make_example(
+            public_states=make_public_states(game, board=board),
+            private_states=make_private_states(game, board=board, hole_cards=hole_cards),
+            last_actions=make_last_actions(game),
             next_actions=make_next_actions(game), rewards=make_rewards(game, results)
         )
 
+    def make_features_and_target_tensors(
+        self, serialized_example: str
+    ) -> Tuple[FeatureTensors, TargetTensors]:
+        """
+        All tensors have shape:
+        [batch_size=1, time, 1 OR num_players=2]
+        """
+
+        sequence_features = {}
+        sequence_features.update(self.features)
+        sequence_features.update(self.targets)
+
         context_dict, sequence_dict = tf.io.parse_single_sequence_example(
-            example.SerializeToString(),
+            serialized_example,
             context_features={},
-            sequence_features=self.targets,
+            sequence_features=sequence_features,
             example_name=None,
             name=None,
         )
 
-        return make_sequence_dict_of_dense(sequence_dict)
+        feature_dict = {name: tensor for (name, tensor) in sequence_dict.items()
+                        if name in self.features}
+
+        target_dict = {name: tensor for (name, tensor) in sequence_dict.items()
+                       if name in self.targets}
+
+        return make_sequence_dict_of_dense(feature_dict), make_sequence_dict_of_dense(
+            target_dict)
 
     def action_probs(self, feature_tensors: FeatureTensors) -> tf.Tensor:
         return tf.nn.softmax(self.make_action_logits(feature_tensors))
@@ -167,9 +191,6 @@ class HeadsUpModel(Policy):
 
         # [batch, time]
         next_actions = target_tensors["next_action__action_encoded"]
-        #        next_actions_one_hot = tf.one_hot(
-        #            next_actions, depth=policy_vector_size(), axis=-1
-        #        )
 
         next_actions_one_hot = tf.squeeze(
             tf.one_hot(next_actions, depth=policy_vector_size()), axis=2
@@ -202,3 +223,29 @@ class HeadsUpModel(Policy):
             -1 * tf.squeeze(reward, -1) * cross_entropy,
             tf.zeros_like(cross_entropy),
         )
+
+    def train_step(
+        self, game: GameView, hole_cards: HoleCards, board: Board, results: GameResults
+    ):
+
+        if self.optimizer is None:
+            self.optimizer = tf.keras.optimizers.Adam()
+
+        example = self.make_forward_backward_example(game, hole_cards, board, results)
+
+        self._update_weights(example.SerializeToString())
+
+
+    @tf.function
+    def _update_weights(self, serialized_example):
+
+        with tf.GradientTape() as tape:
+            feature_tensors, target_tensors = self.make_features_and_target_tensors(
+                serialized_example)
+
+            loss_value = tf.reduce_mean(self.loss(feature_tensors, target_tensors))
+
+            gradients = tape.gradient(loss_value, self.model.trainable_variables)
+            self.optimizer.apply_gradients(zip(gradients, self.model.trainable_variables))
+
+        return loss_value

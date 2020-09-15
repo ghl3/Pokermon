@@ -58,9 +58,6 @@ class NutResult:
     num_tied: int
     num_worse: int
 
-    def rank(self):
-        return 1 + self.num_better
-
 
 def make_nut_result(hole_cards: HoleCards, board: Board) -> NutResult:
     """
