@@ -32,7 +32,7 @@ def make_player_data(player_index: int, game: GameView) -> List[PlayerData]:
             PlayerData(
                 player_index=player_index,
                 is_current_player=(game_view.current_player() == player_index),
-                current_player_offset=(game_view.current_player() - player_index)
+                current_player_offset=(game_view.current_player() - player_index),
             )
         )
 

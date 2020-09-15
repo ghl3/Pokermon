@@ -81,9 +81,9 @@ class HeadsUpModel(Policy):
         assert game.current_player() == player_index
         board = board.at_street(game.street())
 
-        example: tf.train.SequenceExample = self.make_forward_example(player_index,
-                                                                      game, hole_cards, board
-                                                                      )
+        example: tf.train.SequenceExample = self.make_forward_example(
+            player_index, game, hole_cards, board
+        )
 
         feature_tensors = self.make_feature_tensors(example.SerializeToString())
         # Create the action probabilities at the last timestep
@@ -136,8 +136,12 @@ class HeadsUpModel(Policy):
         return make_sequence_dict_of_dense(sequence_dict)
 
     def make_forward_backward_example(
-        self, player_index: int, game: GameView, hole_cards: HoleCards, board: Board,
-        results: GameResults
+        self,
+        player_index: int,
+        game: GameView,
+        hole_cards: HoleCards,
+        board: Board,
+        results: GameResults,
     ) -> tf.train.SequenceExample:
         """
         All tensors have shape:
@@ -242,17 +246,22 @@ class HeadsUpModel(Policy):
         )
 
     def train_step(
-        self, player_id: int, game: GameView, hole_cards: HoleCards, board: Board,
-        results: GameResults
+        self,
+        player_id: int,
+        game: GameView,
+        hole_cards: HoleCards,
+        board: Board,
+        results: GameResults,
     ):
 
         if self.optimizer is None:
             self.optimizer = tf.keras.optimizers.Adam()
 
-        example = self.make_forward_backward_example(player_id, game, hole_cards, board, results)
+        example = self.make_forward_backward_example(
+            player_id, game, hole_cards, board, results
+        )
 
-        return self._update_weights(
-            tf.convert_to_tensor(example.SerializeToString()))
+        return self._update_weights(tf.convert_to_tensor(example.SerializeToString()))
 
     @tf.function(experimental_relax_shapes=True)
     def _update_weights(self, serialized_example):
