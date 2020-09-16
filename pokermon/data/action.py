@@ -101,9 +101,10 @@ def make_last_actions(game: GameView) -> List[LastAction]:
         )
     ]
 
+    # Iterate over states shifted by one
     for i in list(iter_game_states(game))[:-1]:
         game_view = game.view(i)
-        a: Action = game._game.events[i]
+        a: Action = game_view.next_action()
 
         stack_size = game_view.current_stack_sizes()[game_view.current_player()]
         pot_size = game_view.pot_size()
@@ -129,8 +130,8 @@ def make_next_actions(game: GameView) -> List[NextAction]:
 
     for i in iter_game_states(game):
         game_view = game.view(i)
-        # TODO: Clean this up
-        a: Action = game._game.events[i]
+
+        a: Action = game_view.next_action()
 
         current_bet = game_view.current_bet_amount()
         raise_amount = a.total_bet - current_bet

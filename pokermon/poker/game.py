@@ -171,6 +171,28 @@ class GameView:
     def view(self, timestamp: int = None):
         return self._game.view(timestamp)
 
+    @functools.lru_cache()
+    def next_action(
+        self,
+    ) -> Optional[Action]:
+
+        for i in range(self.timestamp, len(self._game.events)):
+            if isinstance(self._game.events[i], Action):
+                return self._game.events[i]
+
+        return None
+
+    @functools.lru_cache()
+    def previous_action(
+        self,
+    ) -> Optional[Action]:
+
+        for i in range(0, self.timestamp):
+            if isinstance(self._game.events[i], Action):
+                return self._game.events[i]
+
+        return None
+
     # Nothing below these methods should reference the underlying game
 
     @functools.lru_cache()

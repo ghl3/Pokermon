@@ -43,7 +43,7 @@ def make_rewards(game: GameView, result: GameResults):
     # Iterate in reverse order
     for i in reversed(list(iter_game_states(game))):
 
-        a: Action = game._game.events[i]
+        a: Action = game.view(i).next_action()
 
         won_hand = a.player_index in set(result.best_hand_index)
 
