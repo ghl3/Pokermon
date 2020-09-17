@@ -3,7 +3,7 @@ from dataclasses import dataclass
 from typing import Optional
 
 import pokermon.poker.rules as rules
-from pokermon.poker.game import Action, Game, Street
+from pokermon.poker.game import Action, Game, GameView, Street
 
 logger = logging.getLogger(__name__)
 
@@ -17,6 +17,24 @@ class Result:
     total_bet: Optional[int] = None
 
     amount_to_call: Optional[int] = None
+
+
+class ActionError(Exception):
+    def __init__(
+        self, game_state: GameView, action: Action, validation: rules.ValidationResult
+    ):
+        message = f"{validation.error}\n{validation.metadata}\n{action}\n"
+        message += f"Starting Stacks: {game_state.starting_stacks()}\n"
+        for action in game_state.all_actions():
+            message += f"{action}\n"
+
+        # Call the base class constructor with the parameters it needs
+        super().__init__(message)
+
+        # Now for your custom code...
+        self.game_state = game_state
+        self.action = action
+        self.validation = validation
 
 
 class GameRunner:
@@ -67,7 +85,7 @@ class GameRunner:
 
         if not action_result.is_valid():
             logger.error("Action is invalid %s %s", action, action_result)
-            raise Exception("Action is invalid", action, action_result)
+            raise ActionError(self.game_view(), action, action_result)
 
         self.game.add_action(action)
         self.action_index += 1

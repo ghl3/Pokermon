@@ -84,7 +84,13 @@ def action_valid(
     player_stack = game.current_stack_sizes()[player_index]
     amount_already_addded = game.amount_added_in_street()[player_index]
 
-    if action_index == 0:
+    if action.total_bet < 0:
+        raise Exception()
+
+    elif action.amount_added < 0:
+        raise Exception()
+
+    elif action_index == 0:
         if action.move != Move.SMALL_BLIND:
             return ValidationResult(
                 Error.SMALL_BLIND_REQUIRED, {Metadata.BLIND_AMOUNT: SMALL_BLIND_AMOUNT}
@@ -372,7 +378,6 @@ def get_pot_payouts(
 
 
 def get_result(cards: FullDeal, game: GameView) -> GameResults:
-
     all_hands: List[EvaluationResult] = []
 
     went_to_showdown: List[bool] = []

@@ -359,8 +359,35 @@ class GameView:
 
     @functools.lru_cache()
     def min_bet_amount(self) -> int:
-        """The minimim amount that can be raised above the last bet"""
+        """Amount that a player can raise over the last bet.
+
+        Note that, to make this raise, the player may have to put more than this
+        amount in the pot.
+        """
         return max(BIG_BLIND_AMOUNT, self.last_raise_amount())
+
+    @functools.lru_cache()
+    def new_bet_size_if_min_raise(self) -> int:
+        """Size of the new total bet if a player were to execute a full min raise
+        (meaning, they're able to min raise without going all in).
+        """
+        return self.current_bet_amount() + self.min_bet_amount()
+
+    @functools.lru_cache()
+    def amount_to_add_for_min_raise(self) -> int:
+        """The amount that a player would have to add to the pot in order to execute
+        a min raise.  If a player would have to go all in to min raise, this returns
+        the all in amount
+        """
+
+        amount_remaining = self.current_stack_sizes()[self.current_player()]
+        amount_bet_in_street = self.amount_added_in_street()[self.current_player()]
+
+        amount_to_add_for_full_min_raise = (
+            self.new_bet_size_if_min_raise() - amount_bet_in_street
+        )
+
+        return min(amount_remaining, amount_to_add_for_full_min_raise)
 
     #
     # Actions
@@ -462,10 +489,7 @@ class GameView:
     # TODO: Ensure these work
     @functools.lru_cache()
     def min_raise(self) -> Action:
-        current_stack_size = self.current_stack_sizes()[self.current_player()]
-        return self.bet_raise(
-            raise_amount=min(self.min_bet_amount(), current_stack_size)
-        )
+        return self.bet_raise(amount_to_add=self.amount_to_add_for_min_raise())
 
     @functools.lru_cache()
     def go_all_in(self) -> Action:

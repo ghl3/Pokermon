@@ -43,10 +43,19 @@ def encode_action(action: Action, game: GameView) -> int:
     elif action.move == Move.CHECK_CALL:
         return 1
     else:
-        min_raise = game.min_bet_amount()
+        min_raise = game.amount_to_add_for_min_raise()
         remaining_stack = game.current_stack_sizes()[game.current_player()]
-        range = remaining_stack - min_raise
-        delta = range / NUM_ACTION_BET_BINS
+
+        if action.amount_added < min_raise or action.amount_added > remaining_stack:
+            raise Exception(
+                f"Cannot make action {action} {min_raise=} {remaining_stack=}"
+            )
+        elif action.amount_added == remaining_stack:
+            return 22
+        elif action.amount_added == min_raise:
+            return 2
+
+        delta = (remaining_stack - min_raise) / NUM_ACTION_BET_BINS
         amount_raised = action.amount_added
         num_deltas = int(math.floor((amount_raised - min_raise) / delta))
         return 2 + num_deltas
@@ -80,11 +89,18 @@ def make_action_from_encoded(action_index: int, game: GameView) -> Action:
     elif action_index == NUM_ACTION_BET_BINS + 2:
         return game.go_all_in()
     else:
+        min_add = game.amount_to_add_for_min_raise()
         max_add = game.current_stack_sizes()[game.current_player()]
-        min_add = min(max_add, game.min_bet_amount())
+        if max_add == min_add:
+            return game.go_all_in()
         delta = (max_add - min_add) / NUM_ACTION_BET_BINS
+        if delta == 0:
+            raise Exception(f"{min_add} {max_add} {NUM_ACTION_BET_BINS} {delta}")
         num_deltas = action_index - 2
         amount_to_add = int(math.floor(min_add + num_deltas * delta))
+
+        # print(f"Making Action {action_index} {min_add} {max_add} {amount_to_add}")
+
         return game.bet_raise(amount_to_add=amount_to_add)
 
 

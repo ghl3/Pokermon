@@ -41,6 +41,14 @@ def test_action_encoded():
     assert encode_action(action, game.game_view()) == 22
 
 
+def encode_min_raise():
+    pass
+
+
+def encode_all_in():
+    pass
+
+
 def test_action_decoded():
     game = GameRunner(starting_stacks=[100, 100, 82])
     game.start_game()
@@ -128,3 +136,34 @@ def test_fold_preflop() -> None:
             move=3, action_encoded=0, amount_added=0, amount_raised=0, new_total_bet=10
         ),
     ]
+
+
+def test_decode_bug_a():
+    game = GameRunner(starting_stacks=[208, 262])
+    game.start_game()
+    game.bet_raise(to=167)
+
+    assert make_action_from_encoded(4, game.game_view()) == game.game_view().go_all_in()
+
+
+def test_decode_bug_b():
+    game = GameRunner(starting_stacks=[267, 194])
+    game.start_game()
+    game.bet_raise(to=82)
+    game.bet_raise(to=192)
+
+    assert (
+        make_action_from_encoded(21, game.game_view()) == game.game_view().go_all_in()
+    )
+
+
+def test_decode_bug_c():
+    game = GameRunner(starting_stacks=[219, 224])
+    game.start_game()
+    game.bet_raise(to=79)
+    game.bet_raise(to=156)
+
+    assert make_action_from_encoded(2, game.game_view()) == game.game_view().go_all_in()
+    assert (
+        make_action_from_encoded(18, game.game_view()) == game.game_view().go_all_in()
+    )
