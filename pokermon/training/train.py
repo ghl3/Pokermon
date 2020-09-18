@@ -59,7 +59,7 @@ def main():
         "--log",
         help="Provide logging level. Example --log debug'",
         type=str,
-        default="DEBUG",
+        default="INFO",
     )
 
     args = parser.parse_args()

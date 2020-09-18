@@ -1,4 +1,4 @@
-from pokermon.data.state import PrivateState, make_private_states
+from pokermon.data.player_state import PlayerState, make_player_states
 from pokermon.poker.cards import Board, FullDeal, mkcard, mkflop, mkhand
 from pokermon.poker.game_runner import GameRunner
 
@@ -29,12 +29,12 @@ def test_state() -> None:
     game.check()
 
     player_index = 0
-    private_states = make_private_states(
+    private_states = make_player_states(
         game.game_view(), deal.hole_cards[player_index], deal.board
     )
 
     assert private_states == [
-        PrivateState(
+        PlayerState(
             current_hand_type=None,
             current_hand_strength=None,
             current_hand_rank=None,
@@ -43,7 +43,7 @@ def test_state() -> None:
             num_hands_worse=None,
             win_prob_vs_random=None,
         ),
-        PrivateState(
+        PlayerState(
             current_hand_type=None,
             current_hand_strength=None,
             current_hand_rank=None,
@@ -52,7 +52,7 @@ def test_state() -> None:
             num_hands_worse=None,
             win_prob_vs_random=None,
         ),
-        PrivateState(
+        PlayerState(
             current_hand_type=2,
             current_hand_strength=0.5225140712945591,
             current_hand_rank=3563,
@@ -61,7 +61,7 @@ def test_state() -> None:
             num_hands_worse=1122,
             win_prob_vs_random=0.871,
         ),
-        PrivateState(
+        PlayerState(
             current_hand_type=2,
             current_hand_strength=0.5225140712945591,
             current_hand_rank=3563,
@@ -70,7 +70,7 @@ def test_state() -> None:
             num_hands_worse=1122,
             win_prob_vs_random=0.871,
         ),
-        PrivateState(
+        PlayerState(
             current_hand_type=2,
             current_hand_strength=0.5230501206110962,
             current_hand_rank=3559,
@@ -79,7 +79,7 @@ def test_state() -> None:
             num_hands_worse=1044,
             win_prob_vs_random=0.872,
         ),
-        PrivateState(
+        PlayerState(
             current_hand_type=2,
             current_hand_strength=0.5230501206110962,
             current_hand_rank=3559,
@@ -88,7 +88,7 @@ def test_state() -> None:
             num_hands_worse=1044,
             win_prob_vs_random=0.872,
         ),
-        PrivateState(
+        PlayerState(
             current_hand_type=2,
             current_hand_strength=0.5230501206110962,
             current_hand_rank=3559,
@@ -97,7 +97,7 @@ def test_state() -> None:
             num_hands_worse=900,
             win_prob_vs_random=0.842,
         ),
-        PrivateState(
+        PlayerState(
             current_hand_type=2,
             current_hand_strength=0.5230501206110962,
             current_hand_rank=3559,
@@ -135,12 +135,12 @@ def test_monster() -> None:
     game.check()
 
     player_index = 0
-    private_states = make_private_states(
+    private_states = make_player_states(
         game.game_view(), deal.hole_cards[player_index], deal.board
     )
 
     assert private_states == [
-        PrivateState(
+        PlayerState(
             current_hand_type=None,
             current_hand_strength=None,
             current_hand_rank=None,
@@ -149,7 +149,7 @@ def test_monster() -> None:
             num_hands_worse=None,
             win_prob_vs_random=None,
         ),
-        PrivateState(
+        PlayerState(
             current_hand_type=None,
             current_hand_strength=None,
             current_hand_rank=None,
@@ -158,7 +158,7 @@ def test_monster() -> None:
             num_hands_worse=None,
             win_prob_vs_random=None,
         ),
-        PrivateState(
+        PlayerState(
             current_hand_type=4,
             current_hand_strength=0.752881265076387,
             current_hand_rank=1844,
@@ -167,7 +167,7 @@ def test_monster() -> None:
             num_hands_worse=1173,
             win_prob_vs_random=0.928,
         ),
-        PrivateState(
+        PlayerState(
             current_hand_type=4,
             current_hand_strength=0.752881265076387,
             current_hand_rank=1844,
@@ -176,7 +176,7 @@ def test_monster() -> None:
             num_hands_worse=1173,
             win_prob_vs_random=0.928,
         ),
-        PrivateState(
+        PlayerState(
             current_hand_type=8,
             current_hand_strength=0.993299383543286,
             current_hand_rank=50,
@@ -185,7 +185,7 @@ def test_monster() -> None:
             num_hands_worse=1127,
             win_prob_vs_random=0.999,
         ),
-        PrivateState(
+        PlayerState(
             current_hand_type=8,
             current_hand_strength=0.993299383543286,
             current_hand_rank=50,
@@ -194,7 +194,7 @@ def test_monster() -> None:
             num_hands_worse=1127,
             win_prob_vs_random=0.999,
         ),
-        PrivateState(
+        PlayerState(
             current_hand_type=8,
             current_hand_strength=0.9937014205306888,
             current_hand_rank=47,
@@ -203,7 +203,7 @@ def test_monster() -> None:
             num_hands_worse=1079,
             win_prob_vs_random=1.0,
         ),
-        PrivateState(
+        PlayerState(
             current_hand_type=8,
             current_hand_strength=0.9937014205306888,
             current_hand_rank=47,

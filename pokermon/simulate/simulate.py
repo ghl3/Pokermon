@@ -26,7 +26,7 @@ def simulate(
 
     game_runner = GameRunner(starting_stacks=starting_stacks)
 
-    logger.info("Hole Cards: %s", deal.hole_cards)
+    logger.debug("Hole Cards: %s", deal.hole_cards)
 
     game_runner.start_game()
 
@@ -50,6 +50,6 @@ def simulate(
 
     result = rules.get_result(deal, game_runner.game_view())
 
-    logger.info("Result: %s", result)
+    logger.debug("Result: %s", result)
 
     return game_runner.game, result

@@ -7,9 +7,9 @@ import tensorflow as tf  # type: ignore
 
 from pokermon.data.action import LastAction, NextAction
 from pokermon.data.context import PrivateContext, PublicContext
-from pokermon.data.player_data import PlayerData
+from pokermon.data.player_state import PlayerState
 from pokermon.data.rewards import Reward
-from pokermon.data.state import PrivateState, PublicState
+from pokermon.data.public_state import PublicState
 from pokermon.data.target import Target
 from pokermon.data.utils import field_feature_name
 
@@ -130,9 +130,8 @@ def make_example(
     public_context: Optional[PublicContext] = None,
     private_context: Optional[PrivateContext] = None,
     target: Optional[Target] = None,
-    player_data: Optional[List[PlayerData]] = None,
     public_states: Optional[List[PublicState]] = None,
-    private_states: Optional[List[PrivateState]] = None,
+    player_states: Optional[List[PlayerState]] = None,
     last_actions: Optional[List[LastAction]] = None,
     next_actions: Optional[List[NextAction]] = None,
     rewards: Optional[List[Reward]] = None,
@@ -151,19 +150,14 @@ def make_example(
 
     timestamp_features: Dict[str, List[tf.train.Feature]] = defaultdict(list)
 
-    if player_data:
-        for data in player_data:
-            for k, v in _make_feature_map(PlayerData, data).items():
-                timestamp_features[k].append(v)
-
     if public_states:
         for public_state in public_states:
             for k, v in _make_feature_map(PublicState, public_state).items():
                 timestamp_features[k].append(v)
 
-    if private_states:
-        for private_state in private_states:
-            for k, v in _make_feature_map(PrivateState, private_state).items():
+    if public_states:
+        for player_state in player_states:
+            for k, v in _make_feature_map(PlayerState, player_state).items():
                 timestamp_features[k].append(v)
 
     if last_actions:

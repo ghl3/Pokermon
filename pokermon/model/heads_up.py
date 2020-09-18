@@ -14,9 +14,9 @@ from pokermon.data.action import (
     make_next_actions,
 )
 from pokermon.data.examples import make_example
-from pokermon.data.player_data import PlayerData, make_player_data
+from pokermon.data.player_state import PlayerData, make_player_data
 from pokermon.data.rewards import Reward, make_rewards
-from pokermon.data.state import (
+from pokermon.data.public_state import (
     PrivateState,
     PublicState,
     make_private_states,
