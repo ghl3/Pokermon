@@ -1,9 +1,16 @@
 from pokermon.poker import rules
 from pokermon.poker.cards import Board, FullDeal, HandType, mkcard, mkflop, mkhand
 from pokermon.poker.evaluation import EvaluationResult
-from pokermon.poker.game import Game, Street
+from pokermon.poker.game import Game, Move, Street
 from pokermon.poker.game_runner import GameRunner
-from pokermon.poker.rules import GameResults, get_pot_payouts
+from pokermon.poker.rules import (
+    Error,
+    GameResults,
+    Metadata,
+    ValidationResult,
+    get_pot_payouts,
+    voluntary_action_allowed,
+)
 
 
 def test_street_over():
@@ -226,3 +233,57 @@ def test_pot_payouts():
         3: 100,
         4: 0,
     }
+
+
+def test_call_or_raise_all_in():
+    game = GameRunner(starting_stacks=[30, 20])
+    game.start_game()
+
+    # Raise to 10, which is 8 on top
+    game.bet_raise(to=30)
+
+    assert voluntary_action_allowed(
+        game.game_view().bet_raise(to=20), game.game_view()
+    ) == ValidationResult(
+        error=Error.INVALID_MOVE,
+        metadata={Metadata.ALLOWED_MOVES_ARE: [Move.FOLD, Move.CHECK_CALL]},
+    )
+
+    assert voluntary_action_allowed(
+        game.game_view().call(), game.game_view()
+    ) == ValidationResult(error=None, metadata={})
+
+
+def test_min_raise():
+    game = GameRunner(starting_stacks=[20, 20])
+    game.start_game()
+
+    # Raise to 10, which is 8 on top
+    game.bet_raise(to=10)
+
+    assert voluntary_action_allowed(
+        game.game_view().bet_raise(to=17), game.game_view()
+    ) == ValidationResult(
+        error=Error.MIN_RAISE_REQUIRED, metadata={Metadata.RAISE_MUST_BE_GE: 8}
+    )
+
+
+def test_min_raise_when_all_in():
+    game = GameRunner(starting_stacks=[20, 12])
+    game.start_game()
+
+    # Raise to 10, which is 8 on top
+    game.bet_raise(to=10)
+
+    # You can go all in
+    assert voluntary_action_allowed(
+        game.game_view().bet_raise(to=12), game.game_view()
+    ) == ValidationResult(error=None, metadata={})
+
+    # But you must do the right all in amount
+    assert voluntary_action_allowed(
+        game.game_view().bet_raise(to=20), game.game_view()
+    ) == ValidationResult(
+        error=Error.INVALID_AMOUNT_ADDED,
+        metadata={Metadata.AMOUNT_ADDED_SHOULD_BE_LE: 10},
+    )

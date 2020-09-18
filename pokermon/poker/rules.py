@@ -46,6 +46,8 @@ class Error(Enum):
     INVAID_TOTAL_BET = 5
     INVALID_PLAYER = 6
     MIN_RAISE_REQUIRED = 7
+    WRONG_PLAYER = 8
+    INVALID_MOVE = 9
 
 
 class Metadata(Enum):
@@ -55,8 +57,10 @@ class Metadata(Enum):
     AMOUNT_ADDED_SHOULD_BE_GE = 4
     AMOUNT_ADDED_SHOULD_BE_LE = 5
     TOTAL_BET_SHOULD_BE = 6
-    MIN_BE_RAISE_AMOUNT = 7
+    MIN_BET_RAISE_AMOUNT = 7
     RAISE_MUST_BE_GE = 8
+    CURRENT_PLAYER_SHOULD_BE = 9
+    ALLOWED_MOVES_ARE = 10
 
 
 @dataclass
@@ -80,10 +84,6 @@ def min_bet_amount(game: GameView) -> int:
 def action_valid(
     action_index: int, player_index: int, action: Action, game: GameView
 ) -> ValidationResult:
-    amount_to_call = game.amount_to_call()[player_index]
-    player_stack = game.current_stack_sizes()[player_index]
-    amount_already_addded = game.amount_added_in_street()[player_index]
-
     if action.total_bet < 0:
         raise Exception()
 
@@ -120,91 +120,135 @@ def action_valid(
             )
         return MOVE_OK
 
+    else:
+        if player_index != game.current_player():
+            return ValidationResult(
+                Error.WRONG_PLAYER,
+                {Metadata.CURRENT_PLAYER_SHOULD_BE: game.current_player()},
+            )
+        else:
+
+            return voluntary_action_allowed(action, game)
+
+
+def voluntary_action_allowed(action: Action, game: GameView) -> ValidationResult:
+    """
+    Assumes that the right player is making the given action
+    """
+
+    if action.move == Move.SMALL_BLIND or action.move == Move.BIG_BLIND:
+        raise Exception()
+
     elif action.move == Move.FOLD:
-        if action.amount_added != 0:
-            return ValidationResult(
-                Error.INVALID_AMOUNT_ADDED, {Metadata.AMOUNT_ADDED_SHOULD_BE: 0}
-            )
-        if action.total_bet != game.current_bet_amount():
-            return ValidationResult(
-                Error.INVALID_AMOUNT_ADDED,
-                {Metadata.TOTAL_BET_SHOULD_BE: game.current_bet_amount()},
-            )
-        return MOVE_OK
+        return _validate_fold(action, game)
 
     elif action.move == Move.CHECK_CALL:
-
-        if amount_to_call <= player_stack:
-
-            if action.amount_added != amount_to_call:
-                return ValidationResult(
-                    Error.INVALID_AMOUNT_ADDED,
-                    {Metadata.AMOUNT_ADDED_SHOULD_BE: amount_to_call},
-                )
-
-            if action.total_bet != game.current_bet_amount():
-                return ValidationResult(
-                    Error.INVAID_TOTAL_BET,
-                    {Metadata.TOTAL_BET_SHOULD_BE: game.current_bet_amount()},
-                )
-
-            return MOVE_OK
-
-        else:
-            # Player calls all in
-
-            if action.amount_added != player_stack:
-                return ValidationResult(
-                    Error.INVALID_AMOUNT_ADDED,
-                    {Metadata.AMOUNT_ADDED_SHOULD_BE: player_stack},
-                )
-
-            if action.total_bet != game.current_bet_amount():
-                return ValidationResult(
-                    Error.INVAID_TOTAL_BET,
-                    {Metadata.TOTAL_BET_SHOULD_BE: game.current_bet_amount()},
-                )
-
-            return MOVE_OK
+        return _validate_check_call(action, game)
 
     elif action.move == Move.BET_RAISE:
+        return _validate_bet_raise(action, game)
 
-        if action.amount_added > player_stack:
+    else:
+        return ValidationResult(Error.UNKNOWN_MOVE, {})
+
+
+def _validate_fold(action: Action, game: GameView) -> ValidationResult:
+    if action.amount_added != 0:
+        return ValidationResult(
+            Error.INVALID_AMOUNT_ADDED, {Metadata.AMOUNT_ADDED_SHOULD_BE: 0}
+        )
+    if action.total_bet != game.current_bet_amount():
+        return ValidationResult(
+            Error.INVALID_AMOUNT_ADDED,
+            {Metadata.TOTAL_BET_SHOULD_BE: game.current_bet_amount()},
+        )
+    return MOVE_OK
+
+
+def _validate_check_call(action: Action, game: GameView) -> ValidationResult:
+    amount_to_call = game.amount_to_call()[game.current_player()]
+    player_stack = game.current_stack_sizes()[game.current_player()]
+
+    if amount_to_call <= player_stack:
+
+        if action.amount_added != amount_to_call:
             return ValidationResult(
                 Error.INVALID_AMOUNT_ADDED,
-                {Metadata.AMOUNT_ADDED_SHOULD_BE_LE: player_stack},
+                {Metadata.AMOUNT_ADDED_SHOULD_BE: amount_to_call},
             )
 
-        # Player goes all in.  You can always call all in.
-        elif action.amount_added == player_stack:
-            # TODO: Check the total bet size here is consistent
+        if action.total_bet != game.current_bet_amount():
+            return ValidationResult(
+                Error.INVAID_TOTAL_BET,
+                {Metadata.TOTAL_BET_SHOULD_BE: game.current_bet_amount()},
+            )
 
-            required_total_bet = player_stack + amount_already_addded
+        return MOVE_OK
 
-            if action.total_bet != required_total_bet:
-                return ValidationResult(
-                    Error.INVAID_TOTAL_BET,
-                    {Metadata.TOTAL_BET_SHOULD_BE: required_total_bet},
-                )
+    else:
+        # Player calls all in
 
-            return MOVE_OK
+        if action.amount_added != player_stack:
+            return ValidationResult(
+                Error.INVALID_AMOUNT_ADDED,
+                {Metadata.AMOUNT_ADDED_SHOULD_BE: player_stack},
+            )
 
-        else:
+        if action.total_bet != game.current_bet_amount():
+            return ValidationResult(
+                Error.INVAID_TOTAL_BET,
+                {Metadata.TOTAL_BET_SHOULD_BE: game.current_bet_amount()},
+            )
 
-            # Must bet at least the big blind OR must raise at least as much as the
-            # last bet/raise
-            min_bet_amount = max(BIG_BLIND_AMOUNT, game.last_raise_amount())
+        return MOVE_OK
 
-            # Player must raise at least as much as the previous raise.
-            if action.total_bet - game.current_bet_amount() < min_bet_amount:
-                return ValidationResult(
-                    Error.MIN_RAISE_REQUIRED,
-                    {Metadata.RAISE_MUST_BE_GE: min_bet_amount},
-                )
 
-            return MOVE_OK
+def _validate_bet_raise(action: Action, game: GameView) -> ValidationResult:
+    amount_to_call = game.amount_to_call()[game.current_player()]
+    player_stack = game.current_stack_sizes()[game.current_player()]
+    amount_already_added = game.amount_added_in_street()[game.current_player()]
 
-    return ValidationResult(Error.UNKNOWN_MOVE, {})
+    # This should be a CALL, not a BET/RAISE
+    if action.amount_added <= amount_to_call:
+        return ValidationResult(
+            Error.INVALID_MOVE,
+            {Metadata.ALLOWED_MOVES_ARE: [Move.FOLD, Move.CHECK_CALL]},
+        )
+
+    elif action.amount_added > player_stack:
+        return ValidationResult(
+            Error.INVALID_AMOUNT_ADDED,
+            {Metadata.AMOUNT_ADDED_SHOULD_BE_LE: player_stack},
+        )
+
+    # Player goes all in.  You can always call all in.
+    elif action.amount_added == player_stack:
+        # TODO: Check the total bet size here is consistent
+
+        required_total_bet = player_stack + amount_already_added
+
+        if action.total_bet != required_total_bet:
+            return ValidationResult(
+                Error.INVAID_TOTAL_BET,
+                {Metadata.TOTAL_BET_SHOULD_BE: required_total_bet},
+            )
+
+        return MOVE_OK
+
+    else:
+
+        # Must bet at least the big blind OR must raise at least as much as the
+        # last bet/raise
+        # min_bet_amount = max(BIG_BLIND_AMOUNT, game.last_raise_amount())
+
+        # Player must raise at least as much as the previous raise.
+        if action.amount_added < game.amount_to_add_for_min_raise():
+            return ValidationResult(
+                Error.MIN_RAISE_REQUIRED,
+                {Metadata.RAISE_MUST_BE_GE: game.min_bet_amount()},
+            )
+
+        return MOVE_OK
 
 
 def street_over(game: GameView) -> bool:

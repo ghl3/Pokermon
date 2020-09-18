@@ -46,12 +46,12 @@ def encode_action(action: Action, game: GameView) -> int:
         min_raise = game.amount_to_add_for_min_raise()
         remaining_stack = game.current_stack_sizes()[game.current_player()]
 
-        if action.amount_added < min_raise or action.amount_added > remaining_stack:
+        if action.amount_added == remaining_stack:
+            return 22
+        elif action.amount_added < min_raise or action.amount_added > remaining_stack:
             raise Exception(
                 f"Cannot make action {action} {min_raise=} {remaining_stack=}"
             )
-        elif action.amount_added == remaining_stack:
-            return 22
         elif action.amount_added == min_raise:
             return 2
 
@@ -130,7 +130,7 @@ def make_last_actions(game: GameView) -> List[LastAction]:
         actions.append(
             LastAction(
                 move=a.move.value,
-                action_encoded=encode_action(a, game),
+                action_encoded=encode_action(a, game_view),
                 amount_added=a.amount_added,
                 amount_added_percent_of_remaining=100 * a.amount_added // stack_size,
                 amount_raised=raise_amount,

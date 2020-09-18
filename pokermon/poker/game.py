@@ -493,9 +493,15 @@ class GameView:
 
     @functools.lru_cache()
     def go_all_in(self) -> Action:
-        return self.bet_raise(
-            amount_to_add=self.current_stack_sizes()[self.current_player()]
-        )
+
+        remaining_stack = self.current_stack_sizes()[self.current_player()]
+        amount_to_call = self.amount_to_call()[self.current_player()]
+
+        # An all-in may be either a call (if you can't affort a full call) or a raise
+        if remaining_stack <= amount_to_call:
+            return self.call()
+        else:
+            return self.bet_raise(amount_to_add=remaining_stack)
 
     @functools.lru_cache()
     def fold(self) -> Action:

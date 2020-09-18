@@ -254,10 +254,19 @@ def test_blinds():
     )
 
 
-def test_go_all_in():
+def test_raise_all_in():
     game = GameRunner(starting_stacks=[200, 250, 100])
     game.start_game()
     game.bet_raise(to=10)
     assert game.game_view().go_all_in() == Action(
         player_index=0, move=Move.BET_RAISE, amount_added=199, total_bet=200
+    )
+
+
+def test_all_in_is_call():
+    game = GameRunner(starting_stacks=[30, 20])
+    game.start_game()
+    game.bet_raise(to=25)
+    assert game.game_view().go_all_in() == Action(
+        player_index=1, move=Move.CHECK_CALL, amount_added=18, total_bet=25
     )
