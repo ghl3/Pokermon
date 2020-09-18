@@ -15,14 +15,13 @@ from pokermon.poker.odds import odds_vs_random_hand
 
 @dataclass(frozen=True)
 class PublicState:
-    current_player_index: int
     street: int
     current_player_mask: List[int]
     folded_player_mask: List[int]
     all_in_player_mask: List[int]
     stack_sizes: List[int]
-
     amount_to_call: List[int]
+
     min_raise_amount: int
 
     flop_0_rank: Optional[int]

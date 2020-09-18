@@ -37,7 +37,6 @@ def test_state() -> None:
     example = make_example(
         public_states=[
             PublicState(
-                current_player_index=0,
                 street=0,
                 current_player_mask=[1, 0, 0],
                 folded_player_mask=[0, 0, 0],
@@ -57,7 +56,6 @@ def test_state() -> None:
                 river_suit=None,
             ),
             PublicState(
-                current_player_index=1,
                 street=2,
                 current_player_mask=[0, 1, 0],
                 folded_player_mask=[0, 0, 1],
@@ -84,7 +82,6 @@ def test_state() -> None:
         "features": {
             "public_state__all_in_player_mask": [[0, 0, 0], [1, 0, 0]],
             "public_state__amount_to_call": [[10, 10, 15], [5, 0, 5]],
-            "public_state__current_player_index": [[0], [1]],
             "public_state__current_player_mask": [[1, 0, 0], [0, 1, 0]],
             "public_state__flop_0_rank": [[-1], [-1]],
             "public_state__flop_0_suit": [[-1], [-1]],
@@ -178,7 +175,6 @@ def test_fold_preflop() -> None:
             "public_state__river_rank": [[-1], [-1], [-1]],
             "public_state__flop_0_rank": [[-1], [-1], [-1]],
             "public_state__flop_2_suit": [[-1], [-1], [-1]],
-            "public_state__current_player_index": [[2], [0], [1]],
             "public_state__turn_rank": [[-1], [-1], [-1]],
             "public_state__flop_2_rank": [[-1], [-1], [-1]],
         },
@@ -482,22 +478,6 @@ def test_full_hand() -> None:
                 [0, 0, 0, 0],
                 [0, 0, 0, 0],
                 [100, 0, 100, 100],
-            ],
-            "public_state__current_player_index": [
-                [2],
-                [3],
-                [0],
-                [1],
-                [2],
-                [0],
-                [1],
-                [2],
-                [0],
-                [1],
-                [0],
-                [0],
-                [1],
-                [0],
             ],
             "public_state__current_player_mask": [
                 [0, 0, 1, 0],
