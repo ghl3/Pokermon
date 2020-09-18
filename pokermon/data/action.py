@@ -80,17 +80,23 @@ def make_action_from_encoded(action_index: int, game: GameView) -> Action:
 
     # TODO: Assert min raise < all in amount
 
+    min_raise_amount = game.amount_to_add_for_min_raise()
+    remaining_stack = game.current_stack_sizes()[game.current_player()]
+
     if action_index == 0:
         return game.fold()
     elif action_index == 1:
         return game.call()
+    # If any raise is an all-in, then we return an all-in
+    elif min_raise_amount >= remaining_stack:
+        return game.go_all_in()
     elif action_index == 2:
         return game.min_raise()
     elif action_index == NUM_ACTION_BET_BINS + 2:
         return game.go_all_in()
     else:
-        min_add = game.amount_to_add_for_min_raise()
-        max_add = game.current_stack_sizes()[game.current_player()]
+        min_add = min_raise_amount
+        max_add = remaining_stack
         if max_add == min_add:
             return game.go_all_in()
         delta = (max_add - min_add) / NUM_ACTION_BET_BINS
@@ -98,9 +104,6 @@ def make_action_from_encoded(action_index: int, game: GameView) -> Action:
             raise Exception(f"{min_add} {max_add} {NUM_ACTION_BET_BINS} {delta}")
         num_deltas = action_index - 2
         amount_to_add = int(math.floor(min_add + num_deltas * delta))
-
-        # print(f"Making Action {action_index} {min_add} {max_add} {amount_to_add}")
-
         return game.bet_raise(amount_to_add=amount_to_add)
 
 
@@ -155,7 +158,7 @@ def make_next_actions(game: GameView) -> List[NextAction]:
         actions.append(
             NextAction(
                 move=a.move.value,
-                action_encoded=encode_action(a, game),
+                action_encoded=encode_action(a, game_view),
                 amount_added=a.amount_added,
                 new_total_bet=a.total_bet,
                 amount_raised=raise_amount,
