@@ -1,9 +1,8 @@
-from dataclasses import dataclass
-
 # Features that describe the status of a single player
 # Terminology:
 # player: The selected player
 # current_player: The player whose turn it is
+from dataclasses import dataclass
 from typing import List
 
 from pokermon.data.utils import iter_game_states
