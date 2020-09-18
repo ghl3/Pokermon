@@ -23,10 +23,13 @@ def test_action_encoded():
     assert encode_action(action, game.game_view()) == 3
 
     action = game.game_view().bet_raise(to=8)
-    assert encode_action(action, game.game_view()) == 3
+    assert encode_action(action, game.game_view()) == 4
 
     action = game.game_view().bet_raise(to=10)
     assert encode_action(action, game.game_view()) == 4
+
+    action = game.game_view().bet_raise(to=12)
+    assert encode_action(action, game.game_view()) == 5
 
     action = game.game_view().bet_raise(to=74)
     assert encode_action(action, game.game_view()) == 20
@@ -50,7 +53,7 @@ def encode_all_in():
 
 
 def test_action_decoded():
-    game = GameRunner(starting_stacks=[100, 100, 82])
+    game = GameRunner(starting_stacks=[100, 100, 84])
     game.start_game()
 
     assert make_action_from_encoded(0, game.game_view()) == game.game_view().fold()
@@ -64,23 +67,23 @@ def test_action_decoded():
     )
 
     assert make_action_from_encoded(3, game.game_view()) == game.game_view().bet_raise(
-        to=6
+        to=8
     )
 
     assert make_action_from_encoded(4, game.game_view()) == game.game_view().bet_raise(
-        to=10
+        to=12
     )
 
     assert make_action_from_encoded(20, game.game_view()) == game.game_view().bet_raise(
-        to=74
+        to=76
     )
 
     assert make_action_from_encoded(21, game.game_view()) == game.game_view().bet_raise(
-        to=78
+        to=80
     )
 
     assert make_action_from_encoded(22, game.game_view()) == game.game_view().bet_raise(
-        to=82
+        to=84
     )
 
     assert (
@@ -107,7 +110,7 @@ def test_fold_preflop() -> None:
         ),
         LastAction(
             move=5,
-            action_encoded=3,
+            action_encoded=4,
             amount_added=10,
             amount_added_percent_of_remaining=10,
             amount_raised=8,
@@ -127,7 +130,7 @@ def test_fold_preflop() -> None:
 
     assert next_actions == [
         NextAction(
-            move=5, action_encoded=3, amount_added=10, amount_raised=8, new_total_bet=10
+            move=5, action_encoded=4, amount_added=10, amount_raised=8, new_total_bet=10
         ),
         NextAction(
             move=3, action_encoded=0, amount_added=0, amount_raised=0, new_total_bet=10

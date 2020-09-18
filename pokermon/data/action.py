@@ -57,7 +57,7 @@ def encode_action(action: Action, game: GameView) -> int:
 
         delta = (remaining_stack - min_raise) / NUM_ACTION_BET_BINS
         amount_raised = action.amount_added
-        num_deltas = int(math.floor((amount_raised - min_raise) / delta))
+        num_deltas = int(math.ceil((amount_raised - min_raise) / delta))
         return 2 + num_deltas
 
 
