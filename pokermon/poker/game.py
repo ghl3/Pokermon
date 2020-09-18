@@ -1,8 +1,10 @@
 # All Amounts are relative to the small blind.
-from functools import lru_cache
+# from functools import lru_cache
+
 import random
 from collections import defaultdict
 from dataclasses import dataclass, field
+from functools import lru_cache
 from typing import Dict, Iterable, List, Optional, Union
 
 from pokermon.poker.ordered_enum import OrderedEnum
@@ -64,6 +66,9 @@ class Action:
 
 # A street, as an event, represents the dealing of that street.
 Event = Union[Action, Street]
+
+
+cache = lru_cache(2048)
 
 
 @dataclass
@@ -156,22 +161,22 @@ class GameView:
     def __hash__(self):
         return hash((self._game.id, self.timestamp, "364258436582634"))
 
-    @lru_cache()
+    @cache
     def num_players(self) -> int:
         return self._game.num_players()
 
-    @lru_cache()
+    @cache
     def events(self) -> Iterable[Event]:
         return self._game.events[: self.timestamp]
 
-    @lru_cache()
+    @cache
     def starting_stacks(self) -> List[int]:
         return self._game.starting_stacks
 
     def view(self, timestamp: int = None):
         return self._game.view(timestamp)
 
-    @lru_cache()
+    @cache
     def next_action(
         self,
     ) -> Optional[Action]:
@@ -182,7 +187,7 @@ class GameView:
 
         return None
 
-    @lru_cache()
+    @cache
     def previous_action(
         self,
     ) -> Optional[Action]:
@@ -195,14 +200,14 @@ class GameView:
 
     # Nothing below these methods should reference the underlying game
 
-    @lru_cache()
+    @cache
     def _player_list(self, starting_player: int = 0) -> List[int]:
         all_players_twice = list(range(self.num_players())) + list(
             range(self.num_players())
         )
         return all_players_twice[starting_player : starting_player + self.num_players()]
 
-    @lru_cache()
+    @cache
     def current_player(self) -> int:
         if len(self.street_action()) == 0:
             starting_player = 0
@@ -217,7 +222,7 @@ class GameView:
 
         return -1
 
-    @lru_cache()
+    @cache
     def street(self) -> Street:
 
         current_street = Street.PREFLOP
@@ -229,7 +234,7 @@ class GameView:
 
         return current_street
 
-    @lru_cache()
+    @cache
     def street_action_dict(self) -> Dict[Street, List[Action]]:
 
         street_actions: Dict[Street, List[Action]] = defaultdict(lambda: [])
@@ -246,15 +251,15 @@ class GameView:
 
         return street_actions
 
-    @lru_cache()
+    @cache
     def street_action(self) -> List[Action]:
         return self.street_action_dict()[self.street()]
 
-    @lru_cache()
+    @cache
     def current_street_index(self) -> int:
         return len(self.street_action())
 
-    @lru_cache()
+    @cache
     def all_actions(self) -> List[Action]:
         """
         The list of actions before the given timestamp  on the street containing the given action.
@@ -264,7 +269,7 @@ class GameView:
 
         return [e for e in self.events() if isinstance(e, Action)]
 
-    @lru_cache()
+    @cache
     def amount_added_in_street(self) -> List[int]:
         """
         Return a dictionary of the total amount bet per player so far.
@@ -280,7 +285,7 @@ class GameView:
 
         return amount
 
-    @lru_cache()
+    @cache
     def amount_added_total(self) -> List[int]:
         """
         Return a dictionary of the total amount bet per player so far.
@@ -296,32 +301,32 @@ class GameView:
 
         return amount
 
-    @lru_cache()
+    @cache
     def pot_size(self) -> int:
         pot = 0
         for amount in self.amount_added_total():
             pot += amount
         return pot
 
-    @lru_cache()
+    @cache
     def current_stack_sizes(self) -> List[int]:
         return [
             self.starting_stacks()[i] - amount_bet
             for i, amount_bet in enumerate(self.amount_added_total())
         ]
 
-    @lru_cache()
+    @cache
     def current_bet_amount(self) -> int:
         return max(self.amount_added_in_street())
 
-    @lru_cache()
+    @cache
     def amount_to_call(self) -> List[int]:
         return [
             self.current_bet_amount() - amount_bet
             for amount_bet in self.amount_added_in_street()
         ]
 
-    @lru_cache()
+    @cache
     def last_raise_amount(self) -> int:
         """
         The size of the last raise over the previous bet
@@ -340,7 +345,7 @@ class GameView:
 
         return current_bet
 
-    @lru_cache()
+    @cache
     def is_folded(self) -> List[bool]:
 
         folded = [False for _ in range(self.num_players())]
@@ -351,13 +356,13 @@ class GameView:
 
         return folded
 
-    @lru_cache()
+    @cache
     def is_all_in(self) -> List[bool]:
         return [
             current_stack_size == 0 for current_stack_size in self.current_stack_sizes()
         ]
 
-    @lru_cache()
+    @cache
     def min_bet_amount(self) -> int:
         """Amount that a player can raise over the last bet.
 
@@ -366,14 +371,14 @@ class GameView:
         """
         return max(BIG_BLIND_AMOUNT, self.last_raise_amount())
 
-    @lru_cache()
+    @cache
     def new_bet_size_if_min_raise(self) -> int:
         """Size of the new total bet if a player were to execute a full min raise
         (meaning, they're able to min raise without going all in).
         """
         return self.current_bet_amount() + self.min_bet_amount()
 
-    @lru_cache()
+    @cache
     def amount_to_add_for_min_raise(self) -> int:
         """The amount that a player would have to add to the pot in order to execute
         a min raise.  If a player would have to go all in to min raise, this returns
@@ -393,7 +398,7 @@ class GameView:
     # Actions
     #
 
-    @lru_cache()
+    @cache
     def small_blind(self) -> Action:
         return Action(
             self.current_player(),
@@ -402,7 +407,7 @@ class GameView:
             amount_added=SMALL_BLIND_AMOUNT,
         )
 
-    @lru_cache()
+    @cache
     def big_blind(self) -> Action:
         return Action(
             self.current_player(),
@@ -411,7 +416,7 @@ class GameView:
             amount_added=BIG_BLIND_AMOUNT,
         )
 
-    @lru_cache()
+    @cache
     def call(self) -> Action:
         player_index = self.current_player()
 
@@ -433,11 +438,11 @@ class GameView:
                 total_bet=self.current_bet_amount(),
             )
 
-    @lru_cache()
+    @cache
     def check(self) -> Action:
         return self.call()
 
-    @lru_cache()
+    @cache
     def bet_raise(
         self,
         to: Optional[int] = None,
@@ -487,11 +492,11 @@ class GameView:
         return Action(player_index, Move.BET_RAISE, amount_to_add, new_bet_size)
 
     # TODO: Ensure these work
-    @lru_cache()
+    @cache
     def min_raise(self) -> Action:
         return self.bet_raise(amount_to_add=self.amount_to_add_for_min_raise())
 
-    @lru_cache()
+    @cache
     def go_all_in(self) -> Action:
 
         remaining_stack = self.current_stack_sizes()[self.current_player()]
@@ -503,7 +508,7 @@ class GameView:
         else:
             return self.bet_raise(amount_to_add=remaining_stack)
 
-    @lru_cache()
+    @cache
     def fold(self) -> Action:
         player_index = self.current_player()
         return Action(
