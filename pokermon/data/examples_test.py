@@ -6,6 +6,7 @@ from pokermon.data.context import (
     make_public_context,
 )
 from pokermon.data.examples import make_example, seq_example_to_dict
+from pokermon.data.player_data import make_player_data
 from pokermon.data.rewards import make_rewards
 from pokermon.data.state import PublicState, make_public_states
 from pokermon.data.target import make_target
@@ -121,6 +122,7 @@ def test_fold_preflop() -> None:
         private_context=make_private_context(deal.hole_cards[1]),
         target=make_target(deal, results),
         public_states=make_public_states(game.game_view(), deal.board),
+        player_data=make_player_data(1, game.game_view()),
         private_states=None,
         last_actions=make_last_actions(game.game_view()),
         next_actions=make_next_actions(game.game_view()),
@@ -130,84 +132,58 @@ def test_fold_preflop() -> None:
 
     assert example_dict == {
         "context": {
-            "public_context__num_players": [3],
             "private_context__hand_encoded": [168],
             "private_context__hole_card_0_rank": [14],
-            "target__hole_cards": [12, 168, 9],
-            "private_context__hole_card_1_rank": [13],
-            "target__total_rewards": [-1, -2, 3],
-            "public_context__starting_stack_sizes": [200, 250, 100],
-            "private_context__hole_card_1_suit": [4],
             "private_context__hole_card_0_suit": [1],
+            "private_context__hole_card_1_rank": [13],
+            "private_context__hole_card_1_suit": [4],
+            "public_context__num_players": [3],
+            "public_context__starting_stack_sizes": [200, 250, 100],
+            "target__hole_cards": [12, 168, 9],
+            "target__total_rewards": [-1, -2, 3],
         },
         "features": {
-            "public_state__street": [[1], [1], [1]],
-            "public_state__turn_suit": [[-1], [-1], [-1]],
+            "last_action__action_encoded": [[-1], [4], [0]],
+            "last_action__amount_added": [[-1], [10], [0]],
+            "last_action__amount_added_percent_of_remaining": [[-1], [10], [0]],
+            "last_action__amount_raised": [[-1], [8], [0]],
+            "last_action__amount_raised_percent_of_pot": [[-1], [266], [0]],
+            "last_action__move": [[-1], [5], [3]],
+            "next_action__action_encoded": [[4], [0], [0]],
+            "next_action__amount_added": [[10], [0], [0]],
+            "next_action__amount_raised": [[8], [0], [0]],
+            "next_action__move": [[5], [3], [3]],
+            "next_action__new_total_bet": [[10], [10], [10]],
+            "player_data__current_player_offset": [[1], [-1], [0]],
+            "player_data__is_current_player": [[0], [0], [1]],
+            "player_data__player_index": [[1], [1], [1]],
+            "public_state__all_in_player_mask": [[0, 0, 0], [0, 0, 0], [0, 0, 0]],
+            "public_state__amount_to_call": [[1, 0, 2], [9, 8, 0], [9, 8, 0]],
+            "public_state__current_player_mask": [[0, 0, 1], [1, 0, 0], [0, 1, 0]],
+            "public_state__flop_0_rank": [[-1], [-1], [-1]],
+            "public_state__flop_0_suit": [[-1], [-1], [-1]],
+            "public_state__flop_1_rank": [[-1], [-1], [-1]],
+            "public_state__flop_1_suit": [[-1], [-1], [-1]],
+            "public_state__flop_2_rank": [[-1], [-1], [-1]],
+            "public_state__flop_2_suit": [[-1], [-1], [-1]],
+            "public_state__folded_player_mask": [[0, 0, 0], [0, 0, 0], [1, 0, 0]],
+            "public_state__min_raise_amount": [[2], [8], [8]],
+            "public_state__river_rank": [[-1], [-1], [-1]],
+            "public_state__river_suit": [[-1], [-1], [-1]],
             "public_state__stack_sizes": [
                 [199, 248, 100],
                 [199, 248, 90],
                 [199, 248, 90],
             ],
-            "public_state__river_suit": [[-1], [-1], [-1]],
-            "reward__cumulative_reward": [[3], [0], [0]],
-            "public_state__folded_player_mask": [[0, 0, 0], [0, 0, 0], [1, 0, 0]],
-            "public_state__flop_1_rank": [[-1], [-1], [-1]],
-            "last_action__amount_added": [[-1], [10], [0]],
-            "last_action__move": [[-1], [5], [3]],
-            "last_action__amount_added_percent_of_remaining": [[-1], [10], [0]],
-            "last_action__action_encoded": [[-1], [3], [0]],
-            "last_action__amount_raised": [[-1], [8], [0]],
-            "last_action__amount_raised_percent_of_pot": [[-1], [266], [0]],
-            "next_action__move": [[5], [3], [3]],
-            "next_action__action_encoded": [[3], [0], [0]],
-            "next_action__amount_added": [[10], [0], [0]],
-            "next_action__amount_raised": [[8], [0], [0]],
-            "next_action__new_total_bet": [[10], [10], [10]],
-            "reward__instant_reward": [[3], [0], [0]],
-            "public_state__amount_to_call": [[1, 0, 2], [9, 8, 0], [9, 8, 0]],
-            "reward__is_players_last_action": [[1], [1], [1]],
-            "public_state__all_in_player_mask": [[0, 0, 0], [0, 0, 0], [0, 0, 0]],
-            "public_state__flop_0_suit": [[-1], [-1], [-1]],
-            "public_state__flop_1_suit": [[-1], [-1], [-1]],
-            "public_state__min_raise_amount": [[2], [8], [8]],
-            "reward__won_hand": [[1], [0], [0]],
-            "public_state__current_player_mask": [[0, 0, 1], [1, 0, 0], [0, 1, 0]],
-            "public_state__river_rank": [[-1], [-1], [-1]],
-            "public_state__flop_0_rank": [[-1], [-1], [-1]],
-            "public_state__flop_2_suit": [[-1], [-1], [-1]],
+            "public_state__street": [[1], [1], [1]],
             "public_state__turn_rank": [[-1], [-1], [-1]],
-            "public_state__flop_2_rank": [[-1], [-1], [-1]],
+            "public_state__turn_suit": [[-1], [-1], [-1]],
+            "reward__cumulative_reward": [[3], [0], [0]],
+            "reward__instant_reward": [[3], [0], [0]],
+            "reward__is_players_last_action": [[1], [1], [1]],
+            "reward__won_hand": [[1], [0], [0]],
         },
     }
-
-    # assert example_dict["context"]["num_players"] == [3]
-    # assert example_dict["context"]["starting_stack_sizes"] == [200, 200, 200]
-    #
-    # # Player 3 (UTG) wins the blinds, the others lose their blinds
-    # assert example_dict["context"]["total_rewards"] == [-1, -2, 3]
-    #
-    # # Bet, Fold, Fold
-    # assert example_dict["features"]["action__action_encoded"] == [[5], [3], [3]]
-    #
-    # # Bet 10, fold, fold
-    # assert example_dict["features"]["action__amount_added"] == [[10], [0], [0]]
-    #
-    # # These are the states before the action (the blinds have already taken place)
-    # assert example_dict["features"]["state__stack_sizes"] == [
-    #     [199, 198, 200],
-    #     [199, 198, 190],
-    #     [199, 198, 190],
-    # ]
-    #
-    # # Hole Cards 0: Jc Ac As
-    # # Hole Cards 1: Jh Ad Kh
-    # assert example_dict["features"]["state__hole_card_0_rank"] == [[11], [14], [14]]
-    # assert example_dict["features"]["state__hole_card_0_suit"] == [[2], [2], [1]]
-    # assert example_dict["features"]["state__hole_card_1_rank"] == [[11], [14], [13]]
-    # assert example_dict["features"]["state__hole_card_1_suit"] == [[4], [3], [4]]
-    #
-    # # These are the indices of the actions
-    # assert example_dict["features"]["state__action_index"] == [[3], [4], [5]]
 
 
 def test_full_hand() -> None:
@@ -256,8 +232,6 @@ def test_full_hand() -> None:
     )
     example_dict = seq_example_to_dict(example)
 
-    print(example_dict)
-
     assert example_dict == {
         "context": {
             "private_context__hand_encoded": [140],
@@ -273,19 +247,19 @@ def test_full_hand() -> None:
         "features": {
             "last_action__action_encoded": [
                 [-1],
-                [4],
+                [3],
                 [0],
-                [8],
+                [3],
                 [1],
                 [1],
-                [12],
+                [5],
                 [1],
                 [0],
                 [1],
-                [17],
+                [7],
                 [1],
                 [1],
-                [28],
+                [14],
             ],
             "last_action__amount_added": [
                 [-1],
@@ -368,19 +342,19 @@ def test_full_hand() -> None:
                 [5],
             ],
             "next_action__action_encoded": [
-                [4],
+                [3],
                 [0],
-                [8],
+                [3],
                 [1],
                 [1],
-                [12],
+                [5],
                 [1],
                 [0],
                 [1],
-                [17],
+                [7],
                 [1],
                 [1],
-                [28],
+                [14],
                 [1],
             ],
             "next_action__amount_added": [

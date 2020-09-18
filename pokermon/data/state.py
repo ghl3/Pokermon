@@ -106,7 +106,6 @@ def make_public_states(game: GameView, board: Optional[Board]):
 
         public_states.append(
             PublicState(
-                current_player_index=game_view.current_player(),
                 street=game_view.street().value,
                 current_player_mask=current_player_mask,
                 folded_player_mask=game_view.is_folded(),

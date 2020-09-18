@@ -57,11 +57,11 @@ def seq_example_to_dict(example: tf.train.SequenceExample) -> Dict[str, Any]:
     }
 
     for name, feature_list in example.feature_lists.feature_list.items():
-
         for feature in feature_list.feature:
             feature_map["features"][name].append(_feature_value_to_vals(feature))
 
-    feature_map["features"] = dict(feature_map["features"])
+    feature_map["context"] = dict(sorted(feature_map["context"].items()))
+    feature_map["features"] = dict(sorted(feature_map["features"].items()))
 
     return feature_map
 
