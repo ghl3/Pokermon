@@ -1,5 +1,4 @@
 # All Amounts are relative to the small blind.
-# from functools import lru_cache
 
 import random
 from collections import defaultdict
@@ -124,7 +123,7 @@ class Game:
         - At the ith timestamp, a user is deciding the move with index=i (0 indexed)
 
         A timestamp represents different states of the game
-        Returns a view of the game AFTER the timestamp'th action.  Or, equivalently,
+        Returns a view of the game AFTER the timestamp action.  Or, equivalently,
         returns a view of the game when the 0-indexed action is being decided.
 
         So, if timestamp == 0, then no actions have been done.
@@ -263,8 +262,6 @@ class GameView:
     def all_actions(self) -> List[Action]:
         """
         The list of actions before the given timestamp  on the street containing the given action.
-        :param timestamp:
-        :return:
         """
 
         return [e for e in self.events() if isinstance(e, Action)]
@@ -273,7 +270,6 @@ class GameView:
     def amount_added_in_street(self) -> List[int]:
         """
         Return a dictionary of the total amount bet per player so far.
-        :return:
         """
 
         amount = [0 for _ in range(self.num_players())]
@@ -289,7 +285,6 @@ class GameView:
     def amount_added_total(self) -> List[int]:
         """
         Return a dictionary of the total amount bet per player so far.
-        :return:
         """
 
         amount = [0 for _ in range(self.num_players())]
@@ -330,7 +325,6 @@ class GameView:
     def last_raise_amount(self) -> int:
         """
         The size of the last raise over the previous bet
-        :return:
         """
 
         if len(self.street_action()) == 0:
@@ -491,7 +485,6 @@ class GameView:
         # This may be an invalid raise, but this will be caught downstream
         return Action(player_index, Move.BET_RAISE, amount_to_add, new_bet_size)
 
-    # TODO: Ensure these work
     @cache
     def min_raise(self) -> Action:
         return self.bet_raise(amount_to_add=self.amount_to_add_for_min_raise())
@@ -502,7 +495,7 @@ class GameView:
         remaining_stack = self.current_stack_sizes()[self.current_player()]
         amount_to_call = self.amount_to_call()[self.current_player()]
 
-        # An all-in may be either a call (if you can't affort a full call) or a raise
+        # An all-in may be either a call (if you can't afford a full call) or a raise
         if remaining_stack <= amount_to_call:
             return self.call()
         else:
