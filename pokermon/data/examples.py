@@ -155,7 +155,7 @@ def make_example(
             for k, v in _make_feature_map(PublicState, public_state).items():
                 timestamp_features[k].append(v)
 
-    if public_states:
+    if player_states:
         for player_state in player_states:
             for k, v in _make_feature_map(PlayerState, player_state).items():
                 timestamp_features[k].append(v)

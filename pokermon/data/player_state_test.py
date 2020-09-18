@@ -30,11 +30,13 @@ def test_state() -> None:
 
     player_index = 0
     private_states = make_player_states(
-        game.game_view(), deal.hole_cards[player_index], deal.board
+        player_index, game.game_view(), deal.hole_cards[player_index], deal.board
     )
 
     assert private_states == [
         PlayerState(
+            is_current_player=True,
+            current_player_offset=0,
             current_hand_type=None,
             current_hand_strength=None,
             current_hand_rank=None,
@@ -44,6 +46,8 @@ def test_state() -> None:
             win_prob_vs_random=None,
         ),
         PlayerState(
+            is_current_player=False,
+            current_player_offset=1,
             current_hand_type=None,
             current_hand_strength=None,
             current_hand_rank=None,
@@ -53,6 +57,8 @@ def test_state() -> None:
             win_prob_vs_random=None,
         ),
         PlayerState(
+            is_current_player=True,
+            current_player_offset=0,
             current_hand_type=2,
             current_hand_strength=0.5225140712945591,
             current_hand_rank=3563,
@@ -62,15 +68,19 @@ def test_state() -> None:
             win_prob_vs_random=0.871,
         ),
         PlayerState(
-            current_hand_type=2,
-            current_hand_strength=0.5225140712945591,
-            current_hand_rank=3563,
-            num_hands_better=42,
-            num_hands_tied=11,
-            num_hands_worse=1122,
-            win_prob_vs_random=0.871,
+            is_current_player=False,
+            current_player_offset=1,
+            current_hand_type=None,
+            current_hand_strength=None,
+            current_hand_rank=None,
+            num_hands_better=None,
+            num_hands_tied=None,
+            num_hands_worse=None,
+            win_prob_vs_random=None,
         ),
         PlayerState(
+            is_current_player=True,
+            current_player_offset=0,
             current_hand_type=2,
             current_hand_strength=0.5230501206110962,
             current_hand_rank=3559,
@@ -80,15 +90,19 @@ def test_state() -> None:
             win_prob_vs_random=0.872,
         ),
         PlayerState(
-            current_hand_type=2,
-            current_hand_strength=0.5230501206110962,
-            current_hand_rank=3559,
-            num_hands_better=72,
-            num_hands_tied=11,
-            num_hands_worse=1044,
-            win_prob_vs_random=0.872,
+            is_current_player=False,
+            current_player_offset=1,
+            current_hand_type=None,
+            current_hand_strength=None,
+            current_hand_rank=None,
+            num_hands_better=None,
+            num_hands_tied=None,
+            num_hands_worse=None,
+            win_prob_vs_random=None,
         ),
         PlayerState(
+            is_current_player=True,
+            current_player_offset=0,
             current_hand_type=2,
             current_hand_strength=0.5230501206110962,
             current_hand_rank=3559,
@@ -98,13 +112,15 @@ def test_state() -> None:
             win_prob_vs_random=0.842,
         ),
         PlayerState(
-            current_hand_type=2,
-            current_hand_strength=0.5230501206110962,
-            current_hand_rank=3559,
-            num_hands_better=170,
-            num_hands_tied=10,
-            num_hands_worse=900,
-            win_prob_vs_random=0.842,
+            is_current_player=False,
+            current_player_offset=1,
+            current_hand_type=None,
+            current_hand_strength=None,
+            current_hand_rank=None,
+            num_hands_better=None,
+            num_hands_tied=None,
+            num_hands_worse=None,
+            win_prob_vs_random=None,
         ),
     ]
 
@@ -136,11 +152,13 @@ def test_monster() -> None:
 
     player_index = 0
     private_states = make_player_states(
-        game.game_view(), deal.hole_cards[player_index], deal.board
+        player_index, game.game_view(), deal.hole_cards[player_index], deal.board
     )
 
     assert private_states == [
         PlayerState(
+            is_current_player=True,
+            current_player_offset=0,
             current_hand_type=None,
             current_hand_strength=None,
             current_hand_rank=None,
@@ -150,6 +168,8 @@ def test_monster() -> None:
             win_prob_vs_random=None,
         ),
         PlayerState(
+            is_current_player=False,
+            current_player_offset=1,
             current_hand_type=None,
             current_hand_strength=None,
             current_hand_rank=None,
@@ -159,6 +179,8 @@ def test_monster() -> None:
             win_prob_vs_random=None,
         ),
         PlayerState(
+            is_current_player=True,
+            current_player_offset=0,
             current_hand_type=4,
             current_hand_strength=0.752881265076387,
             current_hand_rank=1844,
@@ -168,15 +190,19 @@ def test_monster() -> None:
             win_prob_vs_random=0.928,
         ),
         PlayerState(
-            current_hand_type=4,
-            current_hand_strength=0.752881265076387,
-            current_hand_rank=1844,
-            num_hands_better=0,
-            num_hands_tied=2,
-            num_hands_worse=1173,
-            win_prob_vs_random=0.928,
+            is_current_player=False,
+            current_player_offset=1,
+            current_hand_type=None,
+            current_hand_strength=None,
+            current_hand_rank=None,
+            num_hands_better=None,
+            num_hands_tied=None,
+            num_hands_worse=None,
+            win_prob_vs_random=None,
         ),
         PlayerState(
+            is_current_player=True,
+            current_player_offset=0,
             current_hand_type=8,
             current_hand_strength=0.993299383543286,
             current_hand_rank=50,
@@ -186,15 +212,19 @@ def test_monster() -> None:
             win_prob_vs_random=0.999,
         ),
         PlayerState(
-            current_hand_type=8,
-            current_hand_strength=0.993299383543286,
-            current_hand_rank=50,
-            num_hands_better=0,
-            num_hands_tied=0,
-            num_hands_worse=1127,
-            win_prob_vs_random=0.999,
+            is_current_player=False,
+            current_player_offset=1,
+            current_hand_type=None,
+            current_hand_strength=None,
+            current_hand_rank=None,
+            num_hands_better=None,
+            num_hands_tied=None,
+            num_hands_worse=None,
+            win_prob_vs_random=None,
         ),
         PlayerState(
+            is_current_player=True,
+            current_player_offset=0,
             current_hand_type=8,
             current_hand_strength=0.9937014205306888,
             current_hand_rank=47,
@@ -204,12 +234,14 @@ def test_monster() -> None:
             win_prob_vs_random=1.0,
         ),
         PlayerState(
-            current_hand_type=8,
-            current_hand_strength=0.9937014205306888,
-            current_hand_rank=47,
-            num_hands_better=1,
-            num_hands_tied=0,
-            num_hands_worse=1079,
-            win_prob_vs_random=1.0,
+            is_current_player=False,
+            current_player_offset=1,
+            current_hand_type=None,
+            current_hand_strength=None,
+            current_hand_rank=None,
+            num_hands_better=None,
+            num_hands_tied=None,
+            num_hands_worse=None,
+            win_prob_vs_random=None,
         ),
     ]
