@@ -1,3 +1,5 @@
+from typing import Tuple
+
 import numpy as np
 import tensorflow as tf
 
@@ -39,6 +41,7 @@ class HeadsUpModel(Policy):
     ):
         super().__init__()
 
+        self.name = name
         self.num_players = 2
 
         context_features = {}
@@ -87,6 +90,18 @@ class HeadsUpModel(Policy):
         self.model.add(tf.keras.layers.Dense(policy_vector_size(), name="logits"))
 
         self.optimizer = None
+
+    def checkpoint(self):
+        return tf.train.Checkpoint(
+            step=tf.Variable(1), optimizer=self.optimizer, model=self.model
+        )
+
+    def checkpoint_manager(self, path):
+        if getattr(self, "manager", None) is None:
+            self.manager = tf.train.CheckpointManager(
+                self.checkpoint(), path, max_to_keep=5
+            )
+        return self.manager
 
     def select_action(
         self, player_index: int, game: GameView, hole_cards: HoleCards, board: Board
@@ -211,7 +226,7 @@ class HeadsUpModel(Policy):
         hole_cards: HoleCards,
         board: Board,
         results: GameResults,
-    ):
+    ) -> Tuple[tf.train.SequenceExample, float]:
 
         if self.optimizer is None:
             self.optimizer = tf.keras.optimizers.Adam()
