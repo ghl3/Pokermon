@@ -1,6 +1,4 @@
-from deuces import Card
-from deuces import Evaluator
-from deuces import Deck
+from deuces import Card, Deck, Evaluator
 
 board = [Card.new("Ah"), Card.new("Kd"), Card.new("Jc")]
 hand = [Card.new("Qs"), Card.new("Th")]
