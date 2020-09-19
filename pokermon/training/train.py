@@ -25,8 +25,6 @@ def train_heads_up(
 ):
     logger.debug("Beginning training with %s players", len(players))
 
-    losses = []
-
     for i in tqdm(range(num_hands_to_play)):
         starting_stacks = choose_starting_stacks()
 
@@ -57,9 +55,6 @@ def train_heads_up(
                 elif i % num_hands_between_checkpoins == 0:
                     print(f"Saving to {ckpt_path}")
                     model.checkpoint_manager(ckpt_path).save()
-
-
-#   print(np.cumsum(losses))
 
 
 def main():
