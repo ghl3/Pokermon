@@ -1,10 +1,9 @@
-from typing import Dict, Tuple
+from itertools import chain
 
 import numpy as np
 import tensorflow as tf
 
 from pokermon.ai.policy import Policy
-from pokermon.data import features
 from pokermon.data.action import (
     NUM_ACTION_BET_BINS,
     LastAction,
@@ -13,13 +12,17 @@ from pokermon.data.action import (
     make_last_actions,
     make_next_actions,
 )
+from pokermon.data.context import PublicContext, make_public_context
+from pokermon.data.context import PrivateContext, make_private_context
+
 from pokermon.data.examples import make_example
 from pokermon.data.player_state import PlayerState, make_player_states
 from pokermon.data.rewards import Reward, make_rewards
 from pokermon.data.public_state import PublicState, make_public_states
 
-from pokermon.model import utils
-from pokermon.model.utils import make_sequence_dict_of_dense, select_proportionally
+from pokermon.model import utils, features
+from pokermon.model.features import FeatureTensors, TargetTensors
+from pokermon.model.utils import select_proportionally
 from pokermon.poker.cards import Board, HoleCards
 from pokermon.poker.game import Action, GameView, Street
 from pokermon.poker.rules import GameResults
@@ -27,10 +30,6 @@ from pokermon.poker.rules import GameResults
 
 def policy_vector_size():
     return NUM_ACTION_BET_BINS + 2
-
-
-FeatureTensors = Dict[str, tf.Tensor]
-TargetTensors = Dict[str, tf.Tensor]
 
 
 class HeadsUpModel(Policy):
@@ -42,18 +41,34 @@ class HeadsUpModel(Policy):
 
         self.num_players = 2
 
-        self.features = {}
-        self.features.update(
-            features.make_feature_config(PlayerState, is_sequence=True)
+        self.context_features = {}
+        self.context_features.update(
+            features.make_feature_definition_dict(PublicContext, is_sequence=False)
         )
-        self.features.update(
-            features.make_feature_config(PublicState, is_sequence=True)
+        self.context_features.update(
+            features.make_feature_definition_dict(PrivateContext, is_sequence=False)
         )
-        self.features.update(features.make_feature_config(LastAction, is_sequence=True))
 
-        self.targets = {}
-        self.targets.update(features.make_feature_config(NextAction, is_sequence=True))
-        self.targets.update(features.make_feature_config(Reward, is_sequence=True))
+        self.sequence_feaures = {}
+        self.sequence_feaures.update(
+            features.make_feature_definition_dict(PlayerState, is_sequence=True)
+        )
+        self.sequence_feaures.update(
+            features.make_feature_definition_dict(PublicState, is_sequence=True)
+        )
+        self.sequence_feaures.update(
+            features.make_feature_definition_dict(LastAction, is_sequence=True)
+        )
+
+        self.context_targets = {}
+
+        self.sequence_targets = {}
+        self.sequence_targets.update(
+            features.make_feature_definition_dict(NextAction, is_sequence=True)
+        )
+        self.sequence_targets.update(
+            features.make_feature_definition_dict(Reward, is_sequence=True)
+        )
 
         self.model = tf.keras.Sequential(name=name)
         self.model.add(
@@ -61,8 +76,8 @@ class HeadsUpModel(Policy):
                 input_dim=self.num_features(), return_sequences=True, units=32
             )
         )
-        self.model.add(tf.keras.layers.Dense(64))
-        self.model.add(tf.keras.layers.Dense(policy_vector_size()))
+        self.model.add(tf.keras.layers.Dense(64, name="hidden"))
+        self.model.add(tf.keras.layers.Dense(policy_vector_size(), name="logits"))
 
         self.optimizer = None
 
@@ -90,8 +105,12 @@ class HeadsUpModel(Policy):
 
         num = 0
 
-        for _, feature_col in self.features.items():
+        for _, feature_col in chain(
+            self.sequence_targets.items(), self.context_features.items()
+        ):
             if isinstance(feature_col, tf.io.FixedLenSequenceFeature):
+                num += 1
+            elif isinstance(feature_col, tf.io.FixedLenFeature):
                 num += 1
             elif isinstance(feature_col, tf.io.VarLenFeature):
                 num += self.num_players
@@ -111,21 +130,12 @@ class HeadsUpModel(Policy):
         assert game.num_players() == self.num_players
 
         return make_example(
+            public_context=make_public_context(game),
+            private_context=make_private_context(hole_cards),
             public_states=make_public_states(game, board=board),
             player_states=make_player_states(player_index, game, hole_cards, board),
             last_actions=make_last_actions(game),
         )
-
-    def make_feature_tensors(self, serialized_example: str) -> FeatureTensors:
-        context_dict, sequence_dict = tf.io.parse_single_sequence_example(
-            serialized_example,
-            context_features={},
-            sequence_features=self.features,
-            example_name=None,
-            name=None,
-        )
-
-        return make_sequence_dict_of_dense(sequence_dict)
 
     def make_forward_backward_example(
         self,
@@ -144,47 +154,13 @@ class HeadsUpModel(Policy):
         assert game.street() == Street.OVER
 
         return make_example(
+            public_context=make_public_context(game),
+            private_context=make_private_context(hole_cards),
             public_states=make_public_states(game, board=board),
             player_states=make_player_states(player_index, game, hole_cards, board),
             last_actions=make_last_actions(game),
             next_actions=make_next_actions(game),
             rewards=make_rewards(game, results),
-        )
-
-    def make_features_and_target_tensors(
-        self, serialized_example: str
-    ) -> Tuple[FeatureTensors, TargetTensors]:
-        """
-        All tensors have shape:
-        [batch_size=1, time, 1 OR num_players=2]
-        """
-
-        sequence_features = {}
-        sequence_features.update(self.features)
-        sequence_features.update(self.targets)
-
-        context_dict, sequence_dict = tf.io.parse_single_sequence_example(
-            serialized_example,
-            context_features={},
-            sequence_features=sequence_features,
-            example_name=None,
-            name=None,
-        )
-
-        feature_dict = {
-            name: tensor
-            for (name, tensor) in sequence_dict.items()
-            if name in self.features
-        }
-
-        target_dict = {
-            name: tensor
-            for (name, tensor) in sequence_dict.items()
-            if name in self.targets
-        }
-
-        return make_sequence_dict_of_dense(feature_dict), make_sequence_dict_of_dense(
-            target_dict
         )
 
     def action_probs(self, feature_tensors: FeatureTensors) -> tf.Tensor:
@@ -250,7 +226,11 @@ class HeadsUpModel(Policy):
             player_id, game, hole_cards, board, results
         )
 
-        return self._update_weights(tf.convert_to_tensor(example.SerializeToString()))
+        _, loss = self._update_weights(
+            tf.convert_to_tensor(example.SerializeToString())
+        )
+
+        return example, loss
 
     @tf.function(experimental_relax_shapes=True)
     def _update_weights(self, serialized_example):

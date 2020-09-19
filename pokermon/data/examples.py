@@ -136,6 +136,7 @@ def make_example(
     next_actions: Optional[List[NextAction]] = None,
     rewards: Optional[List[Reward]] = None,
 ) -> tf.train.SequenceExample:
+
     context_features: Dict[str, tf.train.Feature] = OrderedDict()
 
     # First, make any context features, if necessary
@@ -174,6 +175,15 @@ def make_example(
         for reward in rewards:
             for k, v in _make_feature_map(Reward, reward).items():
                 timestamp_features[k].append(v)
+
+    num_steps = None
+    for name, feature_list in timestamp_features.items():
+        if num_steps is None:
+            num_steps = len(feature_list)
+        elif len(feature_list) != num_steps:
+            raise Exception(f"Invalid number of features for {name}")
+
+    context_features["num_steps"] = _int64_feature([num_steps or 0])
 
     seq_ex = tf.train.SequenceExample(
         context=tf.train.Features(feature=context_features)

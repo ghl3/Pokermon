@@ -1,5 +1,4 @@
-import zlib
-from typing import Iterable, Optional, Tuple
+from typing import Iterable, Tuple
 
 import stringcase  # type: ignore
 
