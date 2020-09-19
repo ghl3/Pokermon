@@ -57,3 +57,18 @@ def test_winner() -> None:
     assert make_nut_result(hole_cards, board) == NutResult(
         num_better=32, num_tied=3, num_worse=1046
     )
+
+
+def test_turn() -> None:
+    hole_cards = mkhand("7d8s")
+    board = Board(flop=mkflop("5h6cJs"), turn=mkcard("5h"))
+
+    eval_result = evaluate_hand(hole_cards, board)
+
+    #    assert eval_result == EvaluationResult(
+    #        hand_type=HandType.TRIPS, rank=1615, percentage=0.7835700884481372
+    #    )
+
+    assert make_nut_result(hole_cards, board) == NutResult(
+        num_better=1016, num_tied=15, num_worse=144
+    )

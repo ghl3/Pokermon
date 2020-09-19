@@ -1,4 +1,5 @@
 import logging
+from random import randint
 from typing import List, Tuple
 
 import pokermon.poker.rules as rules
@@ -9,6 +10,10 @@ from pokermon.poker.game_runner import GameRunner
 from pokermon.poker.rules import GameResults
 
 logger = logging.getLogger(__name__)
+
+
+def choose_starting_stacks():
+    return [randint(10, 300), randint(10, 300)]
 
 
 def simulate(
@@ -32,11 +37,13 @@ def simulate(
 
     while True:
 
+        board = deal.board.at_street(game_runner.street())
+
         player_index = game_runner.current_player()
         player = players[player_index]
         hand = deal.hole_cards[player_index]
         action = player.select_action(
-            player_index, game_runner.game_view(), hand, deal.board
+            player_index, game_runner.game_view(), hand, board
         )
 
         if action is None:

@@ -68,7 +68,7 @@ def make_player_states(
             current_board = board.at_street(game_view.street())
 
             hand_eval = evaluate_hand(hole_cards, current_board)
-            # These odds are deterministic if we don't pass an explicit rng
+            # These odds are deterministic if we don't pass an explicit rng#
             win_odds = odds_vs_random_hand(hole_cards, current_board, num_draws=1000)
 
             nut_result = make_nut_result(hole_cards, current_board)

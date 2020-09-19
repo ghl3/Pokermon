@@ -12,12 +12,9 @@ from pokermon.model.heads_up import HeadsUpModel
 from pokermon.poker import dealer
 from pokermon.poker.cards import FullDeal
 from pokermon.simulate import simulate
+from pokermon.simulate.simulate import choose_starting_stacks
 
 logger = logging.getLogger(__name__)
-
-
-def choose_starting_stacks():
-    return [randint(10, 300), randint(10, 300)]
 
 
 def train_heads_up(players: List[HeadsUpModel], num_hands_to_play: int):

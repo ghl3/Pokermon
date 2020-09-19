@@ -24,10 +24,12 @@ _DEUCES_RANK_CLASS_TO_HAND = {
 }
 
 
+@functools.lru_cache(13)
 def deuces_rank(rank: Rank) -> int:
     return rank.value - 2
 
 
+@functools.lru_cache(4)
 def deuces_suit(suit: Suit) -> int:
     return _SUIT_TO_DEUCES_INT[suit]
 
@@ -39,10 +41,12 @@ def to_decues_card(card: Card) -> DeucesCard:
     return deuces.card.Card.from_rank_int_and_suit_int(rank_int, suit_int)
 
 
+@functools.lru_cache(32)
 def to_deuces_hand(hole_cards: HoleCards) -> Tuple[DeucesCard, DeucesCard]:
     return to_decues_card(hole_cards[0]), to_decues_card(hole_cards[1])
 
 
+@functools.lru_cache(32)
 def to_deuces_board(
     board: Board,
 ) -> Optional[
@@ -79,6 +83,7 @@ def to_deuces_board(
         return None
 
 
+@functools.lru_cache(52)
 def from_deuces_card(deuces_card: DeucesCard) -> Card:
     rank_int = deuces.Card.get_rank_int(deuces_card)
     suit_int = deuces.Card.get_suit_int(deuces_card)
@@ -87,5 +92,6 @@ def from_deuces_card(deuces_card: DeucesCard) -> Card:
     return Card(rank=rank, suit=suit)
 
 
+@functools.lru_cache(16)
 def from_deuces_hand_type(deuces_hand: DeucesHand) -> HandType:
     return _DEUCES_RANK_CLASS_TO_HAND[deuces_hand]
