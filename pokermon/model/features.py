@@ -1,18 +1,16 @@
 import dataclasses
 import typing
+from itertools import chain
 from typing import Dict, List
 
 import tensorflow as tf  # type: ignore
 
 from pokermon.data.utils import field_feature_name
 from pokermon.model.utils import (
-    make_sequence_dict_of_dense,
-    context_tensor_to_sequence,
-    make_context_dict_of_dense,
-    make_sequence_dict_of_dense_from_context,
-    make_context_dense,
     make_sequence_dense,
     make_sequence_dense_from_context,
+    make_sequence_dict_of_dense,
+    make_sequence_dict_of_dense_from_context,
 )
 
 FeatureTensors = Dict[str, tf.Tensor]
@@ -81,6 +79,23 @@ class FeatureConfig:
     sequence_targets: Dict[str, tf.train.Feature] = dataclasses.field(
         default_factory=dict
     )
+
+    def num_features(self, num_players):
+        num = 0
+
+        for _, feature_col in chain(
+            self.sequence_features.items(), self.context_features.items()
+        ):
+            if isinstance(feature_col, tf.io.FixedLenSequenceFeature):
+                num += 1
+            elif isinstance(feature_col, tf.io.FixedLenFeature):
+                num += 1
+            elif isinstance(feature_col, tf.io.VarLenFeature):
+                num += num_players
+            else:
+                raise Exception()
+
+        return num
 
     def make_feature_tensors(self, serialized_example: str) -> FeatureTensors:
 

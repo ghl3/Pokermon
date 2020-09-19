@@ -8,8 +8,8 @@ import tensorflow as tf  # type: ignore
 from pokermon.data.action import LastAction, NextAction
 from pokermon.data.context import PrivateContext, PublicContext
 from pokermon.data.player_state import PlayerState
-from pokermon.data.rewards import Reward
 from pokermon.data.public_state import PublicState
+from pokermon.data.rewards import Reward
 from pokermon.data.target import Target
 from pokermon.data.utils import field_feature_name
 

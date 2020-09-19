@@ -1,5 +1,3 @@
-from itertools import chain
-
 import numpy as np
 import tensorflow as tf
 
@@ -12,16 +10,18 @@ from pokermon.data.action import (
     make_last_actions,
     make_next_actions,
 )
-from pokermon.data.context import PublicContext, make_public_context
-from pokermon.data.context import PrivateContext, make_private_context
-
+from pokermon.data.context import (
+    PrivateContext,
+    PublicContext,
+    make_private_context,
+    make_public_context,
+)
 from pokermon.data.examples import make_example
 from pokermon.data.player_state import PlayerState, make_player_states
-from pokermon.data.rewards import Reward, make_rewards
 from pokermon.data.public_state import PublicState, make_public_states
-
-from pokermon.model import utils, features
-from pokermon.model.features import FeatureTensors, TargetTensors
+from pokermon.data.rewards import Reward, make_rewards
+from pokermon.model import features, utils
+from pokermon.model.features import FeatureConfig, FeatureTensors, TargetTensors
 from pokermon.model.utils import select_proportionally
 from pokermon.poker.cards import Board, HoleCards
 from pokermon.poker.game import Action, GameView, Street
@@ -41,33 +41,40 @@ class HeadsUpModel(Policy):
 
         self.num_players = 2
 
-        self.context_features = {}
-        self.context_features.update(
+        context_features = {}
+        context_features.update(
             features.make_feature_definition_dict(PublicContext, is_sequence=False)
         )
-        self.context_features.update(
+        context_features.update(
             features.make_feature_definition_dict(PrivateContext, is_sequence=False)
         )
 
-        self.sequence_feaures = {}
-        self.sequence_feaures.update(
+        sequence_features = {}
+        sequence_features.update(
             features.make_feature_definition_dict(PlayerState, is_sequence=True)
         )
-        self.sequence_feaures.update(
+        sequence_features.update(
             features.make_feature_definition_dict(PublicState, is_sequence=True)
         )
-        self.sequence_feaures.update(
+        sequence_features.update(
             features.make_feature_definition_dict(LastAction, is_sequence=True)
         )
 
-        self.context_targets = {}
+        context_targets = {}
 
-        self.sequence_targets = {}
-        self.sequence_targets.update(
+        sequence_targets = {}
+        sequence_targets.update(
             features.make_feature_definition_dict(NextAction, is_sequence=True)
         )
-        self.sequence_targets.update(
+        sequence_targets.update(
             features.make_feature_definition_dict(Reward, is_sequence=True)
+        )
+
+        self.feature_config = FeatureConfig(
+            context_features=context_features,
+            sequence_features=sequence_features,
+            context_targets=context_targets,
+            sequence_targets=sequence_targets,
         )
 
         self.model = tf.keras.Sequential(name=name)
@@ -95,29 +102,16 @@ class HeadsUpModel(Policy):
             player_index, game, hole_cards, board
         )
 
-        feature_tensors = self.make_feature_tensors(example.SerializeToString())
+        feature_tensors = self.feature_config.make_feature_tensors(
+            example.SerializeToString()
+        )
         # Create the action probabilities at the last timestep
         action_probs: np.Array = self.action_probs(feature_tensors)[0, -1, :].numpy()
         action_index = select_proportionally(action_probs)
         return make_action_from_encoded(action_index=action_index, game=game)
 
     def num_features(self):
-
-        num = 0
-
-        for _, feature_col in chain(
-            self.sequence_targets.items(), self.context_features.items()
-        ):
-            if isinstance(feature_col, tf.io.FixedLenSequenceFeature):
-                num += 1
-            elif isinstance(feature_col, tf.io.FixedLenFeature):
-                num += 1
-            elif isinstance(feature_col, tf.io.VarLenFeature):
-                num += self.num_players
-            else:
-                raise Exception()
-
-        return num
+        return self.feature_config.num_features(self.num_players)
 
     def make_forward_example(
         self, player_index: int, game: GameView, hole_cards: HoleCards, board: Board
@@ -236,9 +230,10 @@ class HeadsUpModel(Policy):
     def _update_weights(self, serialized_example):
 
         with tf.GradientTape() as tape:
-            feature_tensors, target_tensors = self.make_features_and_target_tensors(
-                serialized_example
-            )
+            (
+                feature_tensors,
+                target_tensors,
+            ) = self.feature_config.make_features_and_target_tensors(serialized_example)
 
             loss_value = tf.reduce_mean(self.loss(feature_tensors, target_tensors))
 

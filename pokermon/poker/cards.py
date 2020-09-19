@@ -4,7 +4,7 @@ import dataclasses
 import functools
 import itertools
 from dataclasses import dataclass
-from typing import List, Optional, Sequence, Tuple, Dict
+from typing import Dict, List, Optional, Sequence, Tuple
 
 import regex as regex  # type: ignore
 

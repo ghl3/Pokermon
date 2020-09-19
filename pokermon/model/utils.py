@@ -51,12 +51,12 @@ def make_sequence_dict_of_dense(
 def make_context_dense(t: tf.Tensor):
     t = ensure_dense(t)
     if t.shape == []:
-        t = tf.expand_dims(t, 0)
+        t = tf.expand_dims(t, -1)
     return tf.expand_dims(t, 0)
 
 
 def make_sequence_dense_from_context(t: tf.Tensor, num_steps: int):
-    return tf.tile(tf.expand_dims(make_context_dense(t), -1), [1, num_steps, 1])
+    return tf.tile(tf.expand_dims(make_context_dense(t), 1), [1, num_steps, 1])
 
 
 def make_context_dict_of_dense(
@@ -78,6 +78,20 @@ def make_context_dict_of_dense(
     return updated_dict
 
 
+def make_sequence_dict_of_dense_from_context(context_dict):
+    num_steps = context_dict["num_steps"]
+
+    d = {}
+
+    for name, t in context_dict.items():
+        if name == "num_steps":
+            continue
+
+        d[name] = make_sequence_dense_from_context(t, num_steps)
+
+    return d
+
+
 def concat_feature_tensors(tensor_dict):
     tensors = []
 
@@ -86,19 +100,3 @@ def concat_feature_tensors(tensor_dict):
         tensors.append(val)
 
     return tf.concat(tensors, axis=-1)
-
-
-def make_sequence_dict_of_dense_from_context(context_dict):
-    num_steps = context_dict["num_steps"]
-
-    d = {}
-
-    for name, t in make_context_dict_of_dense(context_dict).items():
-        if name == "num_steps":
-            continue
-
-        t = tf.tile(tf.expand_dims(t, -1), [1, num_steps, 1])
-
-        d[name] = t
-
-    return d
