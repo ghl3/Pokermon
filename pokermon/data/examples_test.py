@@ -22,6 +22,7 @@ def test_context() -> None:
 
     assert seq_example_to_dict(example) == {
         "context": {
+            "num_steps": [0],
             "public_context__num_players": [4],
             "public_context__starting_stack_sizes": [
                 1,
@@ -79,7 +80,7 @@ def test_state() -> None:
     )
 
     assert seq_example_to_dict(example) == {
-        "context": {},
+        "context": {"num_steps": [2]},
         "features": {
             "public_state__all_in_player_mask": [[0, 0, 0], [1, 0, 0]],
             "public_state__amount_to_call": [[10, 10, 15], [5, 0, 5]],
@@ -135,6 +136,7 @@ def test_fold_preflop() -> None:
 
     assert example_dict == {
         "context": {
+            "num_steps": [3],
             "private_context__hand_encoded": [168],
             "private_context__hole_card_0_rank": [14],
             "private_context__hole_card_0_suit": [1],
@@ -247,6 +249,7 @@ def test_full_hand() -> None:
 
     assert example_dict == {
         "context": {
+            "num_steps": [14],
             "private_context__hand_encoded": [140],
             "private_context__hole_card_0_rank": [13],
             "private_context__hole_card_0_suit": [2],
