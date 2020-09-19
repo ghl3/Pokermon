@@ -1,9 +1,10 @@
 from __future__ import annotations
 
 import dataclasses
+import functools
 import itertools
 from dataclasses import dataclass
-from typing import List, Optional, Sequence, Tuple
+from typing import List, Optional, Sequence, Tuple, Dict
 
 import regex as regex  # type: ignore
 
@@ -52,11 +53,18 @@ class Card:
     suit: Suit
 
 
-ALL_CARDS: Tuple[Card, ...] = tuple(
-    [Card(rank=rank, suit=suit) for rank in Rank for suit in Suit]
-)
+RANK_SUIT_MAP: Dict[Rank, Dict[Suit, Card]] = {}
 
-card_map = {
+for rank in Rank:
+    if rank not in RANK_SUIT_MAP:
+        RANK_SUIT_MAP[rank] = {}
+    for suit in Suit:
+        card = Card(rank=rank, suit=suit)
+        RANK_SUIT_MAP[rank][suit] = card
+
+ALL_CARDS = tuple([c for r, d in RANK_SUIT_MAP.items() for c in d.values()])
+
+RANK_MAP = {
     "A": Rank.ACE,
     "K": Rank.KING,
     "Q": Rank.QUEEN,
@@ -73,7 +81,7 @@ card_map = {
     "2": Rank.TWO,
 }
 
-suit_map = {"S": Suit.SPADES, "C": Suit.CLUBS, "D": Suit.DIAMONDS, "H": Suit.HEARTS}
+SUIT_MAP = {"S": Suit.SPADES, "C": Suit.CLUBS, "D": Suit.DIAMONDS, "H": Suit.HEARTS}
 
 _card_regex = regex.compile("^(([AKQJT]|10|[2-9])([SHCD]))+$")
 
@@ -98,6 +106,7 @@ def sorted_hole_cards(hole_cards: HoleCards) -> HoleCards:
         return hole_cards[1], hole_cards[0]
 
 
+@functools.lru_cache(104)
 def mkcards(s: str) -> List[Card]:
     s = s.upper()
 
@@ -108,8 +117,8 @@ def mkcards(s: str) -> List[Card]:
 
     cards = []
 
-    for rank, suit in zip(match.captures(2), match.captures(3)):
-        cards.append(Card(rank=card_map[rank], suit=suit_map[suit]))
+    for rank_code, suit_code in zip(match.captures(2), match.captures(3)):
+        cards.append(RANK_SUIT_MAP[RANK_MAP[rank_code]][SUIT_MAP[suit_code]])
     return cards
 
 

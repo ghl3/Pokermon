@@ -1,3 +1,4 @@
+import functools
 from typing import Optional, Tuple, Union
 
 import deuces
@@ -23,9 +24,18 @@ _DEUCES_RANK_CLASS_TO_HAND = {
 }
 
 
+def deuces_rank(rank: Rank) -> int:
+    return rank.value - 2
+
+
+def deuces_suit(suit: Suit) -> int:
+    return _SUIT_TO_DEUCES_INT[suit]
+
+
+@functools.lru_cache(52)
 def to_decues_card(card: Card) -> DeucesCard:
-    rank_int = card.rank.value - 2
-    suit_int = _SUIT_TO_DEUCES_INT[card.suit]
+    rank_int = deuces_rank(card.rank)
+    suit_int = deuces_suit(card.suit)
     return deuces.card.Card.from_rank_int_and_suit_int(rank_int, suit_int)
 
 
@@ -40,7 +50,6 @@ def to_deuces_board(
         Tuple[int, int, int], Tuple[int, int, int, int], Tuple[int, int, int, int, int]
     ]
 ]:
-
     if board.flop is not None and board.turn is not None and board.river is not None:
         return (
             to_decues_card(board.flop[0]),

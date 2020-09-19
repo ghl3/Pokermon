@@ -14,14 +14,10 @@ from pokermon.data.action import (
     make_next_actions,
 )
 from pokermon.data.examples import make_example
-from pokermon.data.player_state import PlayerData, make_player_data
+from pokermon.data.player_state import PlayerState, make_player_states
 from pokermon.data.rewards import Reward, make_rewards
-from pokermon.data.public_state import (
-    PrivateState,
-    PublicState,
-    make_private_states,
-    make_public_states,
-)
+from pokermon.data.public_state import PublicState, make_public_states
+
 from pokermon.model import utils
 from pokermon.model.utils import make_sequence_dict_of_dense, select_proportionally
 from pokermon.poker.cards import Board, HoleCards
@@ -47,12 +43,11 @@ class HeadsUpModel(Policy):
         self.num_players = 2
 
         self.features = {}
-        self.features.update(features.make_feature_config(PlayerData, is_sequence=True))
         self.features.update(
-            features.make_feature_config(PublicState, is_sequence=True)
+            features.make_feature_config(PlayerState, is_sequence=True)
         )
         self.features.update(
-            features.make_feature_config(PrivateState, is_sequence=True)
+            features.make_feature_config(PublicState, is_sequence=True)
         )
         self.features.update(features.make_feature_config(LastAction, is_sequence=True))
 
@@ -116,11 +111,8 @@ class HeadsUpModel(Policy):
         assert game.num_players() == self.num_players
 
         return make_example(
-            player_data=make_player_data(player_index, game),
             public_states=make_public_states(game, board=board),
-            private_states=make_private_states(
-                game, board=board, hole_cards=hole_cards
-            ),
+            player_states=make_player_states(player_index, game, hole_cards, board),
             last_actions=make_last_actions(game),
         )
 
@@ -152,11 +144,8 @@ class HeadsUpModel(Policy):
         assert game.street() == Street.OVER
 
         return make_example(
-            player_data=make_player_data(player_index, game),
             public_states=make_public_states(game, board=board),
-            private_states=make_private_states(
-                game, board=board, hole_cards=hole_cards
-            ),
+            player_states=make_player_states(player_index, game, hole_cards, board),
             last_actions=make_last_actions(game),
             next_actions=make_next_actions(game),
             rewards=make_rewards(game, results),
@@ -236,7 +225,7 @@ class HeadsUpModel(Policy):
         )
 
         player_mask = tf.squeeze(
-            tf.equal(feature_tensors["player_data__is_current_player"], 1), -1
+            tf.equal(feature_tensors["player_state__is_current_player"], 1), -1
         )
 
         return tf.where(
