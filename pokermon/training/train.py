@@ -1,28 +1,33 @@
 import argparse
 import logging
 import sys
-from random import randint, shuffle
-from typing import List
+from random import shuffle
+from typing import Dict
 
-import numpy as np
 from tqdm import tqdm
 
+from pokermon.ai.policy import Policy
 from pokermon.model import heads_up
 from pokermon.model.heads_up import HeadsUpModel
 from pokermon.poker import dealer
 from pokermon.poker.cards import FullDeal
-from pokermon.poker.result import get_result
 from pokermon.simulate import simulate
 from pokermon.simulate.simulate import choose_starting_stacks
+from pokermon.training.stats import Stats
 
 logger = logging.getLogger(__name__)
 
 
 def train_heads_up(
-    players: List[HeadsUpModel],
+    policies: Dict[str, Policy],
     num_hands_to_play: int,
     num_hands_between_checkpoins: int,
 ):
+
+    results: Dict[str, Stats] = {name: Stats() for name in policies}
+
+    players = list(policies.keys())
+
     logger.debug("Beginning training with %s players", len(players))
 
     for i in tqdm(range(num_hands_to_play)):
@@ -32,18 +37,26 @@ def train_heads_up(
 
         deal: FullDeal = dealer.deal_cards(len(players))
 
-        game, results = simulate.simulate(players, starting_stacks, deal)
+        game, result = simulate.simulate(
+            [policies[player] for player in players], starting_stacks, deal
+        )
 
-        results = get_result(deal, game.view())
+        for player_idx, player_name in enumerate(players):
 
-        for player_idx, model in enumerate(players):
+            model = policies[player_name]
+
+            results[player_name].update_stats(game.view(), result, player_idx)
+
+            if i != 0 and i % num_hands_between_checkpoins == 0:
+                print(results[player_name].summarize())
+
             if isinstance(model, HeadsUpModel):
-                example, loss = model.train_step(
+                model.train_step(
                     player_idx,
                     game.view(),
                     deal.hole_cards[player_idx],
                     deal.board,
-                    results,
+                    result,
                 )
 
                 ckpt_path = f"./models/{model.name}"
@@ -89,7 +102,7 @@ def main():
     log_level = getattr(logging, args.log)
     logging.basicConfig(level=log_level, format=format)
 
-    models = [heads_up.HeadsUpModel("Foo"), heads_up.HeadsUpModel("Bar")]
+    models = {"foo": heads_up.HeadsUpModel("Foo"), "bar": heads_up.HeadsUpModel("Bar")}
 
     train_heads_up(models, args.num_hands, args.checkpoint_every)
 
