@@ -7,7 +7,7 @@ from pokermon.ai.policy import Policy
 from pokermon.poker.cards import FullDeal
 from pokermon.poker.game import Game, Street
 from pokermon.poker.game_runner import GameRunner
-from pokermon.poker.rules import GameResults
+from pokermon.poker.result import Result, get_result
 
 logger = logging.getLogger(__name__)
 
@@ -18,7 +18,7 @@ def choose_starting_stacks():
 
 def simulate(
     players: List[Policy], starting_stacks: List[int], deal: FullDeal
-) -> Tuple[Game, GameResults]:
+) -> Tuple[Game, Result]:
     """
     Players are ordered by Small Blind, Big Blind, ..., Button
     :param players:
@@ -55,7 +55,7 @@ def simulate(
             logger.debug("Hand Over")
             break
 
-    result = rules.get_result(deal, game_runner.game_view())
+    result = get_result(deal, game_runner.game_view())
 
     logger.debug("Result: %s", result)
 

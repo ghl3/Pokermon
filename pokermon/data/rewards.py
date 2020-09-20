@@ -3,7 +3,7 @@ from typing import List
 
 from pokermon.data.utils import iter_game_states
 from pokermon.poker.game import Action, GameView, Street
-from pokermon.poker.rules import GameResults
+from pokermon.poker.result import Result
 
 
 @dataclass(frozen=True)
@@ -25,7 +25,7 @@ class Reward:
     won_hand: bool
 
 
-def make_rewards(game: GameView, result: GameResults):
+def make_rewards(game: GameView, result: Result):
     """
     Generate a list of rewards for every non-voluntary action
     """
@@ -45,7 +45,7 @@ def make_rewards(game: GameView, result: GameResults):
 
         a: Action = game.view(i).next_action()
 
-        won_hand = a.player_index in set(result.best_hand_index)
+        won_hand = result.won_hand[a.player_index]
 
         # Subtract the amount lost after taking the given action, which is a part
         # of the future cumulative winnings / losses

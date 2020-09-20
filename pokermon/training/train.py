@@ -7,11 +7,11 @@ from typing import List
 import numpy as np
 from tqdm import tqdm
 
-import pokermon.poker.rules as rules
 from pokermon.model import heads_up
 from pokermon.model.heads_up import HeadsUpModel
 from pokermon.poker import dealer
 from pokermon.poker.cards import FullDeal
+from pokermon.poker.result import get_result
 from pokermon.simulate import simulate
 from pokermon.simulate.simulate import choose_starting_stacks
 
@@ -34,7 +34,7 @@ def train_heads_up(
 
         game, results = simulate.simulate(players, starting_stacks, deal)
 
-        results = rules.get_result(deal, game.view())
+        results = get_result(deal, game.view())
 
         for player_idx, model in enumerate(players):
             if isinstance(model, HeadsUpModel):

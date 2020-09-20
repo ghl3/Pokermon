@@ -9,7 +9,7 @@ logger = logging.getLogger(__name__)
 
 
 @dataclass(frozen=True)
-class Result:
+class ActionResult:
     street: Street
 
     current_player: Optional[int] = None
@@ -66,7 +66,7 @@ class GameRunner:
     # TODO: Make this more fluent.  It can either take an action OR
     # it can take moves which will build an action, eg raise_to=50, etc
     # These must be validated...
-    def advance(self, action: Action) -> Result:
+    def advance(self, action: Action) -> ActionResult:
         if not self.game_started:
             raise Exception("Game not started")
 
@@ -99,35 +99,35 @@ class GameRunner:
         # Return the current state of the game
 
         if self.game_view().street() == Street.OVER:
-            return Result(street=self.game_view().street())
+            return ActionResult(street=self.game_view().street())
         else:
-            return Result(
+            return ActionResult(
                 street=self.game_view().street(),
                 current_player=self.game_view().current_player(),
                 total_bet=self.game_view().current_bet_amount(),
                 amount_to_call=self.game_view().amount_to_call()[player_index],
             )
 
-    def add_small_blind(self) -> Result:
+    def add_small_blind(self) -> ActionResult:
         return self.advance(self.game_view().small_blind())
 
-    def add_big_blind(self) -> Result:
+    def add_big_blind(self) -> ActionResult:
         return self.advance(self.game_view().big_blind())
 
-    def call(self) -> Result:
+    def call(self) -> ActionResult:
         return self.advance(self.game_view().call())
 
-    def check(self) -> Result:
+    def check(self) -> ActionResult:
         return self.advance(self.game_view().check())
 
     def bet_raise(
         self, to: Optional[int] = None, raise_amount: Optional[int] = None
-    ) -> Result:
+    ) -> ActionResult:
         return self.advance(
             self.game_view().bet_raise(to=to, raise_amount=raise_amount)
         )
 
-    def fold(self) -> Result:
+    def fold(self) -> ActionResult:
         return self.advance(self.game_view().fold())
 
     def _advance_street(self):

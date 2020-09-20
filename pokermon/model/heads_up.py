@@ -27,7 +27,7 @@ from pokermon.model.features import FeatureConfig, FeatureTensors, TargetTensors
 from pokermon.model.utils import select_proportionally
 from pokermon.poker.cards import Board, HoleCards
 from pokermon.poker.game import Action, GameView, Street
-from pokermon.poker.rules import GameResults
+from pokermon.poker.result import Result
 
 
 def policy_vector_size():
@@ -152,7 +152,7 @@ class HeadsUpModel(Policy):
         game: GameView,
         hole_cards: HoleCards,
         board: Board,
-        results: GameResults,
+        result: Result,
     ) -> tf.train.SequenceExample:
         """
         All tensors have shape:
@@ -169,7 +169,7 @@ class HeadsUpModel(Policy):
             player_states=make_player_states(player_index, game, hole_cards, board),
             last_actions=make_last_actions(game),
             next_actions=make_next_actions(game),
-            rewards=make_rewards(game, results),
+            rewards=make_rewards(game, result),
         )
 
     def action_probs(self, feature_tensors: FeatureTensors) -> tf.Tensor:
@@ -225,14 +225,14 @@ class HeadsUpModel(Policy):
         game: GameView,
         hole_cards: HoleCards,
         board: Board,
-        results: GameResults,
+        result: Result,
     ) -> Tuple[tf.train.SequenceExample, float]:
 
         if self.optimizer is None:
             self.optimizer = tf.keras.optimizers.Adam()
 
         example = self.make_forward_backward_example(
-            player_id, game, hole_cards, board, results
+            player_id, game, hole_cards, board, result
         )
 
         _, loss = self._update_weights(

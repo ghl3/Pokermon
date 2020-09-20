@@ -1,5 +1,5 @@
 from pokermon.ai.random_policy import RandomPolicy
-from pokermon.poker import dealer, rules
+from pokermon.poker import dealer, result
 from pokermon.poker.cards import FullDeal
 from pokermon.simulate.simulate import choose_starting_stacks, simulate
 
@@ -10,4 +10,4 @@ def test_simulate_random():
         starting_stacks = choose_starting_stacks()
         deal: FullDeal = dealer.deal_cards(len(players))
         game, results = simulate(players, starting_stacks, deal)
-        results = rules.get_result(deal, game.view())
+        result.get_result(deal, game.view())
