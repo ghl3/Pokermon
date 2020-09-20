@@ -30,6 +30,10 @@ class PlayerState:
     frac_hands_worse: Optional[float] = None
 
     win_prob_vs_random: Optional[float] = None
+    # TODO: Implement these
+    # win_prob_vs_better
+    # win_prob_vs_tied
+    # win_prob_vs_worse
 
 
 def make_player_states(
