@@ -177,9 +177,9 @@ class HeadsUpModel(Policy):
         )
 
     def action_probs(self, feature_tensors: FeatureTensors) -> tf.Tensor:
-        return tf.nn.softmax(self.make_action_logits(feature_tensors))
+        return tf.nn.softmax(self.action_logits(feature_tensors))
 
-    def make_action_logits(self, feature_tensors: FeatureTensors) -> tf.Tensor:
+    def action_logits(self, feature_tensors: FeatureTensors) -> tf.Tensor:
         return self.model(utils.concat_feature_tensors(feature_tensors))
 
     def loss(self, feature_tensors: FeatureTensors, target_tensors: TargetTensors):
@@ -195,8 +195,16 @@ class HeadsUpModel(Policy):
             tf.one_hot(next_actions, depth=policy_vector_size()), axis=2
         )
 
-        policy_logits = self.make_action_logits(feature_tensors)
+        policy_logits = self.action_logits(feature_tensors)
         reward = tf.cast(target_tensors["reward__cumulative_reward"], tf.float32)
+
+        # Determine our expectation of the reward we'll get.  Currently, this is just
+        # a naive equal splitting of the existing pot.
+        expected_reward = tf.cast(
+            feature_tensors["public_state__pot_size"]
+            / feature_tensors["public_context__num_players"],
+            tf.float32,
+        )
 
         # We apply a trick to get the REENFORCE loss.
         # The update step is defined as:
@@ -219,7 +227,7 @@ class HeadsUpModel(Policy):
 
         return tf.where(
             player_mask,
-            -1 * tf.squeeze(reward, -1) * cross_entropy,
+            -1 * tf.squeeze(reward - expected_reward, -1) * cross_entropy,
             tf.zeros_like(cross_entropy),
         )
 

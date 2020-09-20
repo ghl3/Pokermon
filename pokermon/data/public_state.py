@@ -16,6 +16,7 @@ from pokermon.poker.odds import odds_vs_random_hand
 @dataclass(frozen=True)
 class PublicState:
     street: int
+    pot_size: int
     current_player_mask: List[int]
     folded_player_mask: List[int]
     all_in_player_mask: List[int]
@@ -84,6 +85,7 @@ def make_public_states(game: GameView, board: Optional[Board]):
 
         public_states.append(
             PublicState(
+                pot_size=game_view.pot_size(),
                 street=game_view.street().value,
                 current_player_mask=current_player_mask,
                 folded_player_mask=game_view.is_folded(),
