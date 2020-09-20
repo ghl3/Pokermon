@@ -117,11 +117,15 @@ class HeadsUpModel(Policy):
             player_index, game, hole_cards, board
         )
 
-        feature_tensors = self.feature_config.make_feature_tensors(
-            example.SerializeToString()
-        )
+        serialized_example_tensor = tf.convert_to_tensor(example.SerializeToString())
+
+        # feature_tensors = self.feature_config.make_feature_tensors(
+        #    example.SerializeToString()
+        # )
         # Create the action probabilities at the last timestep
-        action_probs: np.Array = self.action_probs(feature_tensors)[0, -1, :].numpy()
+        action_probs: np.Array = self._next_action_policy(
+            serialized_example_tensor
+        ).numpy()
         action_index = select_proportionally(action_probs)
         return make_action_from_encoded(action_index=action_index, game=game)
 
@@ -242,8 +246,13 @@ class HeadsUpModel(Policy):
         return example, loss
 
     @tf.function(experimental_relax_shapes=True)
-    def _update_weights(self, serialized_example):
+    def _next_action_policy(self, serialized_example):
+        feature_tensors = self.feature_config.make_feature_tensors(serialized_example)
+        # Create the action probabilities at the last timestep
+        return self.action_probs(feature_tensors)[0, -1, :]
 
+    @tf.function(experimental_relax_shapes=True)
+    def _update_weights(self, serialized_example):
         with tf.GradientTape() as tape:
             (
                 feature_tensors,

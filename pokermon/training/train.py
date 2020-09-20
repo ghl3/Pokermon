@@ -48,7 +48,12 @@ def train_heads_up(
             results[player_name].update_stats(game.view(), result, player_idx)
 
             if i != 0 and i % num_hands_between_checkpoins == 0:
-                print(results[player_name].summarize())
+                print()
+                print(f"Stats for {player_name}")
+                results[player_name].print_summary()
+                print()
+                # Reset the stats
+                results[player_name] = Stats()
 
             if isinstance(model, HeadsUpModel):
                 model.train_step(

@@ -25,9 +25,9 @@ class PlayerState:
     current_hand_strength: Optional[float] = None
     current_hand_rank: Optional[int] = None
 
-    num_hands_better: Optional[int] = None
-    num_hands_tied: Optional[int] = None
-    num_hands_worse: Optional[int] = None
+    frac_hands_better: Optional[float] = None
+    frac_hands_tied: Optional[float] = None
+    frac_hands_worse: Optional[float] = None
 
     win_prob_vs_random: Optional[float] = None
 
@@ -80,9 +80,9 @@ def make_player_states(
                 current_hand_strength=hand_eval.percentage,
                 current_hand_rank=hand_eval.rank,
                 win_prob_vs_random=win_odds.win_rate(),
-                num_hands_better=nut_result.num_better,
-                num_hands_tied=nut_result.num_tied,
-                num_hands_worse=nut_result.num_worse,
+                frac_hands_better=nut_result.frac_better(),
+                frac_hands_tied=nut_result.frac_tied(),
+                frac_hands_worse=nut_result.frac_worse(),
             )
 
         street_cache[street] = player_state

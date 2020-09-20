@@ -58,6 +58,18 @@ class NutResult:
     num_tied: int
     num_worse: int
 
+    def num_hands(self):
+        return self.num_worse + self.num_tied + self.num_better
+
+    def frac_better(self):
+        return self.num_better / self.num_hands()
+
+    def frac_tied(self):
+        return self.num_tied / self.num_hands()
+
+    def frac_worse(self):
+        return self.num_worse / self.num_hands()
+
 
 def make_nut_result(hole_cards: HoleCards, board: Board) -> NutResult:
     """

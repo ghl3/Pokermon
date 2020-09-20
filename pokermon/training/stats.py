@@ -21,6 +21,7 @@ class Stats:
     total_amount_called: int = 0
     num_bet: int = 0
     total_amount_bet: int = 0
+    num_fold: int = 0
 
     def summarize(self):
         return {
@@ -32,7 +33,12 @@ class Stats:
             "avg_call_amount": self.total_amount_called / self.num_call,
             "bet_rate": self.num_bet / self.num_voluntary_actions,
             "avg_bet_amount": self.total_amount_bet / self.num_bet,
+            "fold_rate": self.num_fold / self.num_voluntary_actions,
         }
+
+    def print_summary(self):
+        for k, v in self.summarize().items():
+            print(f"{k}\t{v:.4f}")
 
     def update_stats(self, game: GameView, result: Result, player_id: int):
 
@@ -40,23 +46,33 @@ class Stats:
 
         self.reward += result.profits[player_id]
 
-        payer_won = result.won_hand[player_id]
+        player_won = result.won_hand[player_id]
 
-        if payer_won:
+        if player_won:
             self.num_wins += 1
         else:
             self.num_losses += 1
 
         for action in game.all_actions():
+
+            if action.player_index != player_id:
+                continue
+
             if action.move in {Move.SMALL_BLIND, Move.BIG_BLIND}:
                 continue
+
             self.num_voluntary_actions += 1
 
             if action.move == Move.CHECK_CALL and action.amount_added == 0:
                 self.num_check += 1
+
             elif action.move == Move.CHECK_CALL and action.amount_added > 0:
                 self.num_call += 1
                 self.total_amount_called += action.amount_added
+
             elif action.move == Move.BET_RAISE:
                 self.num_bet += 1
                 self.total_amount_bet += action.amount_added
+
+            elif action.move == Move.FOLD:
+                self.num_fold += 1
