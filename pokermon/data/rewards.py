@@ -31,7 +31,7 @@ def make_rewards(game: GameView, result: Result):
     """
 
     # This only makes sense at the end of the game
-    assert game.street() == Street.OVER
+    assert game.street() == Street.HAND_OVER
 
     rewards = []
 

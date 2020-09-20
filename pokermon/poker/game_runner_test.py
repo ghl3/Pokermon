@@ -50,7 +50,31 @@ def test_call():
     assert game.bet_raise(raise_amount=10) == ActionResult(
         street=Street.RIVER, current_player=0, total_bet=10, amount_to_call=10
     )
-    assert game.call() == ActionResult(street=Street.OVER)
+    assert game.call() == ActionResult(street=Street.HAND_OVER)
+
+
+def test_fold():
+    game = GameRunner(starting_stacks=[500, 500])
+
+    game.start_game()
+
+    # Preflop Action
+    game.bet_raise(to=230)
+    game.call()
+
+    # Flop Action
+    game.fold()
+
+    assert game.game_view().events() == [
+        Street.PREFLOP,
+        Action(player_index=0, move=Move.SMALL_BLIND, amount_added=1, total_bet=1),
+        Action(player_index=1, move=Move.BIG_BLIND, amount_added=2, total_bet=2),
+        Action(player_index=0, move=Move.BET_RAISE, amount_added=229, total_bet=230),
+        Action(player_index=1, move=Move.CHECK_CALL, amount_added=228, total_bet=230),
+        Street.FLOP,
+        Action(player_index=0, move=Move.FOLD, amount_added=0, total_bet=0),
+        Street.HAND_OVER,
+    ]
 
 
 #    call = game.game_view().call()

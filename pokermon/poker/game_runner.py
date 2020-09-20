@@ -91,14 +91,21 @@ class GameRunner:
         self.action_index += 1
         player_index = self.game_view().current_player()
 
+        if self.all_but_one_player_folded():
+            # if self.game_view().num_active_players() == 1:
+            return self._end_hand()
+
+        if self.all_players_all_in():
+            return self._end_hand()
+
         while rules.street_over(self.game_view()):
             self._advance_street()
-            if self.street() == Street.OVER:
+            if self.street() == Street.HAND_OVER:
                 break
 
         # Return the current state of the game
 
-        if self.game_view().street() == Street.OVER:
+        if self.game_view().street() == Street.HAND_OVER:
             return ActionResult(street=self.game_view().street())
         else:
             return ActionResult(
@@ -140,6 +147,24 @@ class GameRunner:
             self.game.set_street(Street.RIVER)
 
         elif self.game_view().street() == Street.RIVER:
-            self.game.set_street(Street.OVER)
+            self.game.set_street(Street.HAND_OVER)
         else:
             raise Exception()
+
+    def _end_hand(self):
+        self.game.set_street(Street.HAND_OVER)
+        return ActionResult(street=self.game_view().street())
+
+    def all_but_one_player_folded(self):
+        num_not_folded = 0
+        for is_folded in self.game_view().is_folded():
+            if not is_folded:
+                num_not_folded += 1
+        return num_not_folded == 1
+
+    def all_players_all_in(self):
+        num_not_all_in = 0
+        for is_all_in in self.game_view().is_all_in():
+            if not is_all_in:
+                num_not_all_in += 1
+        return num_not_all_in == 0

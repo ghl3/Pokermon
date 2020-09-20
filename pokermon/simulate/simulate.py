@@ -51,11 +51,16 @@ def simulate(
 
         action_result = game_runner.advance(action)
 
-        if action_result.street == Street.OVER:
+        if action_result.street == Street.HAND_OVER:
             logger.debug("Hand Over")
             break
 
-    result = get_result(deal, game_runner.game_view())
+    try:
+        result = get_result(deal, game_runner.game_view())
+    except Exception as e:
+        for event in game_runner.game.events:
+            print(event)
+        raise e
 
     logger.debug("Result: %s", result)
 

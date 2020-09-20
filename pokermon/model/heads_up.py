@@ -109,7 +109,7 @@ class HeadsUpModel(Policy):
         """
         Select the next action to take.  This can be a stocastic choice.
         """
-        assert game.street() != Street.OVER
+        assert game.street() != Street.HAND_OVER
         assert game.current_player() == player_index
         board = board.at_street(game.street())
 
@@ -160,7 +160,7 @@ class HeadsUpModel(Policy):
         """
 
         assert game.num_players() == self.num_players
-        assert game.street() == Street.OVER
+        assert game.street() == Street.HAND_OVER
 
         return make_example(
             public_context=make_public_context(game),

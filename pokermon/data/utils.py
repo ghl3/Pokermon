@@ -71,7 +71,7 @@ def iter_game_states(game: GameView) -> Iterable[int]:
 
     # If the game isn't over, we yield the current state.  We don't know the next action,
     # so we yield None for it
-    if game.street() == Street.OVER:
+    if game.street() == Street.HAND_OVER:
         return
     else:
         yield game.timestamp

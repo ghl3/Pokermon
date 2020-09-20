@@ -258,18 +258,6 @@ def street_over(game: GameView) -> bool:
     return True
 
 
-def get_winning_players(hands: Dict[int, EvaluationResult]) -> Set[int]:
-    """
-    Returns the order of winning players (among all players who went to showdown) in order (the
-    first player index returned as the best hand, the second the next best, etc)
-    :param hands:
-    :return:
-    """
-    # Lower ranks are better
-    winning_rank = min([res.rank for _, res in hands.items()])
-    return {player_idx for player_idx, h in hands.items() if h.rank == winning_rank}
-
-
 def get_ranked_hand_groups(hands: Dict[int, EvaluationResult]) -> List[List[int]]:
     """
     Takes a map of integer players to their evaluation results and returns

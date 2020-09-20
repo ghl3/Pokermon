@@ -4,11 +4,7 @@ from typing import Dict, List, Set
 from pokermon.poker.cards import FullDeal
 from pokermon.poker.evaluation import EvaluationResult, evaluate_hand
 from pokermon.poker.game import GameView
-from pokermon.poker.rules import (
-    get_pot_payouts,
-    get_ranked_hand_groups,
-    get_winning_players,
-)
+from pokermon.poker.rules import get_pot_payouts, get_ranked_hand_groups
 
 
 @dataclass(frozen=True)
@@ -78,3 +74,15 @@ def get_result(cards: FullDeal, game: GameView) -> Result:
         earned_at_showdown=earned_at_showdown,
         profits=profit_per_player,
     )
+
+
+def get_winning_players(hands: Dict[int, EvaluationResult]) -> Set[int]:
+    """
+    Returns the order of winning players (among all players who went to showdown) in order (the
+    first player index returned as the best hand, the second the next best, etc)
+    :param hands:
+    :return:
+    """
+    # Lower ranks are better
+    winning_rank = min([res.rank for _, res in hands.items()])
+    return {player_idx for player_idx, h in hands.items() if h.rank == winning_rank}

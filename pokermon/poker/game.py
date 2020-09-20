@@ -36,7 +36,7 @@ class Street(OrderedEnum):
     FLOP = 2
     TURN = 3
     RIVER = 4
-    OVER = 5
+    HAND_OVER = 5
 
 
 class Move(OrderedEnum):
@@ -104,7 +104,7 @@ class Game:
         return Street.PREFLOP
 
     def end_hand(self):
-        self.set_street(Street.OVER)
+        self.set_street(Street.HAND_OVER)
 
     def all_action(self) -> List[Action]:
         return [e for e in self.events if isinstance(e, Action)]
@@ -354,6 +354,13 @@ class GameView:
     def is_all_in(self) -> List[bool]:
         return [
             current_stack_size == 0 for current_stack_size in self.current_stack_sizes()
+        ]
+
+    @cache
+    def is_active_player(self) -> List[bool]:
+        return [
+            not is_folded and not is_all_in
+            for (is_folded, is_all_in) in zip(self.is_all_in(), self.is_folded())
         ]
 
     @cache

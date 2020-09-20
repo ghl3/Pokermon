@@ -83,8 +83,14 @@ def make_action_from_encoded(action_index: int, game: GameView) -> Action:
     min_raise_amount = game.amount_to_add_for_min_raise()
     remaining_stack = game.current_stack_sizes()[game.current_player()]
 
+    amount_to_call = game.amount_to_call()[game.current_player()]
+
     if action_index == 0:
-        return game.fold()
+        # Don't fold for no money!
+        if amount_to_call > 0:
+            return game.fold()
+        else:
+            return game.call()
     elif action_index == 1:
         return game.call()
     # If any raise is an all-in, then we return an all-in
