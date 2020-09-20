@@ -93,9 +93,10 @@ def make_sequence_dict_of_dense_from_context(context_dict):
 
 
 def concat_feature_tensors(tensor_dict):
+
     tensors = []
 
-    for name, val in tensor_dict.items():
+    for name, val in sorted(tensor_dict.items()):
         val = tf.cast(val, dtype=tf.float32)
         tensors.append(val)
 

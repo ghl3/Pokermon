@@ -21,9 +21,10 @@ logger = logging.getLogger(__name__)
 def train_heads_up(
     policies: Dict[str, Policy],
     num_hands_to_play: int,
-    num_hands_between_checkpoins: int,
+    num_hands_between_checkpoints: int,
 ):
 
+    # Initialize the stats per hand
     results: Dict[str, Stats] = {name: Stats() for name in policies}
 
     players = list(policies.keys())
@@ -47,7 +48,7 @@ def train_heads_up(
 
             results[player_name].update_stats(game.view(), result, player_idx)
 
-            if i != 0 and i % num_hands_between_checkpoins == 0:
+            if i != 0 and i % num_hands_between_checkpoints == 0:
                 print()
                 print(f"Stats for {player_name}")
                 results[player_name].print_summary()
@@ -70,7 +71,7 @@ def train_heads_up(
                     model.checkpoint().restore(
                         model.checkpoint_manager(ckpt_path).latest_checkpoint
                     )
-                elif i % num_hands_between_checkpoins == 0:
+                elif i % num_hands_between_checkpoints == 0:
                     print(f"Saving to {ckpt_path}")
                     model.checkpoint_manager(ckpt_path).save()
 
