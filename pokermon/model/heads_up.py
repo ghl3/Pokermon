@@ -6,28 +6,23 @@ import tensorflow as tf
 from pokermon.ai.policy import Policy
 from pokermon.data.action import (
     NUM_ACTION_BET_BINS,
-    LastAction,
-    NextAction,
     make_action_from_encoded,
-    make_last_actions,
-    make_next_actions,
 )
-from pokermon.data.context import (
-    PrivateContext,
-    PublicContext,
-    make_private_context,
-    make_public_context,
+
+from pokermon.data.examples import (
+    make_forward_example,
+    make_forward_backward_example,
 )
-from pokermon.data.examples import make_example
-from pokermon.data.player_state import PlayerState, make_player_states
-from pokermon.data.public_state import PublicState, make_public_states
-from pokermon.data.rewards import Reward, make_rewards
-from pokermon.model import features, utils
+
+from pokermon.model.context_sequence_concat import ContextSequenceConcat
 from pokermon.model.features import FeatureConfig, FeatureTensors, TargetTensors
-from pokermon.model.utils import select_proportionally
+from pokermon.model.utils import select_proportionally, ensure_all_dense
 from pokermon.poker.cards import Board, HoleCards
 from pokermon.poker.game import Action, GameView, Street
 from pokermon.poker.result import Result
+from tensorflow.python.feature_column import feature_column_v2 as fc
+from tensorflow.python.feature_column import sequence_feature_column as sfc
+from tensorflow.python.keras.feature_column import sequence_feature_column as ksfc
 
 
 def policy_vector_size():
@@ -44,51 +39,56 @@ class HeadsUpModel(Policy):
         self.name = name
         self.num_players = 2
 
-        context_features = {}
-        context_features.update(
-            features.make_feature_definition_dict(PublicContext, is_sequence=False)
-        )
-        context_features.update(
-            features.make_feature_definition_dict(PrivateContext, is_sequence=False)
-        )
-
-        sequence_features = {}
-        sequence_features.update(
-            features.make_feature_definition_dict(PlayerState, is_sequence=True)
-        )
-        sequence_features.update(
-            features.make_feature_definition_dict(PublicState, is_sequence=True)
-        )
-        sequence_features.update(
-            features.make_feature_definition_dict(LastAction, is_sequence=True)
-        )
-
-        context_targets = {}
-
-        sequence_targets = {}
-        sequence_targets.update(
-            features.make_feature_definition_dict(NextAction, is_sequence=True)
-        )
-        sequence_targets.update(
-            features.make_feature_definition_dict(Reward, is_sequence=True)
-        )
-
         self.feature_config = FeatureConfig(
-            context_features=context_features,
-            sequence_features=sequence_features,
-            context_targets=context_targets,
-            sequence_targets=sequence_targets,
+            context_features=[
+                fc.numeric_column(
+                    "public_context__starting_stack_sizes", shape=2, dtype=tf.int64
+                ),
+                fc.numeric_column("private_context__hand_encoded", dtype=tf.int64),
+            ],
+            sequence_features=[
+                sfc.sequence_numeric_column(
+                    "last_action__amount_added", dtype=tf.int64, default_value=-1
+                ),
+                sfc.sequence_numeric_column(
+                    "public_state__all_in_player_mask",
+                    dtype=tf.int64,
+                    default_value=-1,
+                    shape=2,
+                ),
+            ],
+            context_targets=[
+                fc.numeric_column(
+                    "public_context__num_players", shape=1, dtype=tf.int64
+                ),
+            ],
+            sequence_targets=[
+                sfc.sequence_numeric_column(
+                    "next_action__action_encoded", dtype=tf.int64, default_value=-1
+                ),
+                sfc.sequence_numeric_column(
+                    "reward__cumulative_reward", dtype=tf.int64, default_value=-1
+                ),
+                sfc.sequence_numeric_column(
+                    "public_state__pot_size", dtype=tf.int64, default_value=-1
+                ),
+                sfc.sequence_numeric_column(
+                    "player_state__is_current_player", dtype=tf.int64, default_value=-1
+                ),
+            ],
         )
 
-        self.model = tf.keras.Sequential(name=name)
-        self.model.add(
-            tf.keras.layers.LSTM(
-                input_dim=self.num_features(), return_sequences=True, units=32
-            )
+        ctx_inputs, seq_inputs = self.feature_config.make_model_input_configs()
+        all_inputs = list(ctx_inputs.values()) + list(seq_inputs.values())
+        x = tf.keras.layers.DenseFeatures(self.feature_config.context_features)(
+            ctx_inputs
         )
-        self.model.add(tf.keras.layers.Dense(64, name="hidden"))
-        self.model.add(tf.keras.layers.Dense(policy_vector_size(), name="logits"))
+        y, _ = ksfc.SequenceFeatures(self.feature_config.sequence_features)(seq_inputs)
+        z = ContextSequenceConcat()((x, y))
+        z = tf.keras.layers.LSTM(units=5, return_sequences=True)(z)
+        z = tf.keras.layers.Dense(1)(z)
 
+        self.model = tf.keras.Model(inputs=all_inputs, outputs=z)
         self.optimizer = None
 
     def checkpoint(self):
@@ -113,7 +113,7 @@ class HeadsUpModel(Policy):
         assert game.current_player() == player_index
         board = board.at_street(game.street())
 
-        example: tf.train.SequenceExample = self.make_forward_example(
+        example: tf.train.SequenceExample = make_forward_example(
             player_index, game, hole_cards, board
         )
 
@@ -124,69 +124,30 @@ class HeadsUpModel(Policy):
         # )
         # Create the action probabilities at the last timestep
         action_probs: np.Array = self._next_action_policy(
-            serialized_example_tensor
+            [serialized_example_tensor]
         ).numpy()
         action_index = select_proportionally(action_probs)
         return make_action_from_encoded(action_index=action_index, game=game)
 
-    def num_features(self):
-        return self.feature_config.num_features(self.num_players)
-
-    def make_forward_example(
-        self, player_index: int, game: GameView, hole_cards: HoleCards, board: Board
-    ) -> tf.train.SequenceExample:
-        """
-        All tensors have shape:
-        [batch_size=1, time, 1 OR num_players=2]
-        """
-
-        assert game.num_players() == self.num_players
-
-        return make_example(
-            public_context=make_public_context(game),
-            private_context=make_private_context(hole_cards),
-            public_states=make_public_states(game, board=board),
-            player_states=make_player_states(player_index, game, hole_cards, board),
-            last_actions=make_last_actions(game),
-        )
-
-    def make_forward_backward_example(
-        self,
-        player_index: int,
-        game: GameView,
-        hole_cards: HoleCards,
-        board: Board,
-        result: Result,
-    ) -> tf.train.SequenceExample:
-        """
-        All tensors have shape:
-        [batch_size=1, time, 1 OR num_players=2]
-        """
-
-        assert game.num_players() == self.num_players
-        assert game.street() == Street.HAND_OVER
-
-        return make_example(
-            public_context=make_public_context(game),
-            private_context=make_private_context(hole_cards),
-            public_states=make_public_states(game, board=board),
-            player_states=make_player_states(player_index, game, hole_cards, board),
-            last_actions=make_last_actions(game),
-            next_actions=make_next_actions(game),
-            rewards=make_rewards(game, result),
-        )
+    #    def num_features(self):
+    #        return self.feature_config.num_features(self.num_players)
 
     def action_probs(self, feature_tensors: FeatureTensors) -> tf.Tensor:
         return tf.nn.softmax(self.action_logits(feature_tensors))
 
     def action_logits(self, feature_tensors: FeatureTensors) -> tf.Tensor:
-        return self.model(utils.concat_feature_tensors(feature_tensors))
+        return self.model(
+            feature_tensors
+        )  # utils.concat_feature_tensors(feature_tensors))
 
     def loss(self, feature_tensors: FeatureTensors, target_tensors: TargetTensors):
         """
         Returns the loss for each batch element and each timestep.
         [batch_size, time]
         """
+
+        # TODO: This seems weird/unnecessary...?
+        target_tensors = ensure_all_dense(target_tensors)
 
         # [batch, time]
         next_actions = target_tensors["next_action__action_encoded"]
@@ -201,8 +162,8 @@ class HeadsUpModel(Policy):
         # Determine our expectation of the reward we'll get.  Currently, this is just
         # a naive equal splitting of the existing pot.
         expected_reward = tf.cast(
-            feature_tensors["public_state__pot_size"]
-            / feature_tensors["public_context__num_players"],
+            target_tensors["public_state__pot_size"]
+            / target_tensors["public_context__num_players"],
             tf.float32,
         )
 
@@ -222,7 +183,7 @@ class HeadsUpModel(Policy):
         )
 
         player_mask = tf.squeeze(
-            tf.equal(feature_tensors["player_state__is_current_player"], 1), -1
+            tf.equal(target_tensors["player_state__is_current_player"], 1), -1
         )
 
         return tf.where(
@@ -243,29 +204,31 @@ class HeadsUpModel(Policy):
         if self.optimizer is None:
             self.optimizer = tf.keras.optimizers.Adam()
 
-        example = self.make_forward_backward_example(
+        example = make_forward_backward_example(
             player_id, game, hole_cards, board, result
         )
 
         _, loss = self._update_weights(
-            tf.convert_to_tensor(example.SerializeToString())
+            tf.convert_to_tensor([example.SerializeToString()])
         )
 
         return example, loss
 
     @tf.function(experimental_relax_shapes=True)
-    def _next_action_policy(self, serialized_example):
-        feature_tensors = self.feature_config.make_feature_tensors(serialized_example)
-        # Create the action probabilities at the last timestep
-        return self.action_probs(feature_tensors)[0, -1, :]
+    def _next_action_policy(self, serialized_examples):
+        fs = self.feature_config.make_feature_tensors(serialized_examples)
+        # Create the action probabilities at the last time step
+        return self.action_probs(fs)[0, -1, :]
 
     @tf.function(experimental_relax_shapes=True)
-    def _update_weights(self, serialized_example):
+    def _update_weights(self, serialized_examples):
         with tf.GradientTape() as tape:
             (
                 feature_tensors,
                 target_tensors,
-            ) = self.feature_config.make_features_and_target_tensors(serialized_example)
+            ) = self.feature_config.make_features_and_target_tensors(
+                serialized_examples
+            )
 
             loss_value = tf.reduce_mean(self.loss(feature_tensors, target_tensors))
 

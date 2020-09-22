@@ -5,13 +5,64 @@ from typing import Any, Dict, List, Optional
 
 import tensorflow as tf  # type: ignore
 
-from pokermon.data.action import LastAction, NextAction
-from pokermon.data.context import PrivateContext, PublicContext
-from pokermon.data.player_state import PlayerState
-from pokermon.data.public_state import PublicState
-from pokermon.data.rewards import Reward
+from pokermon.data.action import (
+    LastAction,
+    NextAction,
+    make_last_actions,
+    make_next_actions,
+)
+from pokermon.data.context import (
+    PrivateContext,
+    PublicContext,
+    make_public_context,
+    make_private_context,
+)
+from pokermon.data.player_state import PlayerState, make_player_states
+from pokermon.data.public_state import PublicState, make_public_states
+from pokermon.data.rewards import Reward, make_rewards
 from pokermon.data.target import Target
 from pokermon.data.utils import field_feature_name
+from pokermon.poker.cards import HoleCards, Board
+from pokermon.poker.game import GameView, Street
+from pokermon.poker.result import Result
+
+
+def make_forward_example(
+    player_index: int, game: GameView, hole_cards: HoleCards, board: Board
+) -> tf.train.SequenceExample:
+    return make_example(
+        public_context=make_public_context(game),
+        private_context=make_private_context(hole_cards),
+        public_states=make_public_states(game, board=board),
+        player_states=make_player_states(player_index, game, hole_cards, board),
+        last_actions=make_last_actions(game),
+    )
+
+
+def make_forward_backward_example(
+    player_index: int,
+    game: GameView,
+    hole_cards: HoleCards,
+    board: Board,
+    result: Result,
+) -> tf.train.SequenceExample:
+    """
+    All tensors have shape:
+    [batch_size=1, time, 1 OR num_players=2]
+    """
+
+    # assert game.num_players() == self.num_players
+    assert game.street() == Street.HAND_OVER
+
+    return make_example(
+        public_context=make_public_context(game),
+        private_context=make_private_context(hole_cards),
+        public_states=make_public_states(game, board=board),
+        player_states=make_player_states(player_index, game, hole_cards, board),
+        last_actions=make_last_actions(game),
+        next_actions=make_next_actions(game),
+        rewards=make_rewards(game, result),
+    )
 
 
 def _bytes_feature(values: List[str]) -> tf.train.Feature:

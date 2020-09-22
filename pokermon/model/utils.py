@@ -17,6 +17,10 @@ def ensure_dense(t):
         return t
 
 
+def ensure_all_dense(tensor_dict):
+    return {k: ensure_dense(t) for k, t in tensor_dict.items()}
+
+
 def context_tensor_to_sequence():
     pass
 

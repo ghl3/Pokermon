@@ -1,17 +1,14 @@
 import dataclasses
 import typing
-from itertools import chain
 from typing import Dict, List
+from tensorflow.python.ops import parsing_ops
+from tensorflow.python.feature_column import feature_column_v2 as fc
+from tensorflow.python.feature_column.feature_column_v2 import FeatureColumn
 
 import tensorflow as tf  # type: ignore
 
 from pokermon.data.utils import field_feature_name
-from pokermon.model.utils import (
-    make_sequence_dense,
-    make_sequence_dense_from_context,
-    make_sequence_dict_of_dense,
-    make_sequence_dict_of_dense_from_context,
-)
+
 
 FeatureTensors = Dict[str, tf.Tensor]
 TargetTensors = Dict[str, tf.Tensor]
@@ -20,111 +17,174 @@ TargetTensors = Dict[str, tf.Tensor]
 @dataclasses.dataclass
 class FeatureConfig:
 
-    context_features: Dict[str, tf.train.Feature] = dataclasses.field(
-        default_factory=dict
-    )
-    sequence_features: Dict[str, tf.train.Feature] = dataclasses.field(
-        default_factory=dict
-    )
+    # These are gathered for the forward pass
+    context_features: List[FeatureColumn] = dataclasses.field(default_factory=list)
 
-    context_targets: Dict[str, tf.train.Feature] = dataclasses.field(
-        default_factory=dict
-    )
-    sequence_targets: Dict[str, tf.train.Feature] = dataclasses.field(
-        default_factory=dict
-    )
+    # These are gathered for the forward pass
+    # These should all be sparse...
+    sequence_features: List[FeatureColumn] = dataclasses.field(default_factory=list)
 
-    def num_features(self, num_players):
-        num = 0
+    # These are only gathered in the backwards pass
+    context_targets: List[FeatureColumn] = dataclasses.field(default_factory=list)
 
-        for _, feature_col in chain(
-            self.sequence_features.items(), self.context_features.items()
-        ):
-            if isinstance(feature_col, tf.io.FixedLenSequenceFeature):
-                num += 1
-            elif isinstance(feature_col, tf.io.FixedLenFeature):
-                num += 1
-            elif isinstance(feature_col, tf.io.VarLenFeature):
-                num += num_players
-            else:
-                raise Exception()
+    sequence_targets: List[FeatureColumn] = dataclasses.field(default_factory=list)
 
-        return num
+    def make_model_input_configs(self):
+        context_inputs = {}
+        for col in self.context_features:
+            context_inputs[col.name] = tf.keras.Input(
+                shape=col.shape,
+                sparse=False,
+                name=col.name,
+                dtype=col.dtype,
+            )
 
-    def make_feature_tensors(self, serialized_example: str) -> FeatureTensors:
+        sequence_inputs = {}
+        for col in self.sequence_features:
+            sequence_inputs[col.name] = tf.keras.Input(
+                shape=(None,) + col.shape,
+                sparse=True,
+                name=col.name,
+                dtype=col.dtype,
+            )
 
-        context_features = make_num_steps_features()
-        context_features.update(self.context_features)
+        return context_inputs, sequence_inputs
 
-        sequence_features = {}
-        sequence_features.update(self.sequence_features)
-
-        context_dict, sequence_dict = tf.io.parse_single_sequence_example(
-            serialized_example,
-            context_features=context_features,
-            sequence_features=sequence_features,
-            example_name=None,
-            name=None,
+    def make_feature_tensors(self, serialized_examples_tensor):
+        ctx, seq, _ = parsing_ops.parse_sequence_example(
+            serialized_examples_tensor,
+            context_features=fc.make_parse_example_spec_v2(self.context_features),
+            sequence_features=fc.make_parse_example_spec_v2(self.sequence_features),
         )
 
-        dense_features = {}
-        dense_features.update(make_sequence_dict_of_dense(sequence_dict))
-        dense_features.update(make_sequence_dict_of_dense_from_context(context_dict))
+        fs = {}
+        fs.update(ctx)
+        fs.update(seq)
+        return fs
 
-        return dense_features
+    def make_features_and_target_tensors(self, serialized_examples_tensor):
 
-    def make_features_and_target_tensors(
-        self, serialized_example: str
-    ) -> typing.Tuple[FeatureTensors, TargetTensors]:
-        """
-        All tensors have shape:
-        [batch_size=1, time, 1 OR num_players=2]
-        """
+        context_features = fc.make_parse_example_spec_v2(self.context_features)
+        context_targets = fc.make_parse_example_spec_v2(self.context_targets)
+        context_data = {}
+        context_data.update(context_features)
+        context_data.update(context_targets)
 
-        context_features = make_num_steps_features()
-        context_features.update(self.context_features)
-        context_features.update(self.context_targets)
+        sequence_features = fc.make_parse_example_spec_v2(self.sequence_features)
+        sequence_targets = fc.make_parse_example_spec_v2(self.sequence_targets)
+        sequence_data = {}
+        sequence_data.update(sequence_features)
+        sequence_data.update(sequence_targets)
 
-        sequence_features = {}
-        sequence_features.update(self.sequence_features)
-        sequence_features.update(self.sequence_targets)
-
-        context_dict, sequence_dict = tf.io.parse_single_sequence_example(
-            serialized_example,
-            context_features=context_features,
-            sequence_features=sequence_features,
-            example_name=None,
-            name=None,
+        ctx, seq, _ = parsing_ops.parse_sequence_example(
+            serialized_examples_tensor,
+            context_features=context_data,
+            sequence_features=sequence_data,
         )
 
-        num_steps = context_dict["num_steps"]
+        fs = {}
+        fs.update({name: t for name, t in ctx.items() if name in context_features})
+        fs.update({name: t for name, t in seq.items() if name in sequence_features})
 
-        feature_dict = {}
-        target_dict = {}
+        ts = {}
+        ts.update({name: t for name, t in ctx.items() if name in context_targets})
+        ts.update({name: t for name, t in seq.items() if name in sequence_targets})
 
-        for (name, tensor) in sequence_dict.items():
-            if name in self.sequence_features:
-                feature_dict[name] = make_sequence_dense(tensor)
-            elif name in self.sequence_targets:
-                target_dict[name] = make_sequence_dense(tensor)
-            else:
-                raise Exception()
+        return fs, ts
 
-        for (name, tensor) in context_dict.items():
-            if name == "num_steps":
-                continue
-            elif name in self.context_features:
-                feature_dict[name] = make_sequence_dense_from_context(tensor, num_steps)
-            elif name in self.sequence_targets:
-                target_dict[name] = make_sequence_dense_from_context(tensor, num_steps)
-            else:
-                raise Exception()
+    # return ctx, seq
 
-        return feature_dict, target_dict
+    # def num_features(self, num_players):
+    #     num = 0
+    #
+    #     for _, feature_col in chain(
+    #         self.sequence_features.items(), self.context_features.items()
+    #     ):
+    #         if isinstance(feature_col, tf.io.FixedLenSequenceFeature):
+    #             num += 1
+    #         elif isinstance(feature_col, tf.io.FixedLenFeature):
+    #             num += 1
+    #         elif isinstance(feature_col, tf.io.VarLenFeature):
+    #             num += num_players
+    #         else:
+    #             raise Exception()
+    #
+    #     return num
+
+    # def make_feature_tensors(self, serialized_example: str) -> FeatureTensors:
+    #
+    #     context_features = make_num_steps_features()
+    #     context_features.update(self.context_features)
+    #
+    #     sequence_features = {}
+    #     sequence_features.update(self.sequence_features)
+    #
+    #     context_dict, sequence_dict = tf.io.parse_single_sequence_example(
+    #         serialized_example,
+    #         context_features=context_features,
+    #         sequence_features=sequence_features,
+    #         example_name=None,
+    #         name=None,
+    #     )
+    #
+    #     dense_features = {}
+    #     dense_features.update(make_sequence_dict_of_dense(sequence_dict))
+    #     dense_features.update(make_sequence_dict_of_dense_from_context(context_dict))
+    #
+    #     return dense_features
+
+    # def make_features_and_target_tensors(
+    #     self, serialized_example: str
+    # ) -> typing.Tuple[FeatureTensors, TargetTensors]:
+    #     """
+    #     All tensors have shape:
+    #     [batch_size=1, time, 1 OR num_players=2]
+    #     """
+    #
+    #     context_features = make_num_steps_features()
+    #     context_features.update(self.context_features)
+    #     context_features.update(self.context_targets)
+    #
+    #     sequence_features = {}
+    #     sequence_features.update(self.sequence_features)
+    #     sequence_features.update(self.sequence_targets)
+    #
+    #     context_dict, sequence_dict = tf.io.parse_single_sequence_example(
+    #         serialized_example,
+    #         context_features=context_features,
+    #         sequence_features=sequence_features,
+    #         example_name=None,
+    #         name=None,
+    #     )
+    #
+    #     num_steps = context_dict["num_steps"]
+    #
+    #     feature_dict = {}
+    #     target_dict = {}
+    #
+    #     for (name, tensor) in sequence_dict.items():
+    #         if name in self.sequence_features:
+    #             feature_dict[name] = make_sequence_dense(tensor)
+    #         elif name in self.sequence_targets:
+    #             target_dict[name] = make_sequence_dense(tensor)
+    #         else:
+    #             raise Exception()
+    #
+    #     for (name, tensor) in context_dict.items():
+    #         if name == "num_steps":
+    #             continue
+    #         elif name in self.context_features:
+    #             feature_dict[name] = make_sequence_dense_from_context(tensor, num_steps)
+    #         elif name in self.sequence_targets:
+    #             target_dict[name] = make_sequence_dense_from_context(tensor, num_steps)
+    #         else:
+    #             raise Exception()
+    #
+    #     return feature_dict, target_dict
 
 
-def make_num_steps_features():
-    return {"num_steps": tf.io.FixedLenFeature([], tf.int64)}
+# def make_num_steps_features():
+#    return {"num_steps": tf.io.FixedLenFeature([], tf.int64)}
 
 
 def make_feature_definition_dict(
