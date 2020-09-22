@@ -2,7 +2,7 @@ import argparse
 import logging
 import sys
 from random import shuffle
-from typing import Dict
+from typing import Dict, Optional
 
 from tqdm import tqdm
 
@@ -21,7 +21,7 @@ logger = logging.getLogger(__name__)
 def train_heads_up(
     policies: Dict[str, Policy],
     num_hands_to_play: int,
-    num_hands_between_checkpoints: int,
+    num_hands_between_checkpoints: Optional[int] = None,
 ):
 
     # Initialize the stats per hand
@@ -48,7 +48,11 @@ def train_heads_up(
 
             results[player_name].update_stats(game.view(), result, player_idx)
 
-            if i != 0 and i % num_hands_between_checkpoints == 0:
+            if (
+                num_hands_between_checkpoints
+                and i != 0
+                and i % num_hands_between_checkpoints == 0
+            ):
                 print()
                 print(f"Stats for {player_name}")
                 results[player_name].print_summary()
@@ -66,12 +70,15 @@ def train_heads_up(
                 )
 
                 ckpt_path = f"./models/{model.name}"
-                if i == 0:
+                if num_hands_between_checkpoints and i == 0:
                     print(f"Restoring from {ckpt_path}")
                     model.checkpoint().restore(
                         model.checkpoint_manager(ckpt_path).latest_checkpoint
                     )
-                elif i % num_hands_between_checkpoints == 0:
+                elif (
+                    num_hands_between_checkpoints
+                    and i % num_hands_between_checkpoints == 0
+                ):
                     print(f"Saving to {ckpt_path}")
                     model.checkpoint_manager(ckpt_path).save()
 
