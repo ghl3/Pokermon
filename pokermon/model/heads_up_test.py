@@ -2,6 +2,7 @@ import numpy as np
 import tensorflow as tf
 from numpy.testing import assert_array_almost_equal
 
+from pokermon.data.examples import make_forward_example, make_forward_backward_example
 from pokermon.model import heads_up
 from pokermon.poker import result
 from pokermon.poker.cards import Board, FullDeal, mkcard, mkflop, mkhand
@@ -38,7 +39,7 @@ def test_action_probs():
 
     player_index = 1
 
-    example = model.make_forward_example(
+    example = make_forward_example(
         player_index,
         game.game_view(),
         deal.hole_cards[player_index],
@@ -46,7 +47,7 @@ def test_action_probs():
     )
 
     logits = model.action_logits(
-        model.feature_config.make_feature_tensors(example.SerializeToString())
+        model.feature_config.make_feature_tensors([example.SerializeToString()])
     )
 
     batch_size = 1
@@ -55,7 +56,7 @@ def test_action_probs():
     assert logits.shape == [batch_size, num_steps, num_possible_actions]
 
     probs = model.action_probs(
-        model.feature_config.make_feature_tensors(example.SerializeToString())
+        model.feature_config.make_feature_tensors([example.SerializeToString()])
     )
 
     assert_array_almost_equal(
@@ -95,7 +96,7 @@ def test_loss():
 
     player_index = 1
 
-    example = model.make_forward_backward_example(
+    example = make_forward_backward_example(
         player_index,
         game.game_view(),
         deal.hole_cards[player_index],
@@ -107,7 +108,7 @@ def test_loss():
         feature_tensors,
         target_tensors,
     ) = model.feature_config.make_features_and_target_tensors(
-        example.SerializeToString()
+        [example.SerializeToString()]
     )
 
     print(tf.cast(target_tensors["reward__cumulative_reward"], tf.float32))

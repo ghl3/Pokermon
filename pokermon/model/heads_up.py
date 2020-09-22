@@ -39,10 +39,18 @@ class HeadsUpModel(Policy):
         self.name = name
         self.num_players = 2
 
-        self.feature_config = FeatureConfig(
+        self.feature_config = self.make_feature_config()
+        self.model = self.make_model(self.feature_config)
+        self.optimizer = None
+        self.manager = None
+
+    def make_feature_config(self):
+        return FeatureConfig(
             context_features=[
                 fc.numeric_column(
-                    "public_context__starting_stack_sizes", shape=2, dtype=tf.int64
+                    "public_context__starting_stack_sizes",
+                    shape=self.num_players,
+                    dtype=tf.int64,
                 ),
                 fc.numeric_column("private_context__hand_encoded", dtype=tf.int64),
             ],
@@ -78,18 +86,19 @@ class HeadsUpModel(Policy):
             ],
         )
 
-        ctx_inputs, seq_inputs = self.feature_config.make_model_input_configs()
-        all_inputs = list(ctx_inputs.values()) + list(seq_inputs.values())
-        x = tf.keras.layers.DenseFeatures(self.feature_config.context_features)(
-            ctx_inputs
-        )
-        y, _ = ksfc.SequenceFeatures(self.feature_config.sequence_features)(seq_inputs)
-        z = ContextSequenceConcat()((x, y))
-        z = tf.keras.layers.LSTM(units=5, return_sequences=True)(z)
-        z = tf.keras.layers.Dense(1)(z)
+    @staticmethod
+    def make_model(feature_config):
 
-        self.model = tf.keras.Model(inputs=all_inputs, outputs=z)
-        self.optimizer = None
+        ctx_inputs, seq_inputs = feature_config.make_model_input_configs()
+        all_inputs = list(ctx_inputs.values()) + list(seq_inputs.values())
+        x = tf.keras.layers.DenseFeatures(feature_config.context_features)(ctx_inputs)
+        y, _ = ksfc.SequenceFeatures(feature_config.sequence_features)(seq_inputs)
+        z = ContextSequenceConcat()((x, y))
+        z = tf.keras.layers.LSTM(units=32, return_sequences=True)(z)
+        z = tf.keras.layers.Dense(64)(z)
+        z = tf.keras.layers.Dense(policy_vector_size(), name="logits")(z)
+
+        return tf.keras.Model(inputs=all_inputs, outputs=z)
 
     def checkpoint(self):
         return tf.train.Checkpoint(
@@ -97,7 +106,7 @@ class HeadsUpModel(Policy):
         )
 
     def checkpoint_manager(self, path):
-        if getattr(self, "manager", None) is None:
+        if self.manager is None:
             self.manager = tf.train.CheckpointManager(
                 self.checkpoint(), path, max_to_keep=5
             )
@@ -119,26 +128,18 @@ class HeadsUpModel(Policy):
 
         serialized_example_tensor = tf.convert_to_tensor(example.SerializeToString())
 
-        # feature_tensors = self.feature_config.make_feature_tensors(
-        #    example.SerializeToString()
-        # )
-        # Create the action probabilities at the last timestep
+        # Create the action probabilities at the last time step
         action_probs: np.Array = self._next_action_policy(
             [serialized_example_tensor]
         ).numpy()
         action_index = select_proportionally(action_probs)
         return make_action_from_encoded(action_index=action_index, game=game)
 
-    #    def num_features(self):
-    #        return self.feature_config.num_features(self.num_players)
-
     def action_probs(self, feature_tensors: FeatureTensors) -> tf.Tensor:
         return tf.nn.softmax(self.action_logits(feature_tensors))
 
     def action_logits(self, feature_tensors: FeatureTensors) -> tf.Tensor:
-        return self.model(
-            feature_tensors
-        )  # utils.concat_feature_tensors(feature_tensors))
+        return self.model(feature_tensors)
 
     def loss(self, feature_tensors: FeatureTensors, target_tensors: TargetTensors):
         """

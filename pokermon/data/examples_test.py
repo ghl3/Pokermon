@@ -10,7 +10,7 @@ from pokermon.data.player_state import make_player_states
 from pokermon.data.public_state import PublicState, make_public_states
 from pokermon.data.rewards import make_rewards
 from pokermon.data.target import make_target
-from pokermon.poker import result, rules
+from pokermon.poker import result
 from pokermon.poker.cards import Board, FullDeal, mkcard, mkflop, mkhand
 from pokermon.poker.game_runner import GameRunner
 
