@@ -2,27 +2,19 @@ from typing import Tuple
 
 import numpy as np
 import tensorflow as tf
-
-from pokermon.ai.policy import Policy
-from pokermon.data.action import (
-    NUM_ACTION_BET_BINS,
-    make_action_from_encoded,
-)
-
-from pokermon.data.examples import (
-    make_forward_example,
-    make_forward_backward_example,
-)
-
-from pokermon.model.context_sequence_concat import ContextSequenceConcat
-from pokermon.model.features import FeatureConfig, FeatureTensors, TargetTensors
-from pokermon.model.utils import select_proportionally, ensure_all_dense
-from pokermon.poker.cards import Board, HoleCards
-from pokermon.poker.game import Action, GameView, Street
-from pokermon.poker.result import Result
 from tensorflow.python.feature_column import feature_column_v2 as fc
 from tensorflow.python.feature_column import sequence_feature_column as sfc
 from tensorflow.python.keras.feature_column import sequence_feature_column as ksfc
+
+from pokermon.ai.policy import Policy
+from pokermon.data.action import NUM_ACTION_BET_BINS, make_action_from_encoded
+from pokermon.data.examples import make_forward_backward_example, make_forward_example
+from pokermon.model.context_sequence_concat import ContextSequenceConcat
+from pokermon.model.features import FeatureConfig, FeatureTensors, TargetTensors
+from pokermon.model.utils import ensure_all_dense, select_proportionally
+from pokermon.poker.cards import Board, HoleCards
+from pokermon.poker.game import Action, GameView, Street
+from pokermon.poker.result import Result
 
 
 def policy_vector_size():

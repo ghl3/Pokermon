@@ -1,11 +1,10 @@
 import dataclasses
 from typing import Dict, List
-from tensorflow.python.ops import parsing_ops
-from tensorflow.python.feature_column import feature_column_v2 as fc
-from tensorflow.python.feature_column.feature_column_v2 import FeatureColumn
 
 import tensorflow as tf  # type: ignore
-
+from tensorflow.python.feature_column import feature_column_v2 as fc
+from tensorflow.python.feature_column.feature_column_v2 import FeatureColumn
+from tensorflow.python.ops import parsing_ops
 
 FeatureTensors = Dict[str, tf.Tensor]
 TargetTensors = Dict[str, tf.Tensor]

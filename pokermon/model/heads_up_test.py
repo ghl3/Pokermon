@@ -2,7 +2,7 @@ import numpy as np
 import tensorflow as tf
 from numpy.testing import assert_array_almost_equal
 
-from pokermon.data.examples import make_forward_example, make_forward_backward_example
+from pokermon.data.examples import make_forward_backward_example, make_forward_example
 from pokermon.model import heads_up
 from pokermon.poker import result
 from pokermon.poker.cards import Board, FullDeal, mkcard, mkflop, mkhand
