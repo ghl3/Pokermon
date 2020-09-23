@@ -112,9 +112,9 @@ def test_fold_preflop() -> None:
             move=5,
             action_encoded=4,
             amount_added=10,
-            amount_added_percent_of_remaining=10,
+            amount_added_percent_of_remaining=0.10,
             amount_raised=8,
-            amount_raised_percent_of_pot=266,
+            amount_raised_percent_of_pot=2.6666666666666665,
         ),
         LastAction(
             move=3,

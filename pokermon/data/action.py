@@ -14,9 +14,9 @@ class LastAction:
     move: int
     action_encoded: int
     amount_added: int
-    amount_added_percent_of_remaining: int
+    amount_added_percent_of_remaining: float
     amount_raised: int
-    amount_raised_percent_of_pot: int
+    amount_raised_percent_of_pot: float
 
 
 # At timestamp i, the action that will be made
@@ -141,9 +141,9 @@ def make_last_actions(game: GameView) -> List[LastAction]:
                 move=a.move.value,
                 action_encoded=encode_action(a, game_view),
                 amount_added=a.amount_added,
-                amount_added_percent_of_remaining=100 * a.amount_added // stack_size,
+                amount_added_percent_of_remaining=a.amount_added / stack_size,
                 amount_raised=raise_amount,
-                amount_raised_percent_of_pot=100 * raise_amount // pot_size,
+                amount_raised_percent_of_pot=raise_amount / pot_size,
             )
         )
 
