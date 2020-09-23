@@ -2,23 +2,18 @@ from typing import Tuple
 
 import numpy as np
 import tensorflow as tf
-from tensorflow.python.feature_column import feature_column_v2 as fc
-from tensorflow.python.feature_column import sequence_feature_column as sfc
-from tensorflow.python.keras.feature_column import sequence_feature_column as ksfc
+
 
 from pokermon.ai.policy import Policy
-from pokermon.data.action import NUM_ACTION_BET_BINS, make_action_from_encoded
+from pokermon.data.action import make_action_from_encoded
 from pokermon.data.examples import make_forward_backward_example, make_forward_example
-from pokermon.model.context_sequence_concat import ContextSequenceConcat
-from pokermon.model.feature_config import FeatureConfig, FeatureTensors, TargetTensors
+from pokermon.model import rnn
+from pokermon.model.feature_config import FeatureTensors, TargetTensors
+from pokermon.model.model_features import make_feature_config
 from pokermon.model.utils import ensure_all_dense, select_proportionally
 from pokermon.poker.cards import Board, HoleCards
 from pokermon.poker.game import Action, GameView, Street
 from pokermon.poker.result import Result
-
-
-def policy_vector_size():
-    return NUM_ACTION_BET_BINS + 2
 
 
 class HeadsUpModel(Policy):
@@ -26,73 +21,10 @@ class HeadsUpModel(Policy):
         super().__init__()
         self.name = name
         self.num_players = 2
-        self.feature_config = self.make_feature_config(self.num_players)
-        self.model = self.make_model(self.feature_config)
+        self.feature_config = make_feature_config(self.num_players)
+        self.model = rnn.make_model(self.feature_config)
         self.optimizer = None
         self.manager = None
-
-    @staticmethod
-    def make_feature_config(num_players):
-        return FeatureConfig(
-            context_features=[
-                fc.numeric_column(
-                    "public_context__starting_stack_sizes",
-                    shape=num_players,
-                    dtype=tf.int64,
-                ),
-                # fc.numeric_column("private_context__hand_encoded", dtype=tf.int64),
-                tf.feature_column.embedding_column(
-                    tf.feature_column.categorical_column_with_vocabulary_list(
-                        "private_context__hand_encoded", range(1326)
-                    ),
-                    dimension=4,
-                ),
-            ],
-            sequence_features=[
-                sfc.sequence_numeric_column(
-                    "last_action__amount_added", dtype=tf.int64, default_value=-1
-                ),
-                sfc.sequence_numeric_column(
-                    "public_state__all_in_player_mask",
-                    dtype=tf.int64,
-                    default_value=-1,
-                    shape=2,
-                ),
-            ],
-            context_targets=[
-                fc.numeric_column(
-                    "public_context__num_players", shape=1, dtype=tf.int64
-                ),
-            ],
-            sequence_targets=[
-                sfc.sequence_numeric_column(
-                    "next_action__action_encoded", dtype=tf.int64, default_value=-1
-                ),
-                sfc.sequence_numeric_column(
-                    "reward__cumulative_reward", dtype=tf.int64, default_value=-1
-                ),
-                sfc.sequence_numeric_column(
-                    "public_state__pot_size", dtype=tf.int64, default_value=-1
-                ),
-                sfc.sequence_numeric_column(
-                    "player_state__is_current_player", dtype=tf.int64, default_value=-1
-                ),
-            ],
-        )
-
-    @staticmethod
-    def make_model(feature_config):
-
-        ctx_inputs, seq_inputs = feature_config.make_model_input_configs()
-        x = tf.keras.layers.DenseFeatures(feature_config.context_features)(ctx_inputs)
-        y, _ = ksfc.SequenceFeatures(feature_config.sequence_features)(seq_inputs)
-        z = ContextSequenceConcat()((x, y))
-        z = tf.keras.layers.LSTM(units=32, return_sequences=True)(z)
-        z = tf.keras.layers.Dense(64)(z)
-        z = tf.keras.layers.Dense(policy_vector_size(), name="logits")(z)
-
-        all_inputs = list(ctx_inputs.values()) + list(seq_inputs.values())
-        return tf.keras.Model(inputs=all_inputs, outputs=z)
 
     def checkpoint(self):
         return tf.train.Checkpoint(
