@@ -10,7 +10,7 @@ from pokermon.ai.policy import Policy
 from pokermon.data.action import NUM_ACTION_BET_BINS, make_action_from_encoded
 from pokermon.data.examples import make_forward_backward_example, make_forward_example
 from pokermon.model.context_sequence_concat import ContextSequenceConcat
-from pokermon.model.features import FeatureConfig, FeatureTensors, TargetTensors
+from pokermon.model.feature_config import FeatureConfig, FeatureTensors, TargetTensors
 from pokermon.model.utils import ensure_all_dense, select_proportionally
 from pokermon.poker.cards import Board, HoleCards
 from pokermon.poker.game import Action, GameView, Street
@@ -22,29 +22,31 @@ def policy_vector_size():
 
 
 class HeadsUpModel(Policy):
-    def __init__(
-        self,
-        name,
-    ):
+    def __init__(self, name):
         super().__init__()
-
         self.name = name
         self.num_players = 2
-
-        self.feature_config = self.make_feature_config()
+        self.feature_config = self.make_feature_config(self.num_players)
         self.model = self.make_model(self.feature_config)
         self.optimizer = None
         self.manager = None
 
-    def make_feature_config(self):
+    @staticmethod
+    def make_feature_config(num_players):
         return FeatureConfig(
             context_features=[
                 fc.numeric_column(
                     "public_context__starting_stack_sizes",
-                    shape=self.num_players,
+                    shape=num_players,
                     dtype=tf.int64,
                 ),
-                fc.numeric_column("private_context__hand_encoded", dtype=tf.int64),
+                # fc.numeric_column("private_context__hand_encoded", dtype=tf.int64),
+                tf.feature_column.embedding_column(
+                    tf.feature_column.categorical_column_with_vocabulary_list(
+                        "private_context__hand_encoded", range(1326)
+                    ),
+                    dimension=4,
+                ),
             ],
             sequence_features=[
                 sfc.sequence_numeric_column(
@@ -82,7 +84,6 @@ class HeadsUpModel(Policy):
     def make_model(feature_config):
 
         ctx_inputs, seq_inputs = feature_config.make_model_input_configs()
-        all_inputs = list(ctx_inputs.values()) + list(seq_inputs.values())
         x = tf.keras.layers.DenseFeatures(feature_config.context_features)(ctx_inputs)
         y, _ = ksfc.SequenceFeatures(feature_config.sequence_features)(seq_inputs)
         z = ContextSequenceConcat()((x, y))
@@ -90,6 +91,7 @@ class HeadsUpModel(Policy):
         z = tf.keras.layers.Dense(64)(z)
         z = tf.keras.layers.Dense(policy_vector_size(), name="logits")(z)
 
+        all_inputs = list(ctx_inputs.values()) + list(seq_inputs.values())
         return tf.keras.Model(inputs=all_inputs, outputs=z)
 
     def checkpoint(self):

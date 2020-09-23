@@ -27,20 +27,20 @@ class FeatureConfig:
 
     def make_model_input_configs(self):
         context_inputs = {}
-        for col in self.context_features:
-            context_inputs[col.name] = tf.keras.Input(
-                shape=col.shape,
+        for name, col in fc.make_parse_example_spec_v2(self.context_features).items():
+            context_inputs[name] = tf.keras.Input(
+                shape=(None,),
                 sparse=False,
-                name=col.name,
+                name=name,
                 dtype=col.dtype,
             )
 
         sequence_inputs = {}
-        for col in self.sequence_features:
-            sequence_inputs[col.name] = tf.keras.Input(
-                shape=(None,) + col.shape,
+        for name, col in fc.make_parse_example_spec_v2(self.sequence_features).items():
+            sequence_inputs[name] = tf.keras.Input(
+                shape=(None, None),
                 sparse=True,
-                name=col.name,
+                name=name,
                 dtype=col.dtype,
             )
 
