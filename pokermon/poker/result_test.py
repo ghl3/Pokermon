@@ -49,7 +49,8 @@ def test_game_result():
             ),
         ],
         went_to_showdown=[True, True, True],
-        earned_at_showdown=[180, 0, 0],
+        remained_in_hand=[True, True, True],
+        earned_from_pot=[180, 0, 0],
         profits=[120, -60, -60],
     )
 
@@ -97,7 +98,8 @@ def test_game_with_tie():
                 hand_type=HandType.TWO_PAIR, rank=2473, percentage=0.6685875100509246
             ),
         ],
+        remained_in_hand=[True, True, True],
         went_to_showdown=[True, True, True],
-        earned_at_showdown=[150, 350, 0],
+        earned_from_pot=[150, 350, 0],
         profits=[50, 150, -200],
     )

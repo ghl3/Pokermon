@@ -36,7 +36,7 @@ def make_rewards(game: GameView, result: Result):
     rewards = []
 
     # Profits between now and the end of the hand
-    cumulative_rewards: List[int] = result.earned_at_showdown
+    cumulative_rewards: List[int] = result.earned_from_pot
 
     is_last_action: List[bool] = [True for _ in range(game.num_players())]
 

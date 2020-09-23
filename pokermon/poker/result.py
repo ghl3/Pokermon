@@ -18,21 +18,27 @@ class Result:
     # or just players who went to showdown?)
     hand_results: List[EvaluationResult]
 
-    # Whether each player went to showdown (or, if they were the last player
-    # after everyone else folded, which we consider to be a 1-player showdown).
-    # In other words, showdown == !folded
-    went_to_showdown: List[bool]
-
-    # The amount of money won by each player at the end of the hand (not profit)
-    earned_at_showdown: List[int]
+    # The amount of money each player received from the pot at the end of the hand.
+    # This is NOT profit.  Most of the time, only 1 player receives any money and the
+    # rest receive zero.
+    earned_from_pot: List[int]
 
     # The actual profits, in small blinds, won or list by each player during this game
     profits: List[int]
+
+    remained_in_hand: List[bool]
+
+    # Whether each player went to showdown.  A showdown is where more than 1 player
+    # get to the end of the hand without folding.
+    went_to_showdown: List[bool]
 
 
 def get_result(cards: FullDeal, game: GameView) -> Result:
     hand_results: List[EvaluationResult] = []
 
+    remained_in_hand: List[bool] = []
+
+    # A showdown requires more than 1 player at the end of the hand.
     went_to_showdown: List[bool] = []
 
     for player_index in range(game.num_players()):
@@ -43,27 +49,37 @@ def get_result(cards: FullDeal, game: GameView) -> Result:
 
         hand_results.append(eval_result)
 
-        went_to_showdown.append(not game.is_folded()[player_index])
+        remained_in_hand.append(not game.is_folded()[player_index])
 
-    showdown_hands: Dict[int, EvaluationResult] = {
-        idx: hand for idx, hand in enumerate(hand_results) if went_to_showdown[idx]
+        went_to_showdown.append(
+            not game.is_folded()[player_index]
+            and sum(
+                not folded
+                for idx, folded in enumerate(game.is_folded())
+                if idx != player_index
+            )
+            > 1
+        )
+
+    final_hands: Dict[int, EvaluationResult] = {
+        idx: hand for idx, hand in enumerate(hand_results) if remained_in_hand[idx]
     }
 
-    winning_players: Set[int] = get_winning_players(showdown_hands)
+    winning_players: Set[int] = get_winning_players(final_hands)
 
     won_hand: List[bool] = [
         player_index in winning_players for player_index in range(game.num_players())
     ]
 
     pot_per_winning_player: Dict[int, int] = get_pot_payouts(
-        get_ranked_hand_groups(showdown_hands), game.amount_added_total()
+        get_ranked_hand_groups(final_hands), game.amount_added_total()
     )
 
-    earned_at_showdown: List[int] = [
+    earned_from_pot: List[int] = [
         pot_per_winning_player.get(i, 0) for i in range(game.num_players())
     ]
     profit_per_player: List[int] = [
-        earned_at_showdown[i] - amount_added
+        earned_from_pot[i] - amount_added
         for i, amount_added in enumerate(game.amount_added_total())
     ]
 
@@ -71,7 +87,8 @@ def get_result(cards: FullDeal, game: GameView) -> Result:
         won_hand=won_hand,
         hand_results=hand_results,
         went_to_showdown=went_to_showdown,
-        earned_at_showdown=earned_at_showdown,
+        remained_in_hand=remained_in_hand,
+        earned_from_pot=earned_from_pot,
         profits=profit_per_player,
     )
 
