@@ -2,7 +2,6 @@ import logging
 from random import randint
 from typing import List, Tuple
 
-import pokermon.poker.rules as rules
 from pokermon.ai.policy import Policy
 from pokermon.poker.cards import FullDeal
 from pokermon.poker.game import Game, Street

@@ -63,9 +63,6 @@ class GameRunner:
         self.add_small_blind()
         self.add_big_blind()
 
-    # TODO: Make this more fluent.  It can either take an action OR
-    # it can take moves which will build an action, eg raise_to=50, etc
-    # These must be validated...
     def advance(self, action: Action) -> ActionResult:
         if not self.game_started:
             raise Exception("Game not started")
@@ -92,10 +89,6 @@ class GameRunner:
         player_index = self.game_view().current_player()
 
         if self.all_but_one_player_folded():
-            # if self.game_view().num_active_players() == 1:
-            return self._end_hand()
-
-        if self.all_players_all_in():
             return self._end_hand()
 
         while rules.street_over(self.game_view()):
@@ -104,7 +97,6 @@ class GameRunner:
                 break
 
         # Return the current state of the game
-
         if self.game_view().street() == Street.HAND_OVER:
             return ActionResult(street=self.game_view().street())
         else:
