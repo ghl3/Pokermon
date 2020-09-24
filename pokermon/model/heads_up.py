@@ -28,7 +28,7 @@ class HeadsUpModel(Policy):
 
     def checkpoint(self):
         return tf.train.Checkpoint(
-            step=tf.Variable(1), optimizer=self.optimizer, model=self.model
+            step=tf.Variable(0), model=self.model, optimizer=self.optimizer
         )
 
     def checkpoint_manager(self, path):

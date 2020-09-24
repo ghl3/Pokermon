@@ -33,11 +33,10 @@ def train_heads_up(
 
     for player_name, model in policies.items():
         if num_hands_between_checkpoints and isinstance(model, HeadsUpModel):
-            ckpt_path = f"./models/{model.name}"
-            print(f"Restoring from {ckpt_path}")
-            model.checkpoint().restore(
-                model.checkpoint_manager(ckpt_path).latest_checkpoint
-            )
+            ckpt_path = f"/Users/George/Projects/pokermon/models/{model.name}"
+            latest_checkpoint = model.checkpoint_manager(ckpt_path).latest_checkpoint
+            print(f"Restoring from {ckpt_path} {latest_checkpoint}")
+            model.checkpoint().restore(latest_checkpoint)
 
     for i in tqdm(range(num_hands_to_play)):
 
