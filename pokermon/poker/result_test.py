@@ -1,7 +1,7 @@
-from pokermon.poker.cards import FullDeal, mkhand, mkflop, Board, mkcard, HandType
+from pokermon.poker.cards import Board, FullDeal, HandType, mkcard, mkflop, mkhand
 from pokermon.poker.evaluation import EvaluationResult
 from pokermon.poker.game_runner import GameRunner
-from pokermon.poker.result import get_result, Result
+from pokermon.poker.result import Result, get_result
 
 
 def test_game_result():

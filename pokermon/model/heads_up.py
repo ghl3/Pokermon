@@ -23,7 +23,7 @@ class HeadsUpModel(Policy):
         self.num_players = 2
         self.feature_config = make_feature_config(self.num_players)
         self.model = rnn.make_model(self.feature_config)
-        self.optimizer = None
+        self.optimizer = tf.keras.optimizers.Adam()
         self.manager = None
 
     def checkpoint(self):
@@ -127,9 +127,6 @@ class HeadsUpModel(Policy):
         board: Board,
         result: Result,
     ) -> Tuple[tf.train.SequenceExample, float]:
-
-        if self.optimizer is None:
-            self.optimizer = tf.keras.optimizers.Adam()
 
         example = make_forward_backward_example(
             player_id, game, hole_cards, board, result

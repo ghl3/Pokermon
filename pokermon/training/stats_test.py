@@ -1,5 +1,5 @@
 from pokermon.poker import result
-from pokermon.poker.cards import FullDeal, mkhand, mkflop, Board, mkcard
+from pokermon.poker.cards import Board, FullDeal, mkcard, mkflop, mkhand
 from pokermon.poker.game_runner import GameRunner
 from pokermon.training.stats import Stats
 

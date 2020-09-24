@@ -31,7 +31,18 @@ def train_heads_up(
 
     logger.debug("Beginning training with %s players", len(players))
 
+    for player_name, model in policies.items():
+        if num_hands_between_checkpoints and isinstance(model, HeadsUpModel):
+            ckpt_path = f"./models/{model.name}"
+            print(f"Restoring from {ckpt_path}")
+            model.checkpoint().restore(
+                model.checkpoint_manager(ckpt_path).latest_checkpoint
+            )
+
     for i in tqdm(range(num_hands_to_play)):
+
+        hand_index = i + 1
+
         starting_stacks = choose_starting_stacks()
 
         shuffle(players)
@@ -48,18 +59,6 @@ def train_heads_up(
 
             results[player_name].update_stats(game.view(), result, player_idx)
 
-            if (
-                num_hands_between_checkpoints
-                and i != 0
-                and i % num_hands_between_checkpoints == 0
-            ):
-                print()
-                print(f"Stats for {player_name}")
-                results[player_name].print_summary()
-                print()
-                # Reset the stats
-                results[player_name] = Stats()
-
             if isinstance(model, HeadsUpModel):
                 model.train_step(
                     player_idx,
@@ -69,16 +68,19 @@ def train_heads_up(
                     result,
                 )
 
-                ckpt_path = f"./models/{model.name}"
-                if num_hands_between_checkpoints and i == 0:
-                    print(f"Restoring from {ckpt_path}")
-                    model.checkpoint().restore(
-                        model.checkpoint_manager(ckpt_path).latest_checkpoint
-                    )
-                elif (
-                    num_hands_between_checkpoints
-                    and i % num_hands_between_checkpoints == 0
-                ):
+            if (
+                num_hands_between_checkpoints
+                and hand_index % num_hands_between_checkpoints == 0
+            ):
+                print()
+                print(f"Stats for {player_name}")
+                results[player_name].print_summary()
+                print()
+                # Reset the stats
+                results[player_name] = Stats()
+
+                if isinstance(model, HeadsUpModel):
+                    ckpt_path = f"./models/{model.name}"
                     print(f"Saving to {ckpt_path}")
                     model.checkpoint_manager(ckpt_path).save()
 
