@@ -58,7 +58,7 @@ def get_result(cards: FullDeal, game: GameView) -> Result:
                 for idx, folded in enumerate(game.is_folded())
                 if idx != player_index
             )
-            > 1
+            > 0
         )
 
     final_hands: Dict[int, EvaluationResult] = {

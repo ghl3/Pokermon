@@ -78,16 +78,8 @@ class Stats:
             elif event == Street.RIVER:
                 self.num_rivers += 1
 
-        if not game.is_folded()[player_id]:
-            if (
-                sum(
-                    not folded
-                    for idx, folded in enumerate(game.is_folded())
-                    if idx != player_id
-                )
-                > 0
-            ):
-                self.num_showdowns += 1
+        if result.went_to_showdown[player_id]:
+            self.num_showdowns += 1
 
         for action in game.all_actions():
 
