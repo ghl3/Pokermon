@@ -6,4 +6,6 @@ venv
 notebooks
 *.svg
 *.out
+
 models
+examples
