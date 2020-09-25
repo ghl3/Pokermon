@@ -3,8 +3,9 @@ import logging
 import sys
 from random import shuffle
 from typing import List
-from tqdm import trange
 
+import tensorflow as tf
+from tqdm import trange
 
 from pokermon.ai import policies
 from pokermon.ai.policy import Policy
@@ -13,7 +14,6 @@ from pokermon.poker import dealer
 from pokermon.poker.cards import FullDeal
 from pokermon.simulate import simulate
 from pokermon.simulate.simulate import choose_starting_stacks
-import tensorflow as tf
 
 logger = logging.getLogger(__name__)
 
