@@ -28,14 +28,14 @@ def write_batch(serialized_examples, directory, batch_idx):
 def simulate_and_write_examples(
     directory: str,
     policies: List[Policy],
-    num_examples: int,
+    num_hands: int,
     num_examples_per_batch: int,
 ):
 
     batch: List[str] = []
     batch_idx = 0
 
-    for _ in trange(num_examples):
+    for _ in trange(num_hands):
 
         starting_stacks = choose_starting_stacks()
 
@@ -45,14 +45,20 @@ def simulate_and_write_examples(
 
         game, result = simulate.simulate(policies, starting_stacks, deal)
 
-        for player_idx, player_name in enumerate(policies):
+        for player_idx, _ in enumerate(policies):
             example = make_forward_backward_example(
-                player_idx, game.view(), deal.hole_cards[player_idx], deal.board, result
+                player_idx,
+                game.view(),
+                deal.hole_cards[player_idx],
+                deal.board,
+                result,
             )
+
             batch.append(example.SerializeToString())
 
             if len(batch) == num_examples_per_batch:
                 write_batch(batch, directory, batch_idx)
+                batch = []
                 batch_idx += 1
 
     # Write the final batch
@@ -71,7 +77,7 @@ def main():
     )
 
     parser.add_argument(
-        "--num_examples",
+        "--num_hands",
         help="Number of examples to create (hands to play)",
         type=int,
         required=True,
@@ -109,7 +115,7 @@ def main():
     players: List[Policy] = [policies.POLICIES[player] for player in args.player]
 
     simulate_and_write_examples(
-        args.output_directory, players, args.num_examples, args.num_examples_per_file
+        args.output_directory, players, args.num_hands, args.num_examples_per_file
     )
     sys.exit(0)
 
