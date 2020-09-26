@@ -8,7 +8,7 @@ from typing import List, Optional
 from pokermon.features.utils import iter_game_states
 from pokermon.poker import odds
 from pokermon.poker.board import Board
-from pokermon.poker.evaluation import evaluate_hand, make_nut_result
+from pokermon.poker.evaluation import evaluate_hand
 from pokermon.poker.game import GameView, Street
 from pokermon.poker.hands import HoleCards
 
@@ -72,14 +72,8 @@ def make_player_states(
 
         else:
             current_board = board.at_street(game_view.street())
-
             hand_eval = evaluate_hand(hole_cards, current_board)
-            # These odds are deterministic if we don't pass an explicit rng#
-            # win_odds = odds_vs_random_hand(hole_cards, current_board, num_draws=100)
-            # win_odds = odds_vs_random_hand(hole_cards, current_board, num_draws=100)
-
             nut_result = odds.make_nut_result(hole_cards, current_board)
-
             odds_result = odds.make_odds_result(hole_cards, current_board, nut_result)
 
             player_state = PlayerState(

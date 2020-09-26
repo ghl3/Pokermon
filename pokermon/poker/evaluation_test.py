@@ -1,12 +1,7 @@
 import deuces
 from pokermon.poker.board import Board, mkflop
 from pokermon.poker.cards import mkcard
-from pokermon.poker.evaluation import (
-    EvaluationResult,
-    NutResult,
-    evaluate_hand,
-    make_nut_result,
-)
+from pokermon.poker.evaluation import EvaluationResult, evaluate_hand
 from pokermon.poker.hands import HandType, mkhand
 
 
@@ -26,10 +21,6 @@ def test_royal() -> None:
         hand_type=HandType.STRAIGHT_FLUSH, rank=1, percentage=0.9998659876708658
     )
 
-    assert make_nut_result(hole_cards, board) == NutResult(
-        num_better=0, num_tied=0, num_worse=1175
-    )
-
 
 def test_wheel() -> None:
     hole_cards = mkhand("2c7d")
@@ -39,10 +30,6 @@ def test_wheel() -> None:
 
     assert eval_result == EvaluationResult(
         hand_type=HandType.HIGH, rank=7462, percentage=0.0
-    )
-
-    assert make_nut_result(hole_cards, board) == NutResult(
-        num_better=1160, num_tied=15, num_worse=0
     )
 
 
@@ -56,10 +43,6 @@ def test_winner() -> None:
         hand_type=HandType.TRIPS, rank=1615, percentage=0.7835700884481372
     )
 
-    assert make_nut_result(hole_cards, board) == NutResult(
-        num_better=32, num_tied=3, num_worse=1046
-    )
-
 
 def test_turn() -> None:
     hole_cards = mkhand("7d8s")
@@ -67,10 +50,6 @@ def test_turn() -> None:
 
     eval_result = evaluate_hand(hole_cards, board)
 
-    #    assert eval_result == EvaluationResult(
-    #        hand_type=HandType.TRIPS, rank=1615, percentage=0.7835700884481372
-    #    )
-
-    assert make_nut_result(hole_cards, board) == NutResult(
-        num_better=1016, num_tied=15, num_worse=144
+    assert eval_result == EvaluationResult(
+        hand_type=HandType.PAIR, rank=5455, percentage=0.2689627445725007
     )
