@@ -5,7 +5,7 @@ import sys
 from random import shuffle
 from typing import Dict, Optional
 
-from tqdm import tqdm
+from tqdm import trange
 
 from pokermon.ai.policy import Policy
 from pokermon.model import heads_up
@@ -53,7 +53,7 @@ def train_heads_up(
             )
             trainers[player_name].checkpointer.restore()
 
-    for i in tqdm(range(num_hands_to_play)):
+    for i in trange(num_hands_to_play):
 
         hand_index = i + 1
 
