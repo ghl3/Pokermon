@@ -1,8 +1,8 @@
 import argparse
 import dataclasses
 import logging
+import random
 import sys
-from random import shuffle
 from typing import Dict, Optional
 
 from tqdm import trange
@@ -23,7 +23,7 @@ logger = logging.getLogger(__name__)
 @dataclasses.dataclass
 class Trainer:
 
-    stats: Stats = Stats()
+    stats: Stats = dataclasses.field(default_factory=Stats)
 
     checkpointer: Optional[Checkpointer] = None
 
@@ -37,9 +37,7 @@ def train_heads_up(
     # Initialize the stats per hand
     trainers: Dict[str, Trainer] = {name: Trainer() for name in policies}
 
-    players = list(policies.keys())
-
-    logger.debug("Beginning training with %s players", len(players))
+    logger.debug("Beginning training with %s players", len(policies))
 
     for player_name, model in policies.items():
         if num_hands_between_checkpoints and isinstance(model, HeadsUpModel):
@@ -59,15 +57,17 @@ def train_heads_up(
 
         starting_stacks = choose_starting_stacks()
 
-        shuffle(players)
-
-        deal: FullDeal = dealer.deal_cards(len(players))
-
-        game, result = simulate.simulate(
-            [policies[player] for player in players], starting_stacks, deal
+        ((player1_name, player1_model), (player2_name, player2_model)) = random.sample(
+            policies.items(), 2
         )
 
-        for player_idx, player_name in enumerate(players):
+        deal: FullDeal = dealer.deal_cards(num_players=2)
+
+        game, result = simulate.simulate(
+            [player1_model, player2_model], starting_stacks, deal
+        )
+
+        for player_idx, player_name in enumerate([player1_name, player2_name]):
 
             model = policies[player_name]
 

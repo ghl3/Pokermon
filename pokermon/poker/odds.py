@@ -1,4 +1,5 @@
 import csv
+import functools
 import importlib.resources as pkg_resources
 import random
 import zlib
@@ -84,10 +85,11 @@ def _make_hand_odds_vs_random():
 PREFLOP_ODDS_VS_RANDOM: Dict[HoleCards, OddsResult] = _make_hand_odds_vs_random()
 
 
+@functools.lru_cache(maxsize=1024)
 def calculate_odds(
     hand: HoleCards,
     board: Optional[Board] = None,
-    other_hands: Optional[List[HoleCards]] = None,
+    other_hands: Optional[Tuple[HoleCards]] = None,
     num_hands_to_simulate=1000,
 ) -> OddsResult:
 
@@ -100,10 +102,11 @@ def calculate_odds(
         )
 
 
+@functools.lru_cache(maxsize=1024)
 def simulate_odds(
     hand: HoleCards,
     board: Optional[Board] = None,
-    other_hands: Optional[List[HoleCards]] = None,
+    other_hands: Optional[Tuple[HoleCards]] = None,
     num_hands_to_simulate=1000,
 ) -> OddsResult:
     """
@@ -245,18 +248,22 @@ def make_odds_result(
 
     if len(partitioned_hands.better_hands) > 0:
         simulation_vs_better = simulate_odds(
-            hand, board, partitioned_hands.better_hands
+            hand, board, tuple(partitioned_hands.better_hands)
         )
     else:
         simulation_vs_better = OddsResult(frac_win=-1, frac_tie=-1, frac_lose=-1)
 
     if len(partitioned_hands.worse_hands) > 0:
-        simulation_vs_worse = simulate_odds(hand, board, partitioned_hands.worse_hands)
+        simulation_vs_worse = simulate_odds(
+            hand, board, tuple(partitioned_hands.worse_hands)
+        )
     else:
         simulation_vs_worse = OddsResult(frac_win=-1, frac_tie=-1, frac_lose=-1)
 
     if len(partitioned_hands.tied_hands) > 0:
-        simulation_vs_tied = simulate_odds(hand, board, partitioned_hands.tied_hands)
+        simulation_vs_tied = simulate_odds(
+            hand, board, tuple(partitioned_hands.tied_hands)
+        )
     else:
         simulation_vs_tied = OddsResult(frac_win=-1, frac_tie=-1, frac_lose=-1)
 
