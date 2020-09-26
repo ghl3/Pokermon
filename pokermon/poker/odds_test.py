@@ -1,6 +1,7 @@
 from pokermon.poker.board import mkboard
 from pokermon.poker.hands import mkhand
 from pokermon.poker.odds import odds_vs_random_hand
+from pokermon.poker.odds import simulate_odds
 
 
 def test_evaluation_vs_random():

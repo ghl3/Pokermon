@@ -10,7 +10,9 @@ from pokermon.poker.board import Board
 from pokermon.poker.evaluation import evaluate_hand, make_nut_result
 from pokermon.poker.game import GameView, Street
 from pokermon.poker.hands import HoleCards
-from pokermon.poker.odds import odds_vs_random_hand
+from pokermon.poker.evaluation import evaluate_hand
+from pokermon.poker.game import GameView, Street
+from pokermon.poker import odds
 
 
 @dataclass(frozen=True)
@@ -30,11 +32,12 @@ class PlayerState:
     frac_hands_tied: Optional[float] = None
     frac_hands_worse: Optional[float] = None
 
-    win_prob_vs_random: Optional[float] = None
+    # win_prob_vs_random: Optional[float] = None
     # TODO: Implement these
-    # win_prob_vs_better
-    # win_prob_vs_tied
-    # win_prob_vs_worse
+    win_prob_vs_any: Optional[float] = None
+    win_prob_vs_better: Optional[float] = None
+    win_prob_vs_tied: Optional[float] = None
+    win_prob_vs_worse: Optional[float] = None
 
 
 def make_player_states(
@@ -74,9 +77,12 @@ def make_player_states(
 
             hand_eval = evaluate_hand(hole_cards, current_board)
             # These odds are deterministic if we don't pass an explicit rng#
-            win_odds = odds_vs_random_hand(hole_cards, current_board, num_draws=100)
+            # win_odds = odds_vs_random_hand(hole_cards, current_board, num_draws=100)
+            # win_odds = odds_vs_random_hand(hole_cards, current_board, num_draws=100)
 
-            nut_result = make_nut_result(hole_cards, current_board)
+            nut_result = odds.make_nut_result(hole_cards, current_board)
+
+            odds_result = odds.make_odds_result(hole_cards, board, nut_result)
 
             player_state = PlayerState(
                 is_current_player=True,
@@ -84,10 +90,13 @@ def make_player_states(
                 current_hand_type=hand_eval.hand_type.value,
                 current_hand_strength=hand_eval.percentage,
                 current_hand_rank=hand_eval.rank,
-                win_prob_vs_random=win_odds.win_rate(),
                 frac_hands_better=nut_result.frac_better(),
                 frac_hands_tied=nut_result.frac_tied(),
                 frac_hands_worse=nut_result.frac_worse(),
+                win_prob_vs_any=odds_result.odds_vs_any(nut_result),
+                win_prob_vs_better=odds_result.odds_vs_better,
+                win_prob_vs_tied=odds_result.odds_vs_tied,
+                win_prob_vs_worse=odds_result.odds_vs_worse,
             )
 
         street_cache[street] = player_state
