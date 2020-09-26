@@ -138,7 +138,7 @@ def simulate_odds(
     for _ in range(num_hands_to_simulate):
 
         # Randomly select the opponent's hand
-        other_hand = random.choice(other_hands)
+        other_hand = rng.choice(other_hands)
 
         # Find the remaining cards in the deck
         remaining_cards = tuple(
