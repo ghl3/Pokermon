@@ -2,7 +2,7 @@ import random
 import zlib
 from dataclasses import dataclass
 from enum import Enum
-from typing import Dict, List, Tuple
+from typing import Dict, List, Tuple, Optional
 
 from pokermon.poker import cards, hands
 from pokermon.poker.board import Board
@@ -50,59 +50,78 @@ def make_seed(num_draws, hand: HoleCards, board: Board, num_other_hands: int) ->
 
 
 @dataclass(frozen=True)
-class SimulationResult:
+class OddsResult:
     frac_win: float
     frac_tie: float
     frac_lose: float
 
 
-#    def num_simulations(self):
-#        return self.num_ties + self.num_wins + self.num_losses
+PREFLOP_ODDS_VS_RANDOM: Dict[HoleCards, OddsResult] = {}
 
-#    def win_rate(self) -> float:
-#        return self.num_wins / self.num_simulations()
+PREFLOP_ODDS_VS_HAND: Dict[HoleCards, Dict[HoleCards, OddsResult]] = {}
 
-PREFLOP_ODDS: Dict[HoleCards, SimulationResult] = {}
+
+def calculate_odds(
+    hand: HoleCards,
+    board: Optional[Board] = None,
+    other_hands: Optional[List[HoleCards]] = None,
+    num_hands_to_simulate=1000,
+) -> OddsResult:
+    if board is None and not other_hands:
+        raise Exception("Not supported yet")
+        # return PREFLOP_ODDS_VS_RANDOM[hand]
+
+    elif board is None:
+        if True:
+            raise Exception("No supported yet")
+        total_win_sum = 0
+        total_tie_sum = 0
+        total_lose_sum = 0
+
+        for other_hand in other_hands:
+            odds = PREFLOP_ODDS_VS_HAND[hand][other_hand]
+            total_win_sum += odds.frac_win
+            total_tie_sum += odds.frac_tie
+            total_lose_sum += odds.frac_lose
+
+        return OddsResult(
+            frac_win=total_win_sum / len(other_hands),
+            frac_tie=total_tie_sum / len(other_hands),
+            frac_lose=total_lose_sum / len(other_hands),
+        )
+
+    else:
+        return simulate_odds(
+            hand, board, other_hands, num_hands_to_simulate=num_hands_to_simulate
+        )
 
 
 def simulate_odds(
     hand: HoleCards,
     board: Board,
     other_hands: List[HoleCards],
-    num_hands=1000,
-    rng=None,
-) -> SimulationResult:
+    num_hands_to_simulate=1000,
+) -> OddsResult:
     """
 
     :type board: object
     """
 
-    if board is None:
-        return PREFLOP_ODDS[hand]
-
-    if rng is None:
-        rng = random.Random(make_seed(num_hands, hand, board, len(other_hands)))
+    # Use a deterministic RNG to make testing easier
+    rng = random.Random(make_seed(num_hands_to_simulate, hand, board, len(other_hands)))
 
     taken_cards = set()
     taken_cards.update(board.cards())
     taken_cards.update(hand)
-    # for other_hand in other_hands:
-    #    taken_cards.update(other_hand)
-
-    #    remaining_cards = tuple(
-    #        [c for c in cards.ALL_CARDS if c not in taken_cards]
-    #    )
 
     num_to_draw = 5 - len(board)
-    # opponent_hand_to_draw = 0 if other_hand else 2
-    # num_to_draw = board_cards_to_draw + opponent_hand_to_draw
 
     num_wins = 0
     num_losses = 0
     num_ties = 0
 
     # Make odds deterministic
-    for _ in range(num_hands):
+    for _ in range(num_hands_to_simulate):
 
         # Randomly select the opponent's hand
         other_hand = random.choice(other_hands)
@@ -133,10 +152,10 @@ def simulate_odds(
         else:
             raise Exception()
 
-    return SimulationResult(
-        frac_win=num_wins / num_hands,
-        frac_tie=num_ties / num_hands,
-        frac_lose=num_losses / num_hands,
+    return OddsResult(
+        frac_win=num_wins / num_hands_to_simulate,
+        frac_tie=num_ties / num_hands_to_simulate,
+        frac_lose=num_losses / num_hands_to_simulate,
     )
 
 
@@ -190,7 +209,7 @@ def make_nut_result(hole_cards: HoleCards, board: Board):
 
 
 @dataclass(frozen=True)
-class OddsResult:
+class PartitionedOddsResult:
     odds_vs_better: float
     odds_vs_tied: float
     odds_vs_worse: float
@@ -205,7 +224,7 @@ class OddsResult:
 
 def make_odds_result(
     hand: HoleCards, board: Board, partitioned_hands: NutResult
-) -> OddsResult:
+) -> PartitionedOddsResult:
     simulation_vs_better = simulate_odds(hand, board, partitioned_hands.better_hands)
     simulation_vs_worse = simulate_odds(hand, board, partitioned_hands.better_hands)
 
@@ -214,9 +233,9 @@ def make_odds_result(
     if len(partitioned_hands.tied_hands) > 0:
         simulation_vs_tied = simulate_odds(hand, board, partitioned_hands.better_hands)
     else:
-        simulation_vs_tied = SimulationResult(frac_win=0, frac_tie=1.0, frac_lose=0)
+        simulation_vs_tied = OddsResult(frac_win=0, frac_tie=1.0, frac_lose=0)
 
-    return OddsResult(
+    return PartitionedOddsResult(
         odds_vs_better=simulation_vs_better.frac_win,
         odds_vs_tied=simulation_vs_tied.frac_win,
         odds_vs_worse=simulation_vs_worse.frac_win,
