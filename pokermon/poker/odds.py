@@ -243,15 +243,22 @@ def make_odds_result(
     hand: HoleCards, board: Board, partitioned_hands: NutResult
 ) -> PartitionedOddsResult:
 
-    simulation_vs_better = simulate_odds(hand, board, partitioned_hands.better_hands)
-    simulation_vs_worse = simulate_odds(hand, board, partitioned_hands.worse_hands)
+    if len(partitioned_hands.better_hands) > 0:
+        simulation_vs_better = simulate_odds(
+            hand, board, partitioned_hands.better_hands
+        )
+    else:
+        simulation_vs_better = OddsResult(frac_win=-1, frac_tie=-1, frac_lose=-1)
 
-    # This is an approximation, but we don't want to spend too much effort on tied
-    # hands since they're a bit of an edge case
+    if len(partitioned_hands.worse_hands) > 0:
+        simulation_vs_worse = simulate_odds(hand, board, partitioned_hands.worse_hands)
+    else:
+        simulation_vs_worse = OddsResult(frac_win=-1, frac_tie=-1, frac_lose=-1)
+
     if len(partitioned_hands.tied_hands) > 0:
         simulation_vs_tied = simulate_odds(hand, board, partitioned_hands.tied_hands)
     else:
-        simulation_vs_tied = OddsResult(frac_win=0, frac_tie=1.0, frac_lose=0)
+        simulation_vs_tied = OddsResult(frac_win=-1, frac_tie=-1, frac_lose=-1)
 
     return PartitionedOddsResult(
         odds_vs_better=simulation_vs_better.frac_win,
