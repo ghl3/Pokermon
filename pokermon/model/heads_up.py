@@ -39,11 +39,11 @@ class HeadsUpModel(Policy):
             player_index, game, hole_cards, board
         )
 
-        serialized_example_tensor = tf.convert_to_tensor(example.SerializeToString())
+        serialized_example_tensor = tf.convert_to_tensor([example.SerializeToString()])
 
         # Create the action probabilities at the last time step
         action_probs: np.Array = self._next_action_policy(
-            [serialized_example_tensor]
+            serialized_example_tensor
         ).numpy()
         action_index = select_proportionally(action_probs)
         return make_action_from_encoded(action_index=action_index, game=game)
