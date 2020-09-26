@@ -2,14 +2,16 @@ import random
 import zlib
 from dataclasses import dataclass
 from enum import Enum
-from typing import Dict, List, Tuple, Optional
+from typing import Dict, List, Optional, Tuple
 
 from pokermon.poker import cards, hands
 from pokermon.poker.board import Board
 from pokermon.poker.cards import Card
-from pokermon.poker import cards
 from pokermon.poker.evaluation import evaluate_hand
 from pokermon.poker.hands import HoleCards
+import importlib.resources as pkg_resources
+from pokermon import data
+import csv
 
 
 class HeadToHeadResult(Enum):
@@ -56,7 +58,30 @@ class OddsResult:
     frac_lose: float
 
 
-PREFLOP_ODDS_VS_RANDOM: Dict[HoleCards, OddsResult] = {}
+def _read_preflop_odds() -> Dict[str, OddsResult]:
+    odds_csv = pkg_resources.read_text(data, "preflop_odds.csv")
+    csv_lines = csv.reader(odds_csv.split("\n"), delimiter=",")
+    hand_odds: Dict[str, OddsResult] = {}
+    next(csv_lines)
+    for row in csv_lines:
+        if row:
+            hand = row[0]
+            odds_result = OddsResult(
+                frac_win=float(row[1]), frac_tie=float(row[2]), frac_lose=float(row[3])
+            )
+            hand_odds[hand] = odds_result
+    return hand_odds
+
+
+def _make_hand_odds_vs_random():
+    preflop_odds: Dict[str, OddsResult] = _read_preflop_odds()
+    hand_odds: Dict[HoleCards, OddsResult] = {}
+    for hand in hands.ALL_HANDS:
+        hand_odds[hand] = preflop_odds[hand.reduced_form]
+    return hand_odds
+
+
+PREFLOP_ODDS_VS_RANDOM: Dict[HoleCards, OddsResult] = _make_hand_odds_vs_random()
 
 PREFLOP_ODDS_VS_HAND: Dict[HoleCards, Dict[HoleCards, OddsResult]] = {}
 
@@ -69,11 +94,11 @@ def calculate_odds(
 ) -> OddsResult:
     if board is None and not other_hands:
         raise Exception("Not supported yet")
-        # return PREFLOP_ODDS_VS_RANDOM[hand]
 
     elif board is None:
         if True:
             raise Exception("No supported yet")
+
         total_win_sum = 0
         total_tie_sum = 0
         total_lose_sum = 0

@@ -6,13 +6,11 @@ from dataclasses import dataclass
 from typing import List, Optional
 
 from pokermon.features.utils import iter_game_states
+from pokermon.poker import odds
 from pokermon.poker.board import Board
 from pokermon.poker.evaluation import evaluate_hand, make_nut_result
 from pokermon.poker.game import GameView, Street
 from pokermon.poker.hands import HoleCards
-from pokermon.poker.evaluation import evaluate_hand
-from pokermon.poker.game import GameView, Street
-from pokermon.poker import odds
 
 
 @dataclass(frozen=True)

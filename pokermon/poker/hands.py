@@ -21,6 +21,7 @@ class HandType(OrderedEnum):
 @dataclass(frozen=True)
 class HoleCards:
     cards: Tuple[Card, Card]
+
     reduced_form: str
 
     encoded: int
@@ -38,7 +39,7 @@ def _make_hole_cards(first: Card, second: Card) -> HoleCards:
     first_rank = INVERSE_RANK_MAP[first.rank]
     second_rank = INVERSE_RANK_MAP[second.rank]
     suited = first.suit == second.suit
-    reduced_form = f"{first_rank}{second_rank}{suited}"
+    reduced_form = f"{first_rank}{second_rank}{'s' if suited else 'o'}"
     return HoleCards(
         (first, second),
         reduced_form=reduced_form,
