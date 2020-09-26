@@ -1,4 +1,5 @@
 import argparse
+import dataclasses
 import logging
 import sys
 from random import shuffle
@@ -13,9 +14,18 @@ from pokermon.poker import dealer
 from pokermon.poker.cards import FullDeal
 from pokermon.simulate import simulate
 from pokermon.simulate.simulate import choose_starting_stacks
+from pokermon.training.checkpointer import Checkpointer
 from pokermon.training.stats import Stats
 
 logger = logging.getLogger(__name__)
+
+
+@dataclasses.dataclass
+class Trainer:
+
+    stats: Stats = Stats()
+
+    checkpointer: Optional[Checkpointer] = None
 
 
 def train_heads_up(
@@ -25,7 +35,7 @@ def train_heads_up(
 ):
 
     # Initialize the stats per hand
-    results: Dict[str, Stats] = {name: Stats() for name in policies}
+    trainers: Dict[str, Trainer] = {name: Trainer() for name in policies}
 
     players = list(policies.keys())
 
@@ -34,9 +44,14 @@ def train_heads_up(
     for player_name, model in policies.items():
         if num_hands_between_checkpoints and isinstance(model, HeadsUpModel):
             ckpt_path = f"/Users/George/Projects/pokermon/models/{model.name}"
-            latest_checkpoint = model.checkpoint_manager(ckpt_path).latest_checkpoint
-            print(f"Restoring from {ckpt_path} {latest_checkpoint}")
-            model.checkpoint().restore(latest_checkpoint)
+
+            trainers[player_name].checkpointer = Checkpointer(
+                model=model.model, optimizer=model.optimizer, directory=ckpt_path
+            )
+            print(
+                f"Restoring from {ckpt_path} {trainers[player_name].checkpointer.latest_checkpoint()}"
+            )
+            trainers[player_name].checkpointer.restore()
 
     for i in tqdm(range(num_hands_to_play)):
 
@@ -56,7 +71,7 @@ def train_heads_up(
 
             model = policies[player_name]
 
-            results[player_name].update_stats(game.view(), result, player_idx)
+            trainers[player_name].stats.update_stats(game.view(), result, player_idx)
 
             if isinstance(model, HeadsUpModel):
                 model.train_step(
@@ -71,17 +86,16 @@ def train_heads_up(
                 num_hands_between_checkpoints
                 and hand_index % num_hands_between_checkpoints == 0
             ):
+
                 print()
                 print(f"Stats for {player_name}")
-                results[player_name].print_summary()
+                trainers[player_name].stats.print_summary()
                 print()
                 # Reset the stats
-                results[player_name] = Stats()
+                trainers[player_name].stats = Stats()
 
                 if isinstance(model, HeadsUpModel):
-                    ckpt_path = f"./models/{model.name}"
-                    print(f"Saving to {ckpt_path}")
-                    model.checkpoint_manager(ckpt_path).save()
+                    trainers[player_name].checkpointer.save()
 
 
 def main():

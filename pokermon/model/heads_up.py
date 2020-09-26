@@ -24,19 +24,6 @@ class HeadsUpModel(Policy):
         self.feature_config = make_feature_config(self.num_players)
         self.model = rnn.make_model(self.feature_config)
         self.optimizer = tf.keras.optimizers.Adam()
-        self.manager = None
-
-    def checkpoint(self):
-        return tf.train.Checkpoint(
-            step=tf.Variable(0), model=self.model, optimizer=self.optimizer
-        )
-
-    def checkpoint_manager(self, path):
-        if self.manager is None:
-            self.manager = tf.train.CheckpointManager(
-                self.checkpoint(), path, max_to_keep=5
-            )
-        return self.manager
 
     def select_action(
         self, player_index: int, game: GameView, hole_cards: HoleCards, board: Board
