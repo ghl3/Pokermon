@@ -1,17 +1,17 @@
+import csv
+import importlib.resources as pkg_resources
 import random
 import zlib
 from dataclasses import dataclass
 from enum import Enum
 from typing import Dict, List, Optional, Tuple
 
+from pokermon import data
 from pokermon.poker import cards, hands
 from pokermon.poker.board import Board
 from pokermon.poker.cards import Card
 from pokermon.poker.evaluation import evaluate_hand
 from pokermon.poker.hands import HoleCards
-import importlib.resources as pkg_resources
-from pokermon import data
-import csv
 
 
 class HeadToHeadResult(Enum):
@@ -38,7 +38,7 @@ def int_to_bytes(i: int, *, signed: bool = False) -> bytes:
 
 
 def make_seed(num_draws, hand: HoleCards, board: Board, num_other_hands: int) -> int:
-    cards: List[Card] = list(hand)
+    cards: List[Card] = list(hand.cards)
     for c in board.cards():
         cards.append(c)
 
@@ -83,8 +83,6 @@ def _make_hand_odds_vs_random():
 
 PREFLOP_ODDS_VS_RANDOM: Dict[HoleCards, OddsResult] = _make_hand_odds_vs_random()
 
-PREFLOP_ODDS_VS_HAND: Dict[HoleCards, Dict[HoleCards, OddsResult]] = {}
-
 
 def calculate_odds(
     hand: HoleCards,
@@ -92,29 +90,10 @@ def calculate_odds(
     other_hands: Optional[List[HoleCards]] = None,
     num_hands_to_simulate=1000,
 ) -> OddsResult:
+
+    # Use a lookup table for preflop odds vs random hand
     if board is None and not other_hands:
-        raise Exception("Not supported yet")
-
-    elif board is None:
-        if True:
-            raise Exception("No supported yet")
-
-        total_win_sum = 0
-        total_tie_sum = 0
-        total_lose_sum = 0
-
-        for other_hand in other_hands:
-            odds = PREFLOP_ODDS_VS_HAND[hand][other_hand]
-            total_win_sum += odds.frac_win
-            total_tie_sum += odds.frac_tie
-            total_lose_sum += odds.frac_lose
-
-        return OddsResult(
-            frac_win=total_win_sum / len(other_hands),
-            frac_tie=total_tie_sum / len(other_hands),
-            frac_lose=total_lose_sum / len(other_hands),
-        )
-
+        return PREFLOP_ODDS_VS_RANDOM[hand]
     else:
         return simulate_odds(
             hand, board, other_hands, num_hands_to_simulate=num_hands_to_simulate
@@ -123,8 +102,8 @@ def calculate_odds(
 
 def simulate_odds(
     hand: HoleCards,
-    board: Board,
-    other_hands: List[HoleCards],
+    board: Optional[Board] = None,
+    other_hands: Optional[List[HoleCards]] = None,
     num_hands_to_simulate=1000,
 ) -> OddsResult:
     """
@@ -132,12 +111,22 @@ def simulate_odds(
     :type board: object
     """
 
-    # Use a deterministic RNG to make testing easier
-    rng = random.Random(make_seed(num_hands_to_simulate, hand, board, len(other_hands)))
+    if board is None:
+        board = Board()
 
     taken_cards = set()
+    taken_cards.update(hand.cards)
     taken_cards.update(board.cards())
-    taken_cards.update(hand)
+
+    if other_hands is None:
+        other_hands = [
+            h
+            for h in hands.ALL_HANDS
+            if h.cards[0] not in taken_cards and h.cards[1] not in taken_cards
+        ]
+
+    # Use a deterministic RNG to make testing easier
+    rng = random.Random(make_seed(num_hands_to_simulate, hand, board, len(other_hands)))
 
     num_to_draw = 5 - len(board)
 
@@ -153,7 +142,11 @@ def simulate_odds(
 
         # Find the remaining cards in the deck
         remaining_cards = tuple(
-            [c for c in cards.ALL_CARDS if c not in taken_cards and c not in other_hand]
+            [
+                c
+                for c in cards.ALL_CARDS
+                if c not in taken_cards and c not in other_hand.cards
+            ]
         )
 
         # Randomly run out the rest of the board
@@ -204,16 +197,17 @@ class NutResult:
 
 
 def make_nut_result(hole_cards: HoleCards, board: Board):
-    hole_cards = sorted_hole_cards(hole_cards)
 
     my_result = evaluate_hand(hole_cards, board)
 
+    disallowed_cards = set()
+    disallowed_cards.update(hole_cards.cards)
+    disallowed_cards.update(board.cards())
+
     all_evals = [
         (hc, evaluate_hand(hc, board))
-        for hc in ALL_HANDS
-        if hc != hole_cards
-        and hc[0] not in board.cards()
-        and hc[1] not in board.cards()
+        for hc in hands.ALL_HANDS
+        if hc.cards[0] not in disallowed_cards and hc.cards[1] not in disallowed_cards
     ]
 
     better_hands: List[HoleCards] = []
