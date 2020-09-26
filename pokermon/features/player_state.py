@@ -80,7 +80,7 @@ def make_player_states(
 
             nut_result = odds.make_nut_result(hole_cards, current_board)
 
-            odds_result = odds.make_odds_result(hole_cards, board, nut_result)
+            odds_result = odds.make_odds_result(hole_cards, current_board, nut_result)
 
             player_state = PlayerState(
                 is_current_player=True,

@@ -156,9 +156,7 @@ def simulate_odds(
         # And pick the winner
         result: HeadToHeadResult = is_winner(
             hand,
-            other_hand
-            if other_hand
-            else hands.lookup_hole_cards(drawn_cards[-2], drawn_cards[-1]),
+            other_hand,
             simulated_board,
         )
         if result == HeadToHeadResult.WIN:
@@ -184,10 +182,10 @@ class NutResult:
     worse_hands: List[HoleCards]
 
     def num_hands(self):
-        return len(self.worse_hands) + len(self.tied_hands) + len(self.worse_hands)
+        return len(self.worse_hands) + len(self.tied_hands) + len(self.better_hands)
 
     def frac_better(self):
-        return len(self.worse_hands) / self.num_hands()
+        return len(self.better_hands) / self.num_hands()
 
     def frac_tied(self):
         return len(self.tied_hands) / self.num_hands()
@@ -244,13 +242,14 @@ class PartitionedOddsResult:
 def make_odds_result(
     hand: HoleCards, board: Board, partitioned_hands: NutResult
 ) -> PartitionedOddsResult:
+
     simulation_vs_better = simulate_odds(hand, board, partitioned_hands.better_hands)
-    simulation_vs_worse = simulate_odds(hand, board, partitioned_hands.better_hands)
+    simulation_vs_worse = simulate_odds(hand, board, partitioned_hands.worse_hands)
 
     # This is an approximation, but we don't want to spend too much effort on tied
     # hands since they're a bit of an edge case
     if len(partitioned_hands.tied_hands) > 0:
-        simulation_vs_tied = simulate_odds(hand, board, partitioned_hands.better_hands)
+        simulation_vs_tied = simulate_odds(hand, board, partitioned_hands.tied_hands)
     else:
         simulation_vs_tied = OddsResult(frac_win=0, frac_tie=1.0, frac_lose=0)
 
