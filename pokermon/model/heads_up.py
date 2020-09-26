@@ -125,13 +125,17 @@ class HeadsUpModel(Policy):
 
         return example, loss
 
-    @tf.function(experimental_relax_shapes=True)
+    @tf.function(
+        input_signature=[tf.TensorSpec(shape=(1,), dtype=tf.string)], autograph=False
+    )
     def _next_action_policy(self, serialized_examples):
         fs = self.feature_config.make_feature_tensors(serialized_examples)
         # Create the action probabilities at the last time step
         return self.action_probs(fs)[0, -1, :]
 
-    @tf.function(experimental_relax_shapes=True)
+    @tf.function(
+        input_signature=[tf.TensorSpec(shape=(1,), dtype=tf.string)], autograph=False
+    )
     def _update_weights(self, serialized_examples):
         with tf.GradientTape() as tape:
             (
