@@ -9,9 +9,9 @@ from tqdm import trange
 
 from pokermon.ai import policies
 from pokermon.ai.policy import Policy
-from pokermon.data.examples import make_forward_backward_example
+from pokermon.features.examples import make_forward_backward_example
 from pokermon.poker import dealer
-from pokermon.poker.cards import FullDeal
+from pokermon.poker.deal import FullDeal
 from pokermon.simulate import simulate
 from pokermon.simulate.simulate import choose_starting_stacks
 

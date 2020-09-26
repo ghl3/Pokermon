@@ -11,7 +11,7 @@ from pokermon.ai.policy import Policy
 from pokermon.model import heads_up
 from pokermon.model.heads_up import HeadsUpModel
 from pokermon.poker import dealer
-from pokermon.poker.cards import FullDeal
+from pokermon.poker.deal import FullDeal
 from pokermon.simulate import simulate
 from pokermon.simulate.simulate import choose_starting_stacks
 from pokermon.training.checkpointer import Checkpointer

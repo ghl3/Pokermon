@@ -1,7 +1,7 @@
 import tensorflow as tf
 from tensorflow.python.keras.feature_column import sequence_feature_column as ksfc
 
-from pokermon.data.action import NUM_ACTION_BET_BINS
+from pokermon.features.action import NUM_ACTION_BET_BINS
 from pokermon.model.context_sequence_concat import ContextSequenceConcat
 from pokermon.model.feature_config import FeatureConfig
 

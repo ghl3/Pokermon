@@ -5,13 +5,8 @@ from functools import total_ordering
 
 import deuces
 from pokermon.poker import deuces_wrapper
-from pokermon.poker.cards import (
-    ALL_HANDS,
-    Board,
-    HandType,
-    HoleCards,
-    sorted_hole_cards,
-)
+from pokermon.poker.board import Board
+from pokermon.poker.hands import ALL_HANDS, HandType, HoleCards
 
 
 @total_ordering
@@ -78,14 +73,13 @@ def make_nut_result(hole_cards: HoleCards, board: Board) -> NutResult:
     ..
     1326 = The worst hand possible
     """
-    hole_cards = sorted_hole_cards(hole_cards)
 
     my_result = evaluate_hand(hole_cards, board)
 
     all_evals = [
         (hc, evaluate_hand(hc, board))
         for hc in ALL_HANDS
-        if hc[0] not in board.cards() and hc[1] not in board.cards()
+        if hc.cards[0] not in board.cards() and hc.cards[1] not in board.cards()
     ]
 
     num_better = 0

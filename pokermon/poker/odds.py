@@ -4,9 +4,11 @@ from dataclasses import dataclass
 from enum import Enum
 from typing import List, Optional, Tuple
 
-from pokermon.poker import cards
-from pokermon.poker.cards import Board, Card, HoleCards
+from pokermon.poker import cards, hands
+from pokermon.poker.board import Board
+from pokermon.poker.cards import Card
 from pokermon.poker.evaluation import evaluate_hand
+from pokermon.poker.hands import HoleCards
 
 
 class HeadToHeadResult(Enum):
@@ -51,12 +53,12 @@ def make_seed(
     board: Board = None,
     other_hand: Optional[HoleCards] = None,
 ) -> int:
-    cards: List[Card] = list(hand)
+    cards: List[Card] = list(hand.cards)
     if board:
         for c in board.cards():
             cards.append(c)
     if other_hand:
-        cards.extend(list(other_hand))
+        cards.extend(list(other_hand.cards))
 
     bytes = b""
     bytes += int_to_bytes(num_draws)
@@ -88,9 +90,9 @@ def odds_vs_random_hand(
         [
             c
             for c in cards.ALL_CARDS
-            if c not in hand
+            if c not in hand.cards
             and c not in board.cards()
-            and (other_hand is None or c not in other_hand)
+            and (other_hand is None or c not in other_hand.cards)
         ]
     )
 
@@ -108,7 +110,9 @@ def odds_vs_random_hand(
         simulated_board: Board = board + tuple(drawn_cards[:board_cards_to_draw])
         result: HeadToHeadResult = is_winner(
             hand,
-            other_hand if other_hand else (drawn_cards[-2], drawn_cards[-1]),
+            other_hand
+            if other_hand
+            else hands.lookup_hole_cards(drawn_cards[-2], drawn_cards[-1]),
             simulated_board,
         )
         if result == HeadToHeadResult.WIN:

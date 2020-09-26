@@ -3,8 +3,9 @@ import random
 
 import pokermon.poker.rules as rules
 from pokermon.ai.policy import Policy
-from pokermon.poker.cards import Board, HoleCards
+from pokermon.poker.board import Board
 from pokermon.poker.game import Action, GameView, Move
+from pokermon.poker.hands import HoleCards
 
 logger = logging.getLogger(__name__)
 

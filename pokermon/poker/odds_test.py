@@ -1,4 +1,5 @@
-from pokermon.poker.cards import mkboard, mkhand
+from pokermon.poker.board import mkboard
+from pokermon.poker.hands import mkhand
 from pokermon.poker.odds import odds_vs_random_hand
 
 

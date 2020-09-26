@@ -4,15 +4,19 @@ import numpy as np
 import tensorflow as tf
 
 from pokermon.ai.policy import Policy
-from pokermon.data.action import make_action_from_encoded
-from pokermon.data.examples import make_forward_backward_example, make_forward_example
+from pokermon.features.action import make_action_from_encoded
+from pokermon.features.examples import (
+    make_forward_backward_example,
+    make_forward_example,
+)
 from pokermon.model import rnn
 from pokermon.model.feature_config import FeatureTensors, TargetTensors
 from pokermon.model.model_features import make_feature_config
 from pokermon.model.rnn import policy_vector_size
 from pokermon.model.utils import ensure_all_dense, select_proportionally
-from pokermon.poker.cards import Board, HoleCards
+from pokermon.poker.board import Board
 from pokermon.poker.game import Action, GameView, Street
+from pokermon.poker.hands import HoleCards
 from pokermon.poker.result import Result
 
 

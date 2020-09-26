@@ -1,6 +1,9 @@
-from pokermon.data.player_state import PlayerState, make_player_states
-from pokermon.poker.cards import Board, FullDeal, mkcard, mkflop, mkhand
+from pokermon.features.player_state import PlayerState, make_player_states
+from pokermon.poker.board import Board, mkflop
+from pokermon.poker.cards import mkcard
+from pokermon.poker.deal import FullDeal
 from pokermon.poker.game_runner import GameRunner
+from pokermon.poker.hands import mkhand
 
 
 def test_state() -> None:

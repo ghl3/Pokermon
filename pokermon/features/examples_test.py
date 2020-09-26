@@ -1,18 +1,21 @@
-# from pokermon.data import reenforcement_types
-from pokermon.data.action import make_last_actions, make_next_actions
-from pokermon.data.context import (
+# from pokermon.features import reenforcement_types
+from pokermon.features.action import make_last_actions, make_next_actions
+from pokermon.features.context import (
     PublicContext,
     make_private_context,
     make_public_context,
 )
-from pokermon.data.examples import make_example, seq_example_to_dict
-from pokermon.data.player_state import make_player_states
-from pokermon.data.public_state import PublicState, make_public_states
-from pokermon.data.rewards import make_rewards
-from pokermon.data.target import make_target
+from pokermon.features.examples import make_example, seq_example_to_dict
+from pokermon.features.player_state import make_player_states
+from pokermon.features.public_state import PublicState, make_public_states
+from pokermon.features.rewards import make_rewards
+from pokermon.features.target import make_target
 from pokermon.poker import result
-from pokermon.poker.cards import Board, FullDeal, mkcard, mkflop, mkhand
+from pokermon.poker.board import Board, mkflop
+from pokermon.poker.cards import mkcard
+from pokermon.poker.deal import FullDeal
 from pokermon.poker.game_runner import GameRunner
+from pokermon.poker.hands import mkhand
 
 
 def test_context() -> None:

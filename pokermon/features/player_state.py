@@ -5,10 +5,11 @@
 from dataclasses import dataclass
 from typing import List, Optional
 
-from pokermon.data.utils import iter_game_states
-from pokermon.poker.cards import Board, HoleCards
+from pokermon.features.utils import iter_game_states
+from pokermon.poker.board import Board
 from pokermon.poker.evaluation import evaluate_hand, make_nut_result
 from pokermon.poker.game import GameView, Street
+from pokermon.poker.hands import HoleCards
 from pokermon.poker.odds import odds_vs_random_hand
 
 

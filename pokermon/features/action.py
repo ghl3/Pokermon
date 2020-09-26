@@ -2,7 +2,7 @@ import math
 from dataclasses import dataclass
 from typing import List
 
-from pokermon.data.utils import iter_game_states
+from pokermon.features.utils import iter_game_states
 from pokermon.poker.game import Action, GameView, Move
 
 NUM_ACTION_BET_BINS = 20

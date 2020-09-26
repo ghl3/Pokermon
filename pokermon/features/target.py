@@ -2,8 +2,7 @@ from dataclasses import dataclass
 from typing import List
 
 # Targets are values that are unknown until after the hand (but don't vary by action).
-from pokermon.data.utils import get_hole_cards_as_int
-from pokermon.poker.cards import FullDeal
+from pokermon.poker.deal import FullDeal
 from pokermon.poker.result import Result
 
 
@@ -20,5 +19,5 @@ class Target:
 def make_target(deal: FullDeal, result: Result) -> Target:
     return Target(
         total_rewards=result.profits,
-        hole_cards=[get_hole_cards_as_int(hc) for hc in deal.hole_cards],
+        hole_cards=[hc.encoded for hc in deal.hole_cards],
     )

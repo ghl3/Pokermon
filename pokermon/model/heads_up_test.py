@@ -2,11 +2,17 @@ import numpy as np
 import tensorflow as tf
 from numpy.testing import assert_array_almost_equal
 
-from pokermon.data.examples import make_forward_backward_example, make_forward_example
+from pokermon.features.examples import (
+    make_forward_backward_example,
+    make_forward_example,
+)
 from pokermon.model import heads_up
 from pokermon.poker import result
-from pokermon.poker.cards import Board, FullDeal, mkcard, mkflop, mkhand
+from pokermon.poker.board import Board, mkflop
+from pokermon.poker.cards import mkcard
+from pokermon.poker.deal import FullDeal
 from pokermon.poker.game_runner import GameRunner
+from pokermon.poker.hands import mkhand
 
 
 def test_action_probs():

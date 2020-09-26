@@ -2,7 +2,9 @@ import functools
 from typing import Optional, Tuple, Union
 
 import deuces
-from pokermon.poker.cards import Board, Card, HandType, HoleCards, Rank, Suit
+from pokermon.poker.board import Board
+from pokermon.poker.cards import Card, Rank, Suit
+from pokermon.poker.hands import HandType, HoleCards
 
 DeucesCard = int
 DeucesHand = int
@@ -43,7 +45,7 @@ def to_decues_card(card: Card) -> DeucesCard:
 
 @functools.lru_cache(32)
 def to_deuces_hand(hole_cards: HoleCards) -> Tuple[DeucesCard, DeucesCard]:
-    return to_decues_card(hole_cards[0]), to_decues_card(hole_cards[1])
+    return to_decues_card(hole_cards.cards[0]), to_decues_card(hole_cards.cards[1])
 
 
 @functools.lru_cache(32)

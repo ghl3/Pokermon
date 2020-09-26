@@ -2,8 +2,9 @@ from typing import Iterable, Tuple
 
 import stringcase  # type: ignore
 
-from pokermon.poker.cards import Card, HoleCards, sorted_hole_cards
+from pokermon.poker.cards import Card
 from pokermon.poker.game import Action, GameView, Move, Street
+from pokermon.poker.hands import HoleCards
 
 
 def field_feature_name(clazz, field) -> str:
@@ -12,37 +13,6 @@ def field_feature_name(clazz, field) -> str:
 
 def card_order(card: Card) -> Tuple[int, int]:
     return 0 - card.rank.value, card.suit.value
-
-
-def get_hole_cards_as_int(hole_cards: HoleCards):
-    cards: HoleCards = sorted_hole_cards(hole_cards)
-
-    suited = cards[0].suit == cards[1].suit
-    paired = cards[0].rank == cards[1].rank
-
-    # The first 13 indices are pairs
-    if paired:
-        return cards[0].rank.value - 2
-
-    # If they're not paired, then the lowest hands are
-    # 32s, 32o, 42s, 42o, 43s, 43o, ...
-
-    # 32, 42, 43
-    # The total length of the first rank is:
-    # Let N = first_rank-2
-    # total = 2*sum(i=1 to N, inclusive, of i)
-    # So, the offset is
-
-    # If the card is a 3, I want to start with 0
-    # If the card is a 4, I want to start with N=1
-    # If the card is a 5, I want to start with N=2
-    # ...
-
-    N = cards[0].rank.value - 1 - 2
-    offset = 13 + 2 * ((N) * (N + 1) // 2)
-    second_rank = cards[1].rank.value - 2
-    # We then do all unpaired hands with suited/unsuited as the fastest dimension
-    return offset + 2 * second_rank + (0 if suited else 1)
 
 
 def iter_game_states(game: GameView) -> Iterable[int]:

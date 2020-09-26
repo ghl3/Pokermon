@@ -1,6 +1,6 @@
 from pokermon.ai.random_policy import RandomPolicy
 from pokermon.poker import dealer, result
-from pokermon.poker.cards import FullDeal
+from pokermon.poker.deal import FullDeal
 from pokermon.simulate.simulate import choose_starting_stacks, simulate
 
 

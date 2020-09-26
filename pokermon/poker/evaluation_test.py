@@ -1,11 +1,13 @@
 import deuces
-from pokermon.poker.cards import Board, HandType, mkcard, mkflop, mkhand
+from pokermon.poker.board import Board, mkflop
+from pokermon.poker.cards import mkcard
 from pokermon.poker.evaluation import (
     EvaluationResult,
     NutResult,
     evaluate_hand,
     make_nut_result,
 )
+from pokermon.poker.hands import HandType, mkhand
 
 
 def test_deck() -> None:

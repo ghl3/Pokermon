@@ -1,4 +1,5 @@
-from pokermon.poker.cards import Board, Card, Rank, Suit, mkcard, mkflop
+from pokermon.poker.board import Board, mkflop
+from pokermon.poker.cards import Card, Rank, Suit, mkcard
 from pokermon.poker.game import Street
 
 

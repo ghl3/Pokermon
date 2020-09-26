@@ -1,4 +1,4 @@
-from pokermon.data.action import (
+from pokermon.features.action import (
     LastAction,
     NextAction,
     encode_action,

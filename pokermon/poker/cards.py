@@ -1,14 +1,11 @@
 from __future__ import annotations
 
-import dataclasses
 import functools
-import itertools
 from dataclasses import dataclass
-from typing import Dict, List, Optional, Sequence, Tuple
+from typing import Dict, List, Tuple
 
 import regex as regex  # type: ignore
 
-from pokermon.poker.game import Street
 from pokermon.poker.ordered_enum import OrderedEnum
 
 
@@ -33,18 +30,6 @@ class Rank(OrderedEnum):
     QUEEN = 12
     KING = 13
     ACE = 14
-
-
-class HandType(OrderedEnum):
-    HIGH = 1
-    PAIR = 2
-    TWO_PAIR = 3
-    TRIPS = 4
-    STRAIGHT = 5
-    FLUSH = 6
-    FULL_HOUSE = 7
-    QUADS = 8
-    STRAIGHT_FLUSH = 9
 
 
 @dataclass(order=True, frozen=True)
@@ -81,29 +66,36 @@ RANK_MAP = {
     "2": Rank.TWO,
 }
 
+INVERSE_RANK_MAP = {
+    Rank.ACE: "A",
+    Rank.KING: "K",
+    Rank.QUEEN: "Q",
+    Rank.JACK: "J",
+    Rank.TEN: "T",
+    Rank.NINE: "9",
+    Rank.EIGHT: "8",
+    Rank.SEVEN: "7",
+    Rank.SIX: "6",
+    Rank.FIVE: "5",
+    Rank.FOUR: "4",
+    Rank.THREE: "3",
+    Rank.TWO: "2",
+}
+
+
 SUIT_MAP = {"S": Suit.SPADES, "C": Suit.CLUBS, "D": Suit.DIAMONDS, "H": Suit.HEARTS}
 
 _card_regex = regex.compile("^(([AKQJT]|10|[2-9])([SHCD]))+$")
-
-HoleCards = Tuple[Card, Card]
-
-
-def make_hole_cards(first: Card, second: Card) -> HoleCards:
-    if first > second:
-        return first, second
-    else:
-        return second, first
 
 
 def sorted_cards(cards: Tuple[Card, ...]) -> Tuple[Card, ...]:
     return tuple(sorted(cards, reverse=True))
 
 
-def sorted_hole_cards(hole_cards: HoleCards) -> HoleCards:
-    if hole_cards[0] > hole_cards[1]:
-        return hole_cards[0], hole_cards[1]
-    else:
-        return hole_cards[1], hole_cards[0]
+def mkcard(s: str) -> Card:
+    cards = mkcards(s)
+    assert len(cards) == 1
+    return cards[0]
 
 
 @functools.lru_cache(104)
@@ -120,103 +112,3 @@ def mkcards(s: str) -> List[Card]:
     for rank_code, suit_code in zip(match.captures(2), match.captures(3)):
         cards.append(RANK_SUIT_MAP[RANK_MAP[rank_code]][SUIT_MAP[suit_code]])
     return cards
-
-
-def mkcard(s: str) -> Card:
-    cards = mkcards(s)
-    assert len(cards) == 1
-    return cards[0]
-
-
-def mkhand(s: str) -> HoleCards:
-    cards = mkcards(s)
-    assert len(cards) == 2
-    return sorted_hole_cards(cards)
-
-
-def mkflop(s: str) -> Tuple[Card, Card, Card]:
-    cards = mkcards(s)
-    assert len(cards) == 3
-    return sorted_cards((cards[0], cards[1], cards[2]))
-
-
-def mkboard(s: str) -> Board:
-    cards = mkcards(s)
-    assert 3 <= len(cards) <= 5
-    return Board(
-        flop=sorted_cards((cards[0], cards[1], cards[2])),
-        turn=cards[3] if len(cards) > 3 else None,
-        river=cards[4] if len(cards) > 4 else None,
-    )
-
-
-ALL_HANDS: Tuple[HoleCards, ...] = tuple(
-    [make_hole_cards(comb[0], comb[1]) for comb in itertools.combinations(ALL_CARDS, 2)]
-)
-
-
-@dataclass(frozen=True)
-class Board:
-    """
-    A board of cards, which may be partially or fully rolled out.
-    """
-
-    flop: Optional[Tuple[Card, Card, Card]] = None
-    turn: Optional[Card] = None
-    river: Optional[Card] = None
-
-    def at_street(self, street: Street):
-
-        board = self
-
-        if street < Street.RIVER:
-            board = dataclasses.replace(board, river=None)
-
-        if street < Street.TURN:
-            board = dataclasses.replace(board, turn=None)
-
-        if street < Street.FLOP:
-            board = dataclasses.replace(board, flop=None)
-
-        return board
-
-    def cards(self) -> Tuple[Card, ...]:
-        if self.flop and self.turn and self.river:
-            return self.flop + (self.turn,) + (self.river,)
-        elif self.flop and self.turn:
-            return self.flop + (self.turn,)
-        elif self.flop:
-            return self.flop
-        else:
-            return tuple()
-
-    def __len__(self):
-        if self.flop is None:
-            return 0
-        elif self.turn is None:
-            return 3
-        elif self.river is None:
-            return 4
-        else:
-            return 5
-
-    def __add__(self, cards: Sequence[Card]) -> Board:
-
-        if len(cards) + len(self) > 5:
-            raise Exception("Too many cards")
-
-        rcards: List[Card] = list(reversed(cards))
-
-        return Board(
-            flop=(
-                self.flop if self.flop else (rcards.pop(), rcards.pop(), rcards.pop())
-            ),
-            turn=(self.turn if self.turn else rcards.pop()),
-            river=(self.river if self.river else rcards.pop()),
-        )
-
-
-@dataclass(frozen=True)
-class FullDeal:
-    hole_cards: List[HoleCards]
-    board: Board

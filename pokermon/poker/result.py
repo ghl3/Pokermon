@@ -1,7 +1,7 @@
 from dataclasses import dataclass
 from typing import Dict, List, Set
 
-from pokermon.poker.cards import FullDeal
+from pokermon.poker.deal import FullDeal
 from pokermon.poker.evaluation import EvaluationResult, evaluate_hand
 from pokermon.poker.game import GameView
 from pokermon.poker.rules import get_pot_payouts, get_ranked_hand_groups

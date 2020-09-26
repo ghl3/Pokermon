@@ -5,25 +5,26 @@ from typing import Any, Dict, List, Optional
 
 import tensorflow as tf  # type: ignore
 
-from pokermon.data.action import (
+from pokermon.features.action import (
     LastAction,
     NextAction,
     make_last_actions,
     make_next_actions,
 )
-from pokermon.data.context import (
+from pokermon.features.context import (
     PrivateContext,
     PublicContext,
     make_private_context,
     make_public_context,
 )
-from pokermon.data.player_state import PlayerState, make_player_states
-from pokermon.data.public_state import PublicState, make_public_states
-from pokermon.data.rewards import Reward, make_rewards
-from pokermon.data.target import Target
-from pokermon.data.utils import field_feature_name
-from pokermon.poker.cards import Board, HoleCards
+from pokermon.features.player_state import PlayerState, make_player_states
+from pokermon.features.public_state import PublicState, make_public_states
+from pokermon.features.rewards import Reward, make_rewards
+from pokermon.features.target import Target
+from pokermon.features.utils import field_feature_name
+from pokermon.poker.board import Board
 from pokermon.poker.game import GameView, Street
+from pokermon.poker.hands import HoleCards
 from pokermon.poker.result import Result
 
 

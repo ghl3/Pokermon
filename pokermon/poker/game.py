@@ -6,6 +6,7 @@ from dataclasses import dataclass, field
 from functools import lru_cache
 from typing import Dict, Iterable, List, Optional, Union
 
+from pokermon.poker.board import Street
 from pokermon.poker.ordered_enum import OrderedEnum
 
 """
@@ -29,14 +30,6 @@ For example, say the events are the following:
 The current state of the game is game.view(5).  There have already been 5 events.
 The next action will be action_index = 5 (making it the 6th action total).
 """
-
-
-class Street(OrderedEnum):
-    PREFLOP = 1
-    FLOP = 2
-    TURN = 3
-    RIVER = 4
-    HAND_OVER = 5
 
 
 class Move(OrderedEnum):
@@ -73,7 +66,7 @@ cache = lru_cache(2048)
 @dataclass
 class Game:
     """
-    All data for a game that is fully known to all players.
+    All features for a game that is fully known to all players.
 
     An observed game is a snapshot of a game at a given action (or possibly after
     all actions are complete and the hand is done).

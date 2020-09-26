@@ -1,7 +1,7 @@
 from dataclasses import dataclass
 from typing import List
 
-from pokermon.data.utils import iter_game_states
+from pokermon.features.utils import iter_game_states
 from pokermon.poker.game import Action, GameView, Street
 from pokermon.poker.result import Result
 

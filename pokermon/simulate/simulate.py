@@ -3,7 +3,7 @@ from random import randint
 from typing import List, Tuple
 
 from pokermon.ai.policy import Policy
-from pokermon.poker.cards import FullDeal
+from pokermon.poker.deal import FullDeal
 from pokermon.poker.game import Game, Street
 from pokermon.poker.game_runner import GameRunner
 from pokermon.poker.result import Result, get_result

@@ -4,8 +4,7 @@ from dataclasses import dataclass
 from enum import Enum
 from typing import Any, Dict, List, Optional, Set, Tuple
 
-from pokermon.poker.cards import FullDeal
-from pokermon.poker.evaluation import EvaluationResult, evaluate_hand
+from pokermon.poker.evaluation import EvaluationResult
 from pokermon.poker.game import (
     BIG_BLIND_AMOUNT,
     SMALL_BLIND_AMOUNT,
