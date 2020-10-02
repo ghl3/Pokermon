@@ -1,9 +1,10 @@
 import tensorflow as tf  # type: ignore
-from tensorflow.python.keras.feature_column import sequence_feature_column as ksfc  # type: ignore
 
 from pokermon.features.action import NUM_ACTION_BET_BINS
 from pokermon.model.context_sequence_concat import ContextSequenceConcat
 from pokermon.model.feature_config import FeatureConfig
+
+from tensorflow.python.keras.feature_column import sequence_feature_column as ksfc  # type: ignore # isort:skip
 
 
 def policy_vector_size():
