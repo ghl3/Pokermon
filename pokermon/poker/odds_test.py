@@ -2,7 +2,7 @@ from pokermon.poker import odds
 from pokermon.poker.board import Board, mkboard, mkflop
 from pokermon.poker.cards import mkcard
 from pokermon.poker.hands import mkhand
-from pokermon.poker.odds import NutResult, make_nut_result
+from pokermon.poker.odds import make_nut_result
 
 
 def test_evaluation_vs_random():

@@ -1,7 +1,7 @@
 from typing import Tuple
 
-import tensorflow as tf
-from tensorflow.python.feature_column import sequence_feature_column as sfc
+import tensorflow as tf  # type: ignore
+from tensorflow.python.feature_column import sequence_feature_column as sfc  # type: ignore
 
 
 class ContextSequenceConcat(tf.keras.layers.Layer):

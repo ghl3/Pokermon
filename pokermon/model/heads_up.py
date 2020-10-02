@@ -1,7 +1,7 @@
 from typing import Tuple
 
-import numpy as np
-import tensorflow as tf
+import numpy as np  # type: ignore
+import tensorflow as tf  # type: ignore
 
 from pokermon.ai.policy import Policy
 from pokermon.features.action import make_action_from_encoded

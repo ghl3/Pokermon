@@ -6,7 +6,7 @@ from functools import total_ordering
 import deuces
 from pokermon.poker import deuces_wrapper
 from pokermon.poker.board import Board
-from pokermon.poker.hands import ALL_HANDS, HandType, HoleCards
+from pokermon.poker.hands import HandType, HoleCards
 
 
 @total_ordering

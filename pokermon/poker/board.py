@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import dataclasses
+import typing
 from dataclasses import dataclass
 from typing import List, Optional, Sequence, Tuple
 
@@ -80,14 +81,18 @@ class Board:
 def mkflop(s: str) -> Tuple[Card, Card, Card]:
     cards = mkcards(s)
     assert len(cards) == 3
-    return sorted_cards((cards[0], cards[1], cards[2]))
+    return typing.cast(
+        Tuple[Card, Card, Card], sorted_cards((cards[0], cards[1], cards[2]))
+    )
 
 
 def mkboard(s: str) -> Board:
     cards = mkcards(s)
     assert 3 <= len(cards) <= 5
     return Board(
-        flop=sorted_cards((cards[0], cards[1], cards[2])),
+        flop=typing.cast(
+            Tuple[Card, Card, Card], sorted_cards((cards[0], cards[1], cards[2]))
+        ),
         turn=cards[3] if len(cards) > 3 else None,
         river=cards[4] if len(cards) > 4 else None,
     )

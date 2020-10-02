@@ -8,7 +8,7 @@ from typing import List
 from pokermon.ai import policies
 from pokermon.ai.policy import Policy
 from pokermon.poker import dealer
-from pokermon.poker.cards import FullDeal
+from pokermon.poker.deal import FullDeal
 from pokermon.simulate import simulate
 
 

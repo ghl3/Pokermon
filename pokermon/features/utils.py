@@ -4,7 +4,6 @@ import stringcase  # type: ignore
 
 from pokermon.poker.cards import Card
 from pokermon.poker.game import Action, GameView, Move, Street
-from pokermon.poker.hands import HoleCards
 
 
 def field_feature_name(clazz, field) -> str:

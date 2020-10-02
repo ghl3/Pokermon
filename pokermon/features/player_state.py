@@ -3,7 +3,7 @@
 # player: The selected player
 # current_player: The player whose turn it is
 from dataclasses import dataclass
-from typing import List, Optional
+from typing import Dict, List, Optional
 
 from pokermon.features.utils import iter_game_states
 from pokermon.poker import odds
@@ -30,8 +30,6 @@ class PlayerState:
     frac_hands_tied: Optional[float] = None
     frac_hands_worse: Optional[float] = None
 
-    # win_prob_vs_random: Optional[float] = None
-    # TODO: Implement these
     win_prob_vs_any: Optional[float] = None
     win_prob_vs_better: Optional[float] = None
     win_prob_vs_tied: Optional[float] = None
@@ -43,7 +41,7 @@ def make_player_states(
 ) -> List[PlayerState]:
 
     player_states = []
-    street_cache = {}
+    street_cache: Dict[Street, PlayerState] = {}
 
     for i in iter_game_states(game):
         game_view = game.view(i)

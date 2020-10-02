@@ -18,7 +18,7 @@ An important concept in a game is the timestamp.  A timestamp connects two ideas
 
 So, game.view(i) is the state of the game before the ith event (when only i events have
 been made), and action[i] is the action made after the state game_view(i).
- 
+
 For example, say the events are the following:
   0 = PREFLOP
   1 = SMALL BLIND
@@ -26,7 +26,7 @@ For example, say the events are the following:
   3 = BET 10
   4 = RAISE TO 25
   5 = ?
-  
+
 The current state of the game is game.view(5).  There have already been 5 events.
 The next action will be action_index = 5 (making it the 6th action total).
 """
@@ -174,8 +174,9 @@ class GameView:
     ) -> Optional[Action]:
 
         for i in range(self.timestamp, len(self._game.events)):
-            if isinstance(self._game.events[i], Action):
-                return self._game.events[i]
+            e = self._game.events[i]
+            if isinstance(e, Action):
+                return e
 
         return None
 
@@ -185,8 +186,9 @@ class GameView:
     ) -> Optional[Action]:
 
         for i in range(0, self.timestamp):
-            if isinstance(self._game.events[i], Action):
-                return self._game.events[i]
+            e = self._game.events[i]
+            if isinstance(e, Action):
+                return e
 
         return None
 

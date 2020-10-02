@@ -4,8 +4,9 @@ from typing import Optional, Tuple
 
 from pokermon.ai.policy import Policy
 from pokermon.poker import rules
-from pokermon.poker.cards import Board, HoleCards
+from pokermon.poker.board import Board
 from pokermon.poker.game import Action, GameView, Move
+from pokermon.poker.hands import HoleCards
 
 logger = logging.getLogger(__name__)
 

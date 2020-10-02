@@ -5,7 +5,7 @@ import random
 import zlib
 from dataclasses import dataclass
 from enum import Enum
-from typing import Dict, List, Optional, Tuple
+from typing import Dict, List, Optional, Set, Tuple
 
 from pokermon import data
 from pokermon.poker import cards, hands
@@ -106,7 +106,7 @@ def calculate_odds(
 def simulate_odds(
     hand: HoleCards,
     board: Optional[Board] = None,
-    other_hands: Optional[Tuple[HoleCards]] = None,
+    other_hands: Optional[Tuple[HoleCards, ...]] = None,
     num_hands_to_simulate=1000,
 ) -> OddsResult:
     """
@@ -117,16 +117,18 @@ def simulate_odds(
     if board is None:
         board = Board()
 
-    taken_cards = set()
+    taken_cards: Set[Card] = set()
     taken_cards.update(hand.cards)
     taken_cards.update(board.cards())
 
     if other_hands is None:
-        other_hands = [
-            h
-            for h in hands.ALL_HANDS
-            if h.cards[0] not in taken_cards and h.cards[1] not in taken_cards
-        ]
+        other_hands = tuple(
+            [
+                h
+                for h in hands.ALL_HANDS
+                if h.cards[0] not in taken_cards and h.cards[1] not in taken_cards
+            ]
+        )
 
     # Use a deterministic RNG to make testing easier
     rng = random.Random(make_seed(num_hands_to_simulate, hand, board, len(other_hands)))
@@ -201,7 +203,7 @@ def make_nut_result(hole_cards: HoleCards, board: Board):
 
     my_result = evaluate_hand(hole_cards, board)
 
-    disallowed_cards = set()
+    disallowed_cards: Set[Card] = set()
     disallowed_cards.update(hole_cards.cards)
     disallowed_cards.update(board.cards())
 

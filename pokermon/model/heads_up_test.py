@@ -1,6 +1,6 @@
-import numpy as np
-import tensorflow as tf
-from numpy.testing import assert_array_almost_equal
+import numpy as np  # type: ignore
+import tensorflow as tf  # type: ignore
+from numpy.testing import assert_array_almost_equal  # type: ignore
 
 from pokermon.features.examples import (
     make_forward_backward_example,

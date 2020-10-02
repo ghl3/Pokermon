@@ -1,4 +1,4 @@
 set -e
 
-isort pokermon
+isort pokermon --line-length 88
 black pokermon

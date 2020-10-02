@@ -103,5 +103,5 @@ def mkhand(s: str) -> HoleCards:
 
 
 # No more constructing HoleCards after this point
-HoleCards.__init__ = None
-HoleCards.__new__ = None
+HoleCards.__init__ = None  # type: ignore
+HoleCards.__new__ = None  # type: ignore

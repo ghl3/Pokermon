@@ -1,6 +1,8 @@
-import tensorflow as tf
-from tensorflow.python.feature_column import feature_column_v2 as fc
-from tensorflow.python.feature_column import sequence_feature_column as sfc
+import tensorflow as tf  # type: ignore
+from tensorflow.python.feature_column import feature_column_v2 as fc  # type: ignore
+from tensorflow.python.feature_column import (
+    sequence_feature_column as sfc,  # type: ignore
+)
 
 from pokermon.model.feature_config import FeatureConfig
 
