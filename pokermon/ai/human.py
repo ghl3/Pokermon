@@ -15,6 +15,9 @@ class Human(Policy):
     _parser_call_fold = re.compile(r"\s*(check|call|fold)\s*")
     _parser_bet_raise = re.compile(r"\s*(bet|raise to)\s+([0-9]+)\s*")
 
+    def name(self) -> str:
+        return "human"
+
     def select_action(
         self, player_index: int, game: GameView, hand: HoleCards, board: Board
     ) -> Action:

@@ -46,12 +46,16 @@ def simulate_and_write_examples(
         game, result = simulate.simulate(policies, starting_stacks, deal)
 
         for player_idx, _ in enumerate(policies):
+
+            policy: Policy = policies[player_idx]
+
             example = make_forward_backward_example(
                 player_idx,
                 game.view(),
                 deal.hole_cards[player_idx],
                 deal.board,
                 result,
+                player_name=policy.name(),
             )
 
             batch.append(example.SerializeToString())

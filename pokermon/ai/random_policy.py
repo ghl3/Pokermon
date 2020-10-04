@@ -11,6 +11,9 @@ logger = logging.getLogger(__name__)
 
 
 class RandomPolicy(Policy):
+    def name(self) -> str:
+        return "random"
+
     def select_action(
         self, player_index: int, game: GameView, hand: HoleCards, board: Board
     ) -> Action:

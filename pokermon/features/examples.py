@@ -29,9 +29,14 @@ from pokermon.poker.result import Result
 
 
 def make_forward_example(
-    player_index: int, game: GameView, hole_cards: HoleCards, board: Board
+    player_index: int,
+    game: GameView,
+    hole_cards: HoleCards,
+    board: Board,
+    player_name: Optional[str] = None,
 ) -> tf.train.SequenceExample:
     return make_example(
+        player_name=player_name,
         public_context=make_public_context(game),
         private_context=make_private_context(hole_cards),
         public_states=make_public_states(game, board=board),
@@ -46,6 +51,7 @@ def make_forward_backward_example(
     hole_cards: HoleCards,
     board: Board,
     result: Result,
+    player_name: Optional[str] = None,
 ) -> tf.train.SequenceExample:
     """
     All tensors have shape:
@@ -56,6 +62,7 @@ def make_forward_backward_example(
     assert game.street() == Street.HAND_OVER
 
     return make_example(
+        player_name=player_name,
         public_context=make_public_context(game),
         private_context=make_private_context(hole_cards),
         public_states=make_public_states(game, board=board),
@@ -179,6 +186,7 @@ def zip_or_none(*lists_or_none):
 
 
 def make_example(
+    player_name: Optional[str] = None,
     public_context: Optional[PublicContext] = None,
     private_context: Optional[PrivateContext] = None,
     target: Optional[Target] = None,
@@ -190,6 +198,9 @@ def make_example(
 ) -> tf.train.SequenceExample:
 
     context_features: Dict[str, tf.train.Feature] = OrderedDict()
+
+    if player_name:
+        context_features["player_name"] = _bytes_feature([player_name])
 
     # First, make any context features, if necessary
     if public_context:

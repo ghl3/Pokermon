@@ -7,6 +7,10 @@ from pokermon.poker.hands import HoleCards
 
 class Policy(ABC):
     @abstractmethod
+    def name(self) -> str:
+        raise NotImplementedError("Policy is purely abstract")
+
+    @abstractmethod
     def select_action(
         self, player_index: int, game: GameView, hand: HoleCards, board: Board
     ) -> Action:
