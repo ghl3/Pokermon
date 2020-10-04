@@ -145,14 +145,11 @@ def simulate_odds(
         # Randomly select the opponent's hand
         other_hand = rng.choice(other_hands)
 
+        all_taken_cards = set(taken_cards)
+        all_taken_cards.update(other_hand.cards)
+
         # Find the remaining cards in the deck
-        remaining_cards = tuple(
-            [
-                c
-                for c in cards.ALL_CARDS
-                if c not in taken_cards and c not in other_hand.cards
-            ]
-        )
+        remaining_cards = tuple(c for c in cards.ALL_CARDS if c not in all_taken_cards)
 
         # Randomly run out the rest of the board
         drawn_cards: Tuple[Card, ...] = tuple(rng.sample(remaining_cards, num_to_draw))
@@ -245,26 +242,38 @@ class PartitionedOddsResult:
 
 
 def make_odds_result(
-    hand: HoleCards, board: Board, partitioned_hands: NutResult
+    hand: HoleCards,
+    board: Board,
+    partitioned_hands: NutResult,
+    num_hands_per_group: int,
 ) -> PartitionedOddsResult:
 
     if len(partitioned_hands.better_hands) > 0:
         simulation_vs_better = simulate_odds(
-            hand, board, tuple(partitioned_hands.better_hands)
+            hand,
+            board,
+            tuple(partitioned_hands.better_hands),
+            num_hands_to_simulate=num_hands_per_group,
         )
     else:
         simulation_vs_better = OddsResult(frac_win=-1, frac_tie=-1, frac_lose=-1)
 
     if len(partitioned_hands.worse_hands) > 0:
         simulation_vs_worse = simulate_odds(
-            hand, board, tuple(partitioned_hands.worse_hands)
+            hand,
+            board,
+            tuple(partitioned_hands.worse_hands),
+            num_hands_to_simulate=num_hands_per_group,
         )
     else:
         simulation_vs_worse = OddsResult(frac_win=-1, frac_tie=-1, frac_lose=-1)
 
     if len(partitioned_hands.tied_hands) > 0:
         simulation_vs_tied = simulate_odds(
-            hand, board, tuple(partitioned_hands.tied_hands)
+            hand,
+            board,
+            tuple(partitioned_hands.tied_hands),
+            num_hands_to_simulate=num_hands_per_group,
         )
     else:
         simulation_vs_tied = OddsResult(frac_win=-1, frac_tie=-1, frac_lose=-1)

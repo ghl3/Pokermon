@@ -15,6 +15,7 @@ from pokermon.poker.hands import HoleCards
 
 @dataclass(frozen=True)
 class PlayerState:
+
     is_current_player: bool
 
     # The player has an offset of 0.  Players who are positioned before the player
@@ -72,7 +73,9 @@ def make_player_states(
             current_board = board.at_street(game_view.street())
             hand_eval = evaluate_hand(hole_cards, current_board)
             nut_result = odds.make_nut_result(hole_cards, current_board)
-            odds_result = odds.make_odds_result(hole_cards, current_board, nut_result)
+            odds_result = odds.make_odds_result(
+                hole_cards, current_board, nut_result, num_hands_per_group=100
+            )
 
             player_state = PlayerState(
                 is_current_player=True,
