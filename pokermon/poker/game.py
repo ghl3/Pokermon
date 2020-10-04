@@ -346,6 +346,10 @@ class GameView:
         return folded
 
     @cache
+    def is_in_hand(self) -> List[bool]:
+        return [not f for f in self.is_folded()]
+
+    @cache
     def is_all_in(self) -> List[bool]:
         return [
             current_stack_size == 0 for current_stack_size in self.current_stack_sizes()

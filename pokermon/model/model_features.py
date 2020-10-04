@@ -207,5 +207,8 @@ def make_feature_config(num_players):
             sfc.sequence_numeric_column(
                 "player_state__is_current_player", dtype=tf.int64, default_value=-1
             ),
+            sfc.sequence_numeric_column(
+                "public_state__num_players_remaining", dtype=tf.int64, default_value=-1
+            ),
         ],
     )

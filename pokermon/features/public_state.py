@@ -15,6 +15,7 @@ from pokermon.poker.game import GameView, Street
 class PublicState:
     street: int
     pot_size: int
+    num_players_remaining: int
     current_player_mask: List[int]
     folded_player_mask: List[int]
     all_in_player_mask: List[int]
@@ -83,6 +84,7 @@ def make_public_states(game: GameView, board: Optional[Board]):
 
         public_states.append(
             PublicState(
+                num_players_remaining=sum(game_view.is_in_hand()),
                 pot_size=game_view.pot_size(),
                 street=game_view.street().value,
                 current_player_mask=current_player_mask,
