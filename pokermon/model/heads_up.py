@@ -84,9 +84,21 @@ class HeadsUpModel(Policy):
         # a naive equal splitting of the existing pot.
         # TODO: These shouldn't be 'targets'.  Re-think difference between model input
         # tensors and other data that is available.  Maybe just call it backwards...?
+
+        pot_size = target_tensors["public_state__pot_size"]
+        tf.debugging.assert_greater_equal(
+            pot_size,
+            tf.cast(0, tf.int64),
+            "pot size negatve",
+        )
+        num_players = target_tensors["public_state__num_players_remaining"]
+        tf.debugging.assert_greater(
+            num_players,
+            tf.cast(1, tf.int64),
+            "num payers less than 2",
+        )
         expected_reward = tf.cast(
-            target_tensors["public_state__pot_size"]
-            / target_tensors["public_state__num_players_remaining"],
+            pot_size / num_players,
             tf.float32,
         )
 
@@ -143,7 +155,7 @@ class HeadsUpModel(Policy):
         return self.action_probs(fs)[0, -1, :]
 
     @tf.function(
-        input_signature=[tf.TensorSpec(shape=(None,), dtype=tf.string)], autograph=False
+        input_signature=[tf.TensorSpec(shape=(1,), dtype=tf.string)], autograph=False
     )
     def _update_weights(self, serialized_examples):
         with tf.GradientTape() as tape:
