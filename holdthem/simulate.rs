@@ -12,7 +12,18 @@ pub struct Game {
     pub board: Vec<Card>,
 }
 
-pub fn simulate(game: Game, num_to_simulate: i64) -> Result<Vec<i64>, String> {
+#[derive(Debug, Clone)]
+pub struct SimulationResult {
+    pub num_wins: i64,
+    pub num_losses: i64,
+    pub num_ties: i64,
+}
+
+pub fn simulate(game: Game, num_to_simulate: i64) -> Result<Vec<SimulationResult>, String> {
+    if (game.hole_cards.len() < 2) {
+        return Err(format!("Not enough players"));
+    }
+
     // First, create the deck
     let mut deck = Deck::default();
 
@@ -36,7 +47,14 @@ pub fn simulate(game: Game, num_to_simulate: i64) -> Result<Vec<i64>, String> {
 
     // Create a flattened deck that we can shuffle
     let mut deck: Vec<Card> = deck.into_iter().collect();
-    let mut win_counts = vec![0; game.hole_cards.len()];
+    let mut simulation_results = vec![
+        SimulationResult {
+            num_wins: 0,
+            num_losses: 0,
+            num_ties: 0
+        };
+        game.hole_cards.len()
+    ];
 
     // Cards to draw
     let num_cards_to_draw = 5 - game.board.len();
@@ -73,17 +91,22 @@ pub fn simulate(game: Game, num_to_simulate: i64) -> Result<Vec<i64>, String> {
             ranks.push(hand.rank());
         }
 
-        // TODO: Handle ties
-        let winner_idx = ranks
-            .iter()
-            .enumerate()
-            .max_by_key(|&(_, ref rank)| rank.clone())
-            .ok_or_else(|| String::from("Unable to determine best rank."))?
-            .0;
+        let max_rank = ranks.iter().max().unwrap();
+        let exists_tie = ranks.iter().map(|r| (r == max_rank) as i8).sum::<i8>() > 1;
 
-        win_counts[winner_idx] += 1;
+        for (idx, rank) in ranks.iter().enumerate() {
+            if (rank == max_rank) {
+                if exists_tie {
+                    simulation_results[idx].num_ties += 1
+                } else {
+                    simulation_results[idx].num_wins += 1
+                }
+            } else {
+                simulation_results[idx].num_losses += 1
+            }
+        }
     }
-    Ok(win_counts)
+    Ok(simulation_results)
 }
 
 #[cfg(test)]

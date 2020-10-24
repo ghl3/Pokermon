@@ -3,8 +3,8 @@ mod simulate;
 use crate::simulate::{simulate, Game};
 use pyo3::exceptions::PyValueError;
 use pyo3::prelude::*;
-use pyo3::types::PyModule;
-use pyo3::wrap_pyfunction;
+use pyo3::types::{PyModule, PyString};
+use pyo3::{wrap_pyfunction, PyObjectProtocol};
 use rs_poker::core::{Card, Hand, Rank, Rankable, Suit, Value};
 
 #[derive(Debug)]
@@ -54,12 +54,39 @@ fn evaluate_hand(hole_cards: String, board: Vec<String>) -> Result<(i32, i32), H
     })
 }
 
+#[pyclass]
+#[derive(Debug)]
+struct SimulationResult {
+    #[pyo3(get)]
+    pub num_wins: i64,
+    #[pyo3(get)]
+    pub num_losses: i64,
+    #[pyo3(get)]
+    pub num_ties: i64,
+}
+// TODO: Fix this
+impl SimulationResult {
+    fn __repr__(&self) -> PyResult<String> {
+        Ok(format!("{:?}", self))
+    }
+}
+
+impl std::convert::From<&simulate::SimulationResult> for SimulationResult {
+    fn from(res: &simulate::SimulationResult) -> SimulationResult {
+        SimulationResult {
+            num_wins: res.num_wins,
+            num_losses: res.num_losses,
+            num_ties: res.num_ties,
+        }
+    }
+}
+
 #[pyfunction]
 fn simulate_hand(
     hands: Vec<String>,
     board: Vec<String>,
     num_to_simulate: i64,
-) -> Result<Vec<i64>, HoldThemError> {
+) -> Result<Vec<SimulationResult>, HoldThemError> {
     let hands: Vec<Hand> = hands
         .iter()
         .map(|s| Hand::new_from_str(s))
@@ -68,14 +95,17 @@ fn simulate_hand(
         .iter()
         .map(|s| card_from_str(s))
         .collect::<Result<Vec<Card>, String>>()?;
-    let res = simulate(
+    Ok(simulate(
         Game {
             hole_cards: hands,
             board,
         },
         num_to_simulate,
-    )?;
-    Ok(res)
+    )?
+    .iter()
+    .map(|res| SimulationResult::from(res))
+    .collect())
+    //Ok(res)
 }
 
 /// A Python module implemented in Rust.
