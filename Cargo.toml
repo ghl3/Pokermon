@@ -21,3 +21,4 @@ features = ["extension-module"]
 
 [dependencies]
 rs_poker = "1.0.0"
+rand = "0.7"
