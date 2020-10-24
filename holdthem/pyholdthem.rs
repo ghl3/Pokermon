@@ -1,3 +1,6 @@
+mod simulate;
+
+use crate::simulate::{simulate, Game};
 use pyo3::exceptions::PyValueError;
 use pyo3::prelude::*;
 use pyo3::types::PyModule;
@@ -51,9 +54,34 @@ fn evaluate_hand(hole_cards: String, board: Vec<String>) -> Result<(i32, i32), H
     })
 }
 
+#[pyfunction]
+fn simulate_hand(
+    hands: Vec<String>,
+    board: Vec<String>,
+    num_to_simulate: i64,
+) -> Result<Vec<i64>, HoldThemError> {
+    let hands: Vec<Hand> = hands
+        .iter()
+        .map(|s| Hand::new_from_str(s))
+        .collect::<Result<Vec<Hand>, String>>()?;
+    let board: Vec<Card> = board
+        .iter()
+        .map(|s| card_from_str(s))
+        .collect::<Result<Vec<Card>, String>>()?;
+    let res = simulate(
+        Game {
+            hole_cards: hands,
+            board,
+        },
+        num_to_simulate,
+    )?;
+    Ok(res)
+}
+
 /// A Python module implemented in Rust.
 #[pymodule]
 fn pyholdthem(_py: Python, m: &PyModule) -> PyResult<()> {
     m.add_function(wrap_pyfunction!(evaluate_hand, m)?)?;
+    m.add_function(wrap_pyfunction!(simulate_hand, m)?)?;
     Ok(())
 }
