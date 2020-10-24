@@ -6,6 +6,9 @@ venv
 notebooks
 *.svg
 *.out
+*.so
+*.egg-info/
+target/
 
 models
 examples

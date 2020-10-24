@@ -1,0 +1,20 @@
+[package]
+name = "holdthem"
+version = "0.1.0"
+authors = ["George Lewis"]
+edition = "2018"
+
+[[bin]]
+name = "holdthem_main"
+test = false
+bench = false
+path = "holdthem/main.rs"    # The source file of the target.
+
+[lib]
+name = "pyholdthem"
+path = "holdthem/pyholdthem.rs"    # The source file of the target.
+crate-type = ["cdylib"]
+
+[dependencies.pyo3]
+version = "0.12.3"
+features = ["extension-module"]
