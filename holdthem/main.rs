@@ -1,8 +1,7 @@
 mod simulate;
 
 use crate::simulate::{simulate, Game};
-use rs_poker::core::{Card, Deck, Flattenable, Hand, Suit, Value};
-use rs_poker::holdem::MonteCarloGame;
+use rs_poker::core::{Card, Hand, Suit, Value};
 
 pub fn card_from_char(card_str: &str) -> Result<Card, String> {
     let value = Value::from_char(card_str.chars().nth(0).unwrap()).unwrap();

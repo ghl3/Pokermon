@@ -1,9 +1,25 @@
 use pyo3::exceptions::PyValueError;
 use pyo3::prelude::*;
-use pyo3::types::{PyModule, PyString, PyTuple};
+use pyo3::types::PyModule;
 use pyo3::wrap_pyfunction;
 use rs_poker::core::{Card, Hand, Rank, Rankable, Suit, Value};
-use std::error::Error;
+
+#[derive(Debug)]
+struct HoldThemError {
+    message: String,
+}
+
+impl std::convert::From<String> for HoldThemError {
+    fn from(err: String) -> HoldThemError {
+        HoldThemError { message: err }
+    }
+}
+
+impl std::convert::From<HoldThemError> for PyErr {
+    fn from(err: HoldThemError) -> PyErr {
+        PyValueError::new_err(err.message)
+    }
+}
 
 pub fn card_from_str(card_str: &str) -> Result<Card, String> {
     if card_str.len() != 2 {
@@ -15,78 +31,23 @@ pub fn card_from_str(card_str: &str) -> Result<Card, String> {
     Ok(Card { value, suit })
 }
 
-#[pyclass]
-struct HandRank {
-    #[pyo3(get)]
-    rank: i32,
-    #[pyo3(get)]
-    kicker: i32,
-}
-
-#[derive(Debug)]
-struct CustomError {
-    message: String,
-}
-
-impl std::convert::From<String> for CustomError {
-    fn from(err: String) -> CustomError {
-        CustomError { message: err }
-    }
-}
-
-impl std::convert::From<CustomError> for PyErr {
-    fn from(err: CustomError) -> PyErr {
-        PyValueError::new_err(err.message)
-    }
-}
-
 #[pyfunction]
-fn evaluate_hand(hole_cards: String, board: Vec<String>) -> Result<HandRank, CustomError> {
+fn evaluate_hand(hole_cards: String, board: Vec<String>) -> Result<(i32, i32), HoldThemError> {
     let mut hand = Hand::new_from_str(&hole_cards)?;
     for card in &board {
         hand.push(card_from_str(card)?)
     }
 
-    let gil = Python::acquire_gil();
-    let py = gil.python();
-
     Ok(match hand.rank() {
-        Rank::HighCard(x) => HandRank {
-            rank: 1,
-            kicker: x as i32,
-        },
-        Rank::OnePair(x) => HandRank {
-            rank: 2,
-            kicker: x as i32,
-        },
-        Rank::TwoPair(x) => HandRank {
-            rank: 3,
-            kicker: x as i32,
-        },
-        Rank::ThreeOfAKind(x) => HandRank {
-            rank: 4,
-            kicker: x as i32,
-        },
-        Rank::Straight(x) => HandRank {
-            rank: 5,
-            kicker: x as i32,
-        },
-        Rank::Flush(x) => HandRank {
-            rank: 6,
-            kicker: x as i32,
-        },
-        Rank::FullHouse(x) => HandRank {
-            rank: 7,
-            kicker: x as i32,
-        },
-        Rank::FourOfAKind(x) => HandRank {
-            rank: 8,
-            kicker: x as i32,
-        },
-        Rank::StraightFlush(x) => HandRank {
-            rank: 9,
-            kicker: x as i32,
-        },
+        Rank::HighCard(x) => (1, x as i32),
+        Rank::OnePair(x) => (2, x as i32),
+        Rank::TwoPair(x) => (3, x as i32),
+        Rank::ThreeOfAKind(x) => (4, x as i32),
+        Rank::Straight(x) => (5, x as i32),
+        Rank::Flush(x) => (6, x as i32),
+        Rank::FullHouse(x) => (7, x as i32),
+        Rank::FourOfAKind(x) => (8, x as i32),
+        Rank::StraightFlush(x) => (9, x as i32),
     })
 }
 

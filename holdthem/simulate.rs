@@ -1,6 +1,4 @@
-//use rand::{rngs::StdRng, Rng, SeedableRng};
-use rs_poker::core::{Card, Deck, Flattenable, Hand, Rank, Rankable, Suit, Value};
-use std::error::Error;
+use rs_poker::core::{Card, Deck, Hand, Rank, Rankable};
 
 extern crate rand;
 use rand::seq::*;
@@ -63,7 +61,7 @@ pub fn simulate(game: Game, num_to_simulate: i64) -> Result<Vec<i64>, String> {
 
         let mut ranks: Vec<Rank> = vec![];
 
-        for (hole_cards) in game.hole_cards.iter() {
+        for hole_cards in game.hole_cards.iter() {
             let mut hand: Vec<Card> = hole_cards.iter().map(|c| c.clone()).collect();
             hand.reserve_exact(7);
             for c in &game.board {
