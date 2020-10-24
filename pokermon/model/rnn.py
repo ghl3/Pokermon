@@ -17,8 +17,9 @@ def make_model(feature_config: FeatureConfig):
     x = tf.keras.layers.DenseFeatures(feature_config.context_features)(ctx_inputs)
     y, _ = ksfc.SequenceFeatures(feature_config.sequence_features)(seq_inputs)
     z = ContextSequenceConcat()((x, y))
-    z = tf.keras.layers.LSTM(units=32, return_sequences=True)(z)
-    z = tf.keras.layers.Dense(64)(z)
+    z = tf.keras.layers.Dense(16)(z)
+    z = tf.keras.layers.LSTM(units=16, return_sequences=True)(z)
+    z = tf.keras.layers.Dense(8)(z)
     z = tf.keras.layers.Dense(policy_vector_size(), name="logits")(z)
 
     all_inputs = list(ctx_inputs.values()) + list(seq_inputs.values())
