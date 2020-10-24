@@ -1,1 +1,1 @@
-from . import *
+from holdthem.pyholdthem import *
