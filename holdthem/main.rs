@@ -2,6 +2,8 @@ mod globals;
 mod simulate;
 
 use crate::simulate::{simulate, Game};
+use all_asserts::assert_le;
+use clap::Clap;
 use rs_poker::core::{Card, Hand, Suit, Value};
 
 pub fn card_from_char(card_str: &str) -> Result<Card, String> {
@@ -10,23 +12,74 @@ pub fn card_from_char(card_str: &str) -> Result<Card, String> {
     Ok(Card { value, suit })
 }
 
-fn main() {
-    let hand = Hand::new_from_str("Adkh").unwrap();
-    let oppo_hand = Hand::new_from_str("8c8s").unwrap();
+#[derive(Clap, Debug)]
+#[clap(name = "basic")]
+struct Opts {
+    #[clap(long)]
+    hand: String,
 
-    let board = vec![
-        card_from_char("As").unwrap(),
-        card_from_char("Kd").unwrap(),
-        card_from_char("8h").unwrap(),
-    ];
+    #[clap(long)]
+    range: String,
+
+    #[clap(long)]
+    board: Option<String>,
+
+    #[clap(long, default_value = "1000000")]
+    num_to_simulate: i64,
+}
+
+fn main() {
+    let opts: Opts = Opts::parse();
+
+    let hand = Hand::new_from_str(&*opts.hand).unwrap();
+    let oppo_range: Vec<Hand> = opts
+        .range
+        .split(",")
+        .map(|s| Hand::new_from_str(s).unwrap())
+        .collect();
+
+    let board: Vec<Card> = match opts.board {
+        Some(s) => {
+            let board_chars: Vec<char> = s.chars().collect();
+            board_chars
+                .chunks(2)
+                .map(|chunk| chunk.iter().collect::<String>())
+                .map(|s| card_from_char(&*s).unwrap())
+                .collect::<Vec<Card>>()
+        }
+
+        None => vec![],
+    };
+
+    // let board_chars: Vec<char> = opts.board.chars().collect();
+    // let board: Vec<Card> = board_chars
+    //     .chunks(2)
+    //     .map(|chunk| chunk.iter().collect::<String>())
+    //     .map(|s| card_from_char(&*s).unwrap())
+    //     .collect::<Vec<Card>>();
+
+    //    let board: Vec<Card> = ops
+    //        .board
+    //        .split(",")
+    //        .iter()
+    //        .map(|s| Hand::card_from_char(s))
+    //       .collect();
+
+    assert_le!(board.len(), 5);
+
+    //    let board = vec![
+    //        card_from_char("As").unwrap(),
+    //       card_from_char("Kd").unwrap(),
+    //       card_from_char("8h").unwrap(),
+    //   ];
 
     let win_counts = simulate(
         Game {
-            hand: hand,
-            range: vec![oppo_hand],
+            hand,
+            range: oppo_range,
             board,
         },
-        1_000_000,
+        opts.num_to_simulate,
     )
     .unwrap();
 

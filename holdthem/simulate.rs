@@ -108,10 +108,10 @@ pub fn simulate(game: Game, num_to_simulate: i64) -> Result<SimulationResult, St
 
         let next_cards = deck.draw(&mut rng, num_cards_to_draw, villian_hand.iter());
 
-        assert_eq!(next_cards.len(), 5);
         let hero_full_hand: Hand = Hand::new_with_cards(
             game.hand
                 .iter()
+                .chain(game.board.iter())
                 .chain(next_cards.iter())
                 .map(|c| *c)
                 .collect(),
@@ -122,6 +122,7 @@ pub fn simulate(game: Game, num_to_simulate: i64) -> Result<SimulationResult, St
         let villian_full_hand: Hand = Hand::new_with_cards(
             villian_hand
                 .iter()
+                .chain(game.board.iter())
                 .chain(next_cards.iter())
                 .map(|c| *c)
                 .collect(),

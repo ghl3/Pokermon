@@ -4,6 +4,9 @@ version = "0.1.0"
 authors = ["George Lewis"]
 edition = "2018"
 
+[profile.release]
+debug = true
+
 [[bin]]
 name = "holdthem_main"
 test = false
@@ -24,3 +27,6 @@ rs_poker = "1.0.0"
 rand = "0.7"
 counter = "0.5.2"
 lazy_static = "1.4.0"
+clap = "3.0.0-beta.2"
+all_asserts = "2.1.0"
+
