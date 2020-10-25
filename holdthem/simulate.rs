@@ -1,13 +1,21 @@
+use crate::globals::ALL_CARDS;
 use rs_poker::core::{Card, Deck, Hand, Rank, Rankable};
 
 extern crate rand;
-use rand::seq::*;
+use self::rand::seq::SliceRandom;
+//use rand::seq::SliceRandom::{choose, shuffle};
+use self::rand::rngs::ThreadRng;
 use rand::thread_rng;
+use std::collections::HashSet;
+use std::slice::Iter;
 
 /// The input of a simulation
 #[derive(Debug)]
 pub struct Game {
-    pub hole_cards: Vec<Hand>,
+    /// Current Player's Hole Cards
+    pub hand: Hand,
+    /// Opponent Player's Range
+    pub range: Vec<Hand>,
     /// Flatten deck
     pub board: Vec<Card>,
 }
@@ -19,113 +27,137 @@ pub struct SimulationResult {
     pub num_ties: i64,
 }
 
-pub fn simulate(game: Game, num_to_simulate: i64) -> Result<Vec<SimulationResult>, String> {
-    if game.hole_cards.len() < 2 {
-        return Err(format!("Not enough players"));
+struct FastDrawDeck {
+    cards: Vec<Card>,
+    /// Current index into the deck
+    /// cards[current_index] is the first card eligibe to be drawn, and all cards
+    /// afer are also eligible to be drawn
+    current_index: usize,
+}
+
+impl FastDrawDeck {
+    pub fn new(game: &Game) -> Self {
+        let mut ineligible_cards: HashSet<Card> = HashSet::new();
+        for card in game.hand.iter() {
+            ineligible_cards.insert(*card);
+        }
+        // Note that we don't remove all cards in the range
+        for card in game.board.iter() {
+            ineligible_cards.insert(*card);
+        }
+
+        FastDrawDeck {
+            cards: ALL_CARDS
+                .iter()
+                .filter(|c| !ineligible_cards.contains(c))
+                .map(|c| *c)
+                .collect(),
+            current_index: 0,
+        }
+    }
+
+    pub fn draw(
+        &mut self,
+        rng: &mut ThreadRng,
+        num_to_draw: usize,
+        skippable: Iter<Card>,
+    ) -> Vec<Card> {
+        let mut skippable: HashSet<Card> = skippable.map(|c| *c).collect();
+        let mut cards: Vec<Card> = vec![];
+        cards.reserve_exact(num_to_draw);
+
+        while cards.len() < num_to_draw {
+            if self.current_index >= self.cards.len() {
+                self.cards.shuffle(rng);
+                self.current_index = 0;
+            }
+            let test_card = &self.cards[self.current_index];
+            if skippable.contains(test_card) {
+                self.current_index += 1;
+                continue;
+            }
+            cards.push(test_card.clone());
+            skippable.insert(test_card.clone());
+        }
+        cards
+    }
+}
+
+pub fn simulate(game: Game, num_to_simulate: i64) -> Result<SimulationResult, String> {
+    if game.range.len() == 0 {
+        return Err(format!("Must have non-empty range"));
     }
 
     // First, create the deck
-    let mut deck = Deck::default();
-
-    // Then, remove known cards
-    for h in &game.hole_cards {
-        if h.len() != 2 {
-            return Err(String::from("Hand passed in doesn't have 2 cards."));
-        }
-        for c in h.iter() {
-            if !deck.remove(*c) {
-                return Err(format!("Card {} was already removed from the deck.", c));
-            }
-        }
-    }
-
-    for c in &game.board {
-        if !deck.remove(*c) {
-            return Err(format!("Card {} was already removed from the deck.", c));
-        }
-    }
-
-    // Create a flattened deck that we can shuffle
-    let mut deck: Vec<Card> = deck.into_iter().collect();
-    let mut simulation_results = vec![
-        SimulationResult {
-            num_wins: 0,
-            num_losses: 0,
-            num_ties: 0
-        };
-        game.hole_cards.len()
-    ];
+    let mut deck = FastDrawDeck::new(&game);
 
     // Cards to draw
     let num_cards_to_draw = 5 - game.board.len();
 
-    //let mut rng = SeedableRng::from_seed(12);
     let mut rng = thread_rng();
 
-    let mut deck_idx: usize = 0;
+    let mut simulation_result = SimulationResult {
+        num_wins: 0,
+        num_losses: 0,
+        num_ties: 0,
+    };
 
     for _ in 0..num_to_simulate {
-        // We only need to re-shuffle when we get to the end of the deck
-        // This is because we "Run it N Times".  This ends up having the same
-        // expectation value as re-shuffling between each run.
-        if deck_idx + num_cards_to_draw >= deck.len() {
-            // Shuffle the deck
-            deck.shuffle(&mut rng);
-            deck_idx = 0;
-        }
+        // Randomy pick the opponent's card
+        let villian_hand = game.range.choose(&mut rng).unwrap();
 
-        let next_cards = &deck[deck_idx..deck_idx + num_cards_to_draw];
-        deck_idx += num_cards_to_draw;
+        let next_cards = deck.draw(&mut rng, num_cards_to_draw, villian_hand.iter());
 
-        let mut ranks: Vec<Rank> = vec![];
+        assert_eq!(next_cards.len(), 5);
+        let hero_full_hand: Hand = Hand::new_with_cards(
+            game.hand
+                .iter()
+                .chain(next_cards.iter())
+                .map(|c| *c)
+                .collect(),
+        );
+        assert_eq!(hero_full_hand.len(), 7);
+        let hero_rank = hero_full_hand.rank();
 
-        for hole_cards in game.hole_cards.iter() {
-            let mut hand: Vec<Card> = hole_cards.iter().map(|c| c.clone()).collect();
-            hand.reserve_exact(7);
-            for c in &game.board {
-                hand.push(*c);
-            }
-            for c in next_cards {
-                hand.push(c.clone());
-            }
-            ranks.push(hand.rank());
-        }
+        let villian_full_hand: Hand = Hand::new_with_cards(
+            villian_hand
+                .iter()
+                .chain(next_cards.iter())
+                .map(|c| *c)
+                .collect(),
+        );
+        assert_eq!(villian_full_hand.len(), 7);
+        let villian_rank = villian_full_hand.rank();
 
-        let max_rank = ranks.iter().max().unwrap();
-        let exists_tie = ranks.iter().map(|r| (r == max_rank) as i8).sum::<i8>() > 1;
-
-        for (idx, rank) in ranks.iter().enumerate() {
-            if rank == max_rank {
-                if exists_tie {
-                    simulation_results[idx].num_ties += 1
-                } else {
-                    simulation_results[idx].num_wins += 1
-                }
-            } else {
-                simulation_results[idx].num_losses += 1
-            }
+        if hero_rank == villian_rank {
+            simulation_result.num_ties += 1
+        } else if hero_rank > villian_rank {
+            simulation_result.num_wins += 1
+        } else {
+            simulation_result.num_losses += 1
         }
     }
-    Ok(simulation_results)
+    Ok(simulation_result)
 }
 
 #[cfg(test)]
 mod test {
-    use super::*;
-    use crate::core::Hand;
-    use crate::core::Rank;
+    use crate::simulate::{simulate, Game};
+    use rs_poker::core::Hand;
 
     #[test]
     fn test_simulate_pocket_pair() {
-        let hands = ["AdAh", "2c2s"]
+        let hand = Hand::new_from_str("KdKh").unwrap();
+        let range = ["AdAh", "2c2s"]
             .iter()
             .map(|s| Hand::new_from_str(s).unwrap())
             .collect();
-        let mut g = Game {
-            hole_cards: hands,
+        let mut game = Game {
+            hand,
+            range,
             board: vec![],
         };
         let result = simulate(game, 1).unwrap();
-        assert!(result.1 >= Rank::OnePair(0));
+        println!("{:?}", result);
     }
 }

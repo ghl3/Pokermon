@@ -1,3 +1,4 @@
+mod globals;
 mod hand_comparison;
 mod simulate;
 
@@ -86,11 +87,13 @@ impl std::convert::From<&simulate::SimulationResult> for SimulationResult {
 
 #[pyfunction]
 fn simulate_hand(
-    hands: Vec<String>,
+    hand: String,
+    range: Vec<String>,
     board: Vec<String>,
     num_to_simulate: i64,
-) -> Result<Vec<SimulationResult>, HoldThemError> {
-    let hands: Vec<Hand> = hands
+) -> Result<SimulationResult, HoldThemError> {
+    print!("Simulating Hand");
+    let range: Vec<Hand> = range
         .iter()
         .map(|s| Hand::new_from_str(s))
         .collect::<Result<Vec<Hand>, String>>()?;
@@ -98,17 +101,16 @@ fn simulate_hand(
         .iter()
         .map(|s| card_from_str(s))
         .collect::<Result<Vec<Card>, String>>()?;
-    Ok(simulate(
+
+    let result = simulate(
         Game {
-            hole_cards: hands,
+            hand: Hand::new_from_str(&*hand)?,
+            range,
             board,
         },
         num_to_simulate,
-    )?
-    .iter()
-    .map(|res| SimulationResult::from(res))
-    .collect())
-    //Ok(res)
+    )?;
+    Ok(SimulationResult::from(&result))
 }
 
 /// A Python module implemented in Rust.

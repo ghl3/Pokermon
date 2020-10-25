@@ -1,3 +1,4 @@
+mod globals;
 mod simulate;
 
 use crate::simulate::{simulate, Game};
@@ -10,10 +11,9 @@ pub fn card_from_char(card_str: &str) -> Result<Card, String> {
 }
 
 fn main() {
-    let hands = vec![
-        Hand::new_from_str("Adkh").unwrap(),
-        Hand::new_from_str("8c8s").unwrap(),
-    ];
+    let hand = Hand::new_from_str("Adkh").unwrap();
+    let oppo_hand = Hand::new_from_str("8c8s").unwrap();
+
     let board = vec![
         card_from_char("As").unwrap(),
         card_from_char("Kd").unwrap(),
@@ -22,7 +22,8 @@ fn main() {
 
     let win_counts = simulate(
         Game {
-            hole_cards: hands,
+            hand: hand,
+            range: vec![oppo_hand],
             board,
         },
         1_000_000,
