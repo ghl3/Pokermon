@@ -4,11 +4,8 @@ version = "0.1.0"
 authors = ["George Lewis"]
 edition = "2018"
 
-[profile.release]
-debug = true
-
 [[bin]]
-name = "holdthem_main"
+name = "holdthem"
 test = false
 bench = false
 path = "holdthem/main.rs"    # The source file of the target.
