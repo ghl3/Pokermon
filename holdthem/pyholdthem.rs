@@ -1,10 +1,12 @@
+mod hand_comparison;
 mod simulate;
 
 use crate::simulate::{simulate, Game};
 use pyo3::exceptions::PyValueError;
 use pyo3::prelude::*;
-use pyo3::types::{PyModule, PyString};
+use pyo3::types::PyModule;
 use pyo3::{wrap_pyfunction, PyObjectProtocol};
+
 use rs_poker::core::{Card, Hand, Rank, Rankable, Suit, Value};
 
 #[derive(Debug)]
@@ -64,8 +66,9 @@ struct SimulationResult {
     #[pyo3(get)]
     pub num_ties: i64,
 }
-// TODO: Fix this
-impl SimulationResult {
+
+#[pyproto]
+impl PyObjectProtocol for SimulationResult {
     fn __repr__(&self) -> PyResult<String> {
         Ok(format!("{:?}", self))
     }

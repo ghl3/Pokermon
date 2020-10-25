@@ -20,7 +20,7 @@ pub struct SimulationResult {
 }
 
 pub fn simulate(game: Game, num_to_simulate: i64) -> Result<Vec<SimulationResult>, String> {
-    if (game.hole_cards.len() < 2) {
+    if game.hole_cards.len() < 2 {
         return Err(format!("Not enough players"));
     }
 
@@ -95,7 +95,7 @@ pub fn simulate(game: Game, num_to_simulate: i64) -> Result<Vec<SimulationResult
         let exists_tie = ranks.iter().map(|r| (r == max_rank) as i8).sum::<i8>() > 1;
 
         for (idx, rank) in ranks.iter().enumerate() {
-            if (rank == max_rank) {
+            if rank == max_rank {
                 if exists_tie {
                     simulation_results[idx].num_ties += 1
                 } else {
