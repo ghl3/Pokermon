@@ -9,6 +9,8 @@ notebooks
 *.so
 *.egg-info/
 target/
+build
+dist
 
 models
 examples

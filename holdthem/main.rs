@@ -51,28 +51,6 @@ fn main() {
         None => vec![],
     };
 
-    // let board_chars: Vec<char> = opts.board.chars().collect();
-    // let board: Vec<Card> = board_chars
-    //     .chunks(2)
-    //     .map(|chunk| chunk.iter().collect::<String>())
-    //     .map(|s| card_from_char(&*s).unwrap())
-    //     .collect::<Vec<Card>>();
-
-    //    let board: Vec<Card> = ops
-    //        .board
-    //        .split(",")
-    //        .iter()
-    //        .map(|s| Hand::card_from_char(s))
-    //       .collect();
-
-    assert_le!(board.len(), 5);
-
-    //    let board = vec![
-    //        card_from_char("As").unwrap(),
-    //       card_from_char("Kd").unwrap(),
-    //       card_from_char("8h").unwrap(),
-    //   ];
-
     let win_counts = simulate(
         Game {
             hand,
