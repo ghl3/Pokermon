@@ -3,3 +3,5 @@ set -e
 mypy pokermon
 flake8 pokermon
 pytest -vv
+cargo clippy
+cargo test
