@@ -1,5 +1,5 @@
 use lazy_static::lazy_static;
-use rs_poker::core::{Card, Hand, Rankable, Suit, Value};
+use rs_poker::core::{Card, Hand, Suit, Value};
 
 lazy_static! {
     pub static ref ALL_CARDS: Vec<Card> = {

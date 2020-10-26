@@ -32,7 +32,7 @@ pub fn card_from_str(card_str: &str) -> Result<Card, String> {
         return Err(String::from("Error"));
     }
 
-    let value = Value::from_char(card_str.chars().nth(0).unwrap()).unwrap();
+    let value = Value::from_char(card_str.chars().next().unwrap()).unwrap();
     let suit = Suit::from_char(card_str.chars().nth(1).unwrap()).unwrap();
     Ok(Card { value, suit })
 }

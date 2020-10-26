@@ -2,12 +2,12 @@ mod globals;
 mod simulate;
 
 use crate::simulate::{simulate, Game};
-use all_asserts::assert_le;
+
 use clap::Clap;
 use rs_poker::core::{Card, Hand, Suit, Value};
 
 pub fn card_from_char(card_str: &str) -> Result<Card, String> {
-    let value = Value::from_char(card_str.chars().nth(0).unwrap()).unwrap();
+    let value = Value::from_char(card_str.chars().next().unwrap()).unwrap();
     let suit = Suit::from_char(card_str.chars().nth(1).unwrap()).unwrap();
     Ok(Card { value, suit })
 }
@@ -34,7 +34,7 @@ fn main() {
     let hand = Hand::new_from_str(&*opts.hand).unwrap();
     let oppo_range: Vec<Hand> = opts
         .range
-        .split(",")
+        .split(',')
         .map(|s| Hand::new_from_str(s).unwrap())
         .collect();
 

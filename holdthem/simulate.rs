@@ -1,10 +1,9 @@
 use crate::globals::ALL_CARDS;
-use rs_poker::core::{Card, Deck, Hand, Rank, Rankable};
+use rs_poker::core::{Card, Hand, Rankable};
 
 extern crate rand;
-use self::rand::seq::SliceRandom;
-//use rand::seq::SliceRandom::{choose, shuffle};
 use self::rand::rngs::ThreadRng;
+use self::rand::seq::SliceRandom;
 use rand::thread_rng;
 use std::collections::HashSet;
 use std::slice::Iter;
@@ -50,7 +49,7 @@ impl FastDrawDeck {
             cards: ALL_CARDS
                 .iter()
                 .filter(|c| !ineligible_cards.contains(c))
-                .map(|c| *c)
+                .copied()
                 .collect(),
             current_index: 0,
         }
@@ -62,7 +61,7 @@ impl FastDrawDeck {
         num_to_draw: usize,
         skippable: Iter<Card>,
     ) -> Vec<Card> {
-        let mut skippable: HashSet<Card> = skippable.map(|c| *c).collect();
+        let mut skippable: HashSet<Card> = skippable.copied().collect();
         let mut cards: Vec<Card> = vec![];
         cards.reserve_exact(num_to_draw);
 
@@ -76,16 +75,16 @@ impl FastDrawDeck {
                 self.current_index += 1;
                 continue;
             }
-            cards.push(test_card.clone());
-            skippable.insert(test_card.clone());
+            cards.push(*test_card);
+            skippable.insert(*test_card);
         }
         cards
     }
 }
 
 pub fn simulate(game: Game, num_to_simulate: i64) -> Result<SimulationResult, String> {
-    if game.range.len() == 0 {
-        return Err(format!("Must have non-empty range"));
+    if game.range.is_empty() {
+        return Err("Must have non-empty range".to_string());
     }
 
     // First, create the deck
@@ -113,7 +112,7 @@ pub fn simulate(game: Game, num_to_simulate: i64) -> Result<SimulationResult, St
                 .iter()
                 .chain(game.board.iter())
                 .chain(next_cards.iter())
-                .map(|c| *c)
+                .copied()
                 .collect(),
         );
         assert_eq!(hero_full_hand.len(), 7);
@@ -124,18 +123,18 @@ pub fn simulate(game: Game, num_to_simulate: i64) -> Result<SimulationResult, St
                 .iter()
                 .chain(game.board.iter())
                 .chain(next_cards.iter())
-                .map(|c| *c)
+                .copied()
                 .collect(),
         );
         assert_eq!(villian_full_hand.len(), 7);
         let villian_rank = villian_full_hand.rank();
 
-        if hero_rank == villian_rank {
+        if villian_rank == hero_rank {
             simulation_result.num_ties += 1
-        } else if hero_rank > villian_rank {
-            simulation_result.num_wins += 1
-        } else {
+        } else if hero_rank <= villian_rank {
             simulation_result.num_losses += 1
+        } else {
+            simulation_result.num_wins += 1
         }
     }
     Ok(simulation_result)
@@ -153,7 +152,7 @@ mod test {
             .iter()
             .map(|s| Hand::new_from_str(s).unwrap())
             .collect();
-        let mut game = Game {
+        let game = Game {
             hand,
             range,
             board: vec![],
