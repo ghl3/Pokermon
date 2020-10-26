@@ -1,8 +1,9 @@
 mod globals;
 mod hand_comparison;
+mod hand_features;
 mod simulate;
 
-use crate::simulate::{simulate, Game};
+use crate::simulate::simulate;
 use pyo3::exceptions::PyValueError;
 use pyo3::prelude::*;
 use pyo3::types::PyModule;
@@ -103,14 +104,68 @@ fn simulate_hand(
         .collect::<Result<Vec<Card>, String>>()?;
 
     let result = simulate(
-        Game {
-            hand: Hand::new_from_str(&*hand)?,
-            range,
-            board,
-        },
+        &Hand::new_from_str(&*hand)?,
+        &range,
+        &board,
         num_to_simulate,
     )?;
     Ok(SimulationResult::from(&result))
+}
+
+#[pyclass]
+#[derive(Debug)]
+struct HandFeatures {
+    #[pyo3(get)]
+    pub num_better_hands: i64,
+    #[pyo3(get)]
+    pub num_tied_hands: i64,
+    #[pyo3(get)]
+    pub num_worse_hands: i64,
+
+    #[pyo3(get)]
+    pub odds_vs_better: f32,
+    #[pyo3(get)]
+    pub odds_vs_tied: f32,
+    #[pyo3(get)]
+    pub odds_vs_worse: f32,
+}
+
+#[pyproto]
+impl PyObjectProtocol for HandFeatures {
+    fn __repr__(&self) -> PyResult<String> {
+        Ok(format!("{:?}", self))
+    }
+}
+
+impl std::convert::From<&hand_features::HandFeatures> for HandFeatures {
+    fn from(res: &hand_features::HandFeatures) -> HandFeatures {
+        HandFeatures {
+            num_better_hands: res.num_better_hands,
+            num_tied_hands: res.num_tied_hands,
+            num_worse_hands: res.num_worse_hands,
+            odds_vs_better: res.odds_vs_better.unwrap_or(-1.0),
+            odds_vs_tied: res.odds_vs_tied.unwrap_or(-1.0),
+            odds_vs_worse: res.odds_vs_worse.unwrap_or(-1.0),
+        }
+    }
+}
+
+#[pyfunction]
+fn make_hand_features(
+    hand: String,
+    board: Vec<String>,
+    num_to_simulate: i64,
+) -> Result<HandFeatures, HoldThemError> {
+    let hand = Hand::new_from_str(&*hand)?;
+
+    let board: Vec<Card> = board
+        .iter()
+        .map(|s| card_from_str(s))
+        .collect::<Result<Vec<Card>, String>>()?;
+
+    let result = hand_features::make_hand_features(hand, board, num_to_simulate)?;
+
+    Ok(HandFeatures::from(&result))
 }
 
 /// A Python module implemented in Rust.
@@ -118,5 +173,6 @@ fn simulate_hand(
 fn pyholdthem(_py: Python, m: &PyModule) -> PyResult<()> {
     m.add_function(wrap_pyfunction!(evaluate_hand, m)?)?;
     m.add_function(wrap_pyfunction!(simulate_hand, m)?)?;
+    m.add_function(wrap_pyfunction!(make_hand_features, m)?)?;
     Ok(())
 }

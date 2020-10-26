@@ -8,7 +8,7 @@ pub struct NutResult {
     pub worse_hands: Vec<Hand>,
 }
 
-pub fn make_nut_result(hand: Hand, board: Vec<Card>) -> NutResult {
+pub fn make_nut_result(hand: &Hand, board: &Vec<Card>) -> NutResult {
     let full_hand = Hand::new_with_cards(hand.iter().chain(board.iter()).copied().collect());
     let rank = full_hand.rank();
     let mut nut_result = NutResult {

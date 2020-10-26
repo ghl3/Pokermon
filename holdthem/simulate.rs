@@ -8,22 +8,23 @@ use rand::thread_rng;
 use std::collections::HashSet;
 use std::slice::Iter;
 
-/// The input of a simulation
-#[derive(Debug)]
-pub struct Game {
-    /// Current Player's Hole Cards
-    pub hand: Hand,
-    /// Opponent Player's Range
-    pub range: Vec<Hand>,
-    /// Flatten deck
-    pub board: Vec<Card>,
-}
-
 #[derive(Debug, Clone)]
 pub struct SimulationResult {
     pub num_wins: i64,
     pub num_losses: i64,
     pub num_ties: i64,
+}
+
+impl SimulationResult {
+    pub fn num_simulations(&self) -> i64 {
+        self.num_wins + self.num_ties + self.num_losses
+    }
+    pub fn win_frac(&self) -> Option<f32> {
+        match self.num_simulations() {
+            0 => None,
+            n => Some(self.num_wins as f32 / n as f32),
+        }
+    }
 }
 
 struct FastDrawDeck {
@@ -35,13 +36,13 @@ struct FastDrawDeck {
 }
 
 impl FastDrawDeck {
-    pub fn new(game: &Game) -> Self {
+    pub fn new(hand: &Hand, board: &Vec<Card>) -> Self {
         let mut ineligible_cards: HashSet<Card> = HashSet::new();
-        for card in game.hand.iter() {
+        for card in hand.iter() {
             ineligible_cards.insert(*card);
         }
         // Note that we don't remove all cards in the range
-        for card in game.board.iter() {
+        for card in board.iter() {
             ineligible_cards.insert(*card);
         }
 
@@ -82,16 +83,21 @@ impl FastDrawDeck {
     }
 }
 
-pub fn simulate(game: Game, num_to_simulate: i64) -> Result<SimulationResult, String> {
-    if game.range.is_empty() {
+pub fn simulate(
+    hand: &Hand,
+    range: &Vec<Hand>,
+    board: &Vec<Card>,
+    num_to_simulate: i64,
+) -> Result<SimulationResult, String> {
+    if range.is_empty() {
         return Err("Must have non-empty range".to_string());
     }
 
     // First, create the deck
-    let mut deck = FastDrawDeck::new(&game);
+    let mut deck = FastDrawDeck::new(hand, &board);
 
     // Cards to draw
-    let num_cards_to_draw = 5 - game.board.len();
+    let num_cards_to_draw = 5 - board.len();
 
     let mut rng = thread_rng();
 
@@ -103,14 +109,13 @@ pub fn simulate(game: Game, num_to_simulate: i64) -> Result<SimulationResult, St
 
     for _ in 0..num_to_simulate {
         // Randomy pick the opponent's card
-        let villian_hand = game.range.choose(&mut rng).unwrap();
+        let villian_hand = range.choose(&mut rng).unwrap();
 
         let next_cards = deck.draw(&mut rng, num_cards_to_draw, villian_hand.iter());
 
         let hero_full_hand: Hand = Hand::new_with_cards(
-            game.hand
-                .iter()
-                .chain(game.board.iter())
+            hand.iter()
+                .chain(board.iter())
                 .chain(next_cards.iter())
                 .copied()
                 .collect(),
@@ -121,7 +126,7 @@ pub fn simulate(game: Game, num_to_simulate: i64) -> Result<SimulationResult, St
         let villian_full_hand: Hand = Hand::new_with_cards(
             villian_hand
                 .iter()
-                .chain(game.board.iter())
+                .chain(board.iter())
                 .chain(next_cards.iter())
                 .copied()
                 .collect(),
@@ -142,7 +147,7 @@ pub fn simulate(game: Game, num_to_simulate: i64) -> Result<SimulationResult, St
 
 #[cfg(test)]
 mod test {
-    use crate::simulate::{simulate, Game};
+    use crate::simulate::simulate;
     use rs_poker::core::Hand;
 
     #[test]
@@ -152,12 +157,7 @@ mod test {
             .iter()
             .map(|s| Hand::new_from_str(s).unwrap())
             .collect();
-        let game = Game {
-            hand,
-            range,
-            board: vec![],
-        };
-        let result = simulate(game, 1).unwrap();
+        let result = simulate(&hand, &range, &vec![], 1).unwrap();
         println!("{:?}", result);
     }
 }
