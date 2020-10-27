@@ -1,12 +1,13 @@
-use crate::globals::ALL_CARDS;
-use rs_poker::core::{Card, Hand, Rankable};
-
 extern crate rand;
+
 use self::rand::rngs::ThreadRng;
 use self::rand::seq::SliceRandom;
 use rand::thread_rng;
-use std::collections::HashSet;
+use rs_poker::core::{Card, Hand, Rankable};
 use std::slice::Iter;
+
+use crate::cardset::CardSet;
+use crate::globals::ALL_CARDS;
 
 #[derive(Debug, Clone)]
 pub struct SimulationResult {
@@ -37,13 +38,13 @@ struct FastDrawDeck {
 
 impl FastDrawDeck {
     pub fn new(hand: &Hand, board: &Vec<Card>) -> Self {
-        let mut ineligible_cards: HashSet<Card> = HashSet::new();
+        let mut ineligible_cards = CardSet::new();
         for card in hand.iter() {
-            ineligible_cards.insert(*card);
+            ineligible_cards.insert(card);
         }
         // Note that we don't remove all cards in the range
         for card in board.iter() {
-            ineligible_cards.insert(*card);
+            ineligible_cards.insert(card);
         }
 
         FastDrawDeck {
@@ -62,7 +63,7 @@ impl FastDrawDeck {
         num_to_draw: usize,
         skippable: Iter<Card>,
     ) -> Vec<Card> {
-        let mut skippable: HashSet<Card> = skippable.copied().collect();
+        let mut skippable = CardSet::from_iter(skippable);
         let mut cards: Vec<Card> = vec![];
         cards.reserve_exact(num_to_draw);
 
@@ -77,7 +78,7 @@ impl FastDrawDeck {
                 continue;
             }
             cards.push(*test_card);
-            skippable.insert(*test_card);
+            skippable.insert(test_card);
         }
         cards
     }

@@ -2,8 +2,9 @@
 //
 
 use rs_poker::core::Card;
+use std::slice::Iter;
 
-/// The input of a simulation
+/// A set that holds cards
 pub struct CardSet {
     bitmap: u64,
 }
@@ -18,19 +19,28 @@ fn card_bit_mask(card: &Card) -> u64 {
 }
 
 impl CardSet {
-    fn new() -> CardSet {
+    pub fn new() -> CardSet {
         CardSet { bitmap: 0 }
     }
 
-    fn contains(&self, card: &Card) -> bool {
+    pub fn from_iter(cards: Iter<Card>) -> CardSet {
+        let mut set = CardSet::new();
+        for card in cards {
+            set.insert(card)
+        }
+
+        set
+    }
+
+    pub fn contains(&self, card: &Card) -> bool {
         self.bitmap & card_bit_mask(card) != 0
     }
 
-    fn add(&mut self, card: &Card) -> () {
+    pub fn insert(&mut self, card: &Card) {
         self.bitmap |= card_bit_mask(card)
     }
 
-    fn remove(&mut self, card: &Card) -> () {
+    pub fn remove(&mut self, card: &Card) {
         self.bitmap &= !card_bit_mask(card)
     }
 }
@@ -45,7 +55,7 @@ mod tests {
     fn test_set_contains() {
         let mut set = CardSet::new();
 
-        set.add(&Card {
+        set.insert(&Card {
             value: Value::Ace,
             suit: Suit::Spade,
         });
@@ -62,20 +72,20 @@ mod tests {
     }
 
     #[test]
-    fn test_set_multiple_add() {
+    fn test_set_multiple_insert() {
         let mut set = CardSet::new();
 
-        set.add(&Card {
+        set.insert(&Card {
             value: Value::Ace,
             suit: Suit::Spade,
         });
 
-        set.add(&Card {
+        set.insert(&Card {
             value: Value::Two,
             suit: Suit::Diamond,
         });
 
-        set.add(&Card {
+        set.insert(&Card {
             value: Value::Ten,
             suit: Suit::Heart,
         });
@@ -111,7 +121,7 @@ mod tests {
     fn test_set_removal() {
         let mut set = CardSet::new();
 
-        set.add(&Card {
+        set.insert(&Card {
             value: Value::Ace,
             suit: Suit::Spade,
         });
