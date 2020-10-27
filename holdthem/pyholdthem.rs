@@ -1,3 +1,4 @@
+mod cardset;
 mod globals;
 mod hand_comparison;
 mod hand_features;

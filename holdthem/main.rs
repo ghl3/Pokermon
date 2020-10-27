@@ -1,7 +1,7 @@
 mod globals;
 mod simulate;
 
-use crate::simulate::{simulate, Game};
+use crate::simulate::simulate;
 
 use clap::Clap;
 use rs_poker::core::{Card, Hand, Suit, Value};
@@ -51,15 +51,7 @@ fn main() {
         None => vec![],
     };
 
-    let win_counts = simulate(
-        Game {
-            hand,
-            range: oppo_range,
-            board,
-        },
-        opts.num_to_simulate,
-    )
-    .unwrap();
+    let win_counts = simulate(&hand, &oppo_range, &board, opts.num_to_simulate).unwrap();
 
     println!("Wins = {:?}", win_counts);
 }

@@ -11,6 +11,6 @@ notebooks
 target/
 build
 dist
-
+.DS_Store
 models
 examples
