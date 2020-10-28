@@ -1,32 +1,43 @@
-use rs_poker::core::{Card, Suit, Value};
+use rs_poker::core::{Card, Rankable, Suit, Value};
 use std::collections::HashSet;
 use std::ops::Index;
 use std::ops::{RangeFrom, RangeFull, RangeTo};
 use std::slice::Iter;
 
-pub struct HoleCards {
-    cards: [Card; 2],
+enum Cards {
+    HoleCards([Card; 2]),
+    BoardFlop([Card; 3]),
+    BoardTurn([Card; 4]),
+    BoardRiver([Card; 5]),
 }
 
-pub struct BoardFlop {
-    cards: [Card; 3],
+impl Cards {
+    fn cards(&self) -> &[Card] {
+        match self {
+            Cards::HoleCards(x) => x,
+            Cards::BoardFlop(x) => x,
+            Cards::BoardTurn(x) => x,
+            Cards::BoardRiver(x) => x,
+        }
+    }
 }
 
-pub struct BoardTurn {
-    cards: [Card; 4],
-}
-pub struct BoardTurnRiver {
-    cards: [Card; 5],
+enum Hand {
+    Five([Card; 5]),
+    Six([Card; 6]),
+    Seven([Card; 7]),
 }
 
-/// Struct to hold cards.
-///
-/// This doesn't have the ability to easily check if a card is
-/// in the hand. So do that before adding/removing a card.
-#[derive(Debug, Clone, Hash, PartialEq, Eq)]
-pub struct Hand {
-    /// Where all the cards are placed un-ordered.
-    cards: Vec<Card>,
+/// Implementation for `Hand`
+impl Rankable for Hand {
+    #[must_use]
+    fn cards(&self) -> &[Card] {
+        match self {
+            Hand::Five(x) => x,
+            Hand::Six(x) => x,
+            Hand::Seven(x) => x,
+        }
+    }
 }
 
 impl Hand {
