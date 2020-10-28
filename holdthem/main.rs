@@ -1,5 +1,6 @@
 mod cardset;
 mod globals;
+mod hand;
 mod simulate;
 
 use crate::simulate::simulate;
@@ -16,16 +17,16 @@ pub fn card_from_char(card_str: &str) -> Result<Card, String> {
 #[derive(Clap, Debug)]
 #[clap(name = "basic")]
 struct Opts {
-    #[clap(long)]
+    #[clap(long, default_value = "AdAh")]
     hand: String,
 
-    #[clap(long)]
+    #[clap(long, default_value = "8s7s")]
     range: String,
 
     #[clap(long)]
     board: Option<String>,
 
-    #[clap(long, default_value = "1000000")]
+    #[clap(long, default_value = "10000000")]
     num_to_simulate: i64,
 }
 

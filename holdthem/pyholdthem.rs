@@ -1,5 +1,6 @@
 mod cardset;
 mod globals;
+mod hand;
 mod hand_comparison;
 mod hand_features;
 mod simulate;
