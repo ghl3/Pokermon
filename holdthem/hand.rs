@@ -4,20 +4,74 @@ use std::ops::Index;
 use std::ops::{RangeFrom, RangeFull, RangeTo};
 use std::slice::Iter;
 
-enum Cards {
-    HoleCards([Card; 2]),
-    BoardFlop([Card; 3]),
-    BoardTurn([Card; 4]),
-    BoardRiver([Card; 5]),
+#[derive(Debug)]
+struct HoleCards {
+    pub cards: [Card; 2],
 }
 
-impl Cards {
+enum Board {
+    Flop([Card; 3]),
+    Turn([Card; 4]),
+    River([Card; 5]),
+}
+
+fn card_vec_from_string(hand_string: &str) -> Result<Vec<Card>, String> {
+    // Get the chars iterator.
+    let mut chars = hand_string.chars();
+    // Where we will put the cards
+    //
+    // We make the assumption that the hands will have 2 plus five cards.
+    let mut cards: HashSet<Card> = HashSet::with_capacity(7);
+
+    // Keep looping until we explicitly break
+    loop {
+        // Now try and get a char.
+        let vco = chars.next();
+        // If there was no char then we are done.
+        if vco == None {
+            break;
+        } else {
+            // If we got a value char then we should get a
+            // suit.
+            let sco = chars.next();
+            // Now try and parse the two chars that we have.
+            let v = vco
+                .and_then(Value::from_char)
+                .ok_or_else(|| format!("Couldn't parse value {}", vco.unwrap_or('?')))?;
+            let s = sco
+                .and_then(Suit::from_char)
+                .ok_or_else(|| format!("Couldn't parse suit {}", sco.unwrap_or('?')))?;
+
+            let c = Card { value: v, suit: s };
+            if !cards.insert(c) {
+                // If this card is already in the set then error out.
+                return Err(format!("This card has already been added {}", c));
+            }
+        }
+    }
+
+    if chars.next() != None {
+        return Err(String::from("Extra un-used chars found."));
+    }
+
+    Ok(cards.into_iter().collect::<Vec<Card>>())
+}
+
+impl Board {
     fn cards(&self) -> &[Card] {
         match self {
-            Cards::HoleCards(x) => x,
-            Cards::BoardFlop(x) => x,
-            Cards::BoardTurn(x) => x,
-            Cards::BoardRiver(x) => x,
+            Board::Flop(x) => x,
+            Board::Turn(x) => x,
+            Board::River(x) => x,
+        }
+    }
+
+    pub fn new_from_string(hand_string: &str) -> Result<Board, String> {
+        match card_vec_from_string(hand_string)?[..] {
+            [a, b, c] => Ok(Board::Flop([a, b, c])),
+            [a, b, c, d] => Ok(Board::Turn([a, b, c, d])),
+            [a, b, c, d, e] => Ok(Board::River([a, b, c, d, e])),
+            _ => Err("Cannot parse hand".parse().unwrap()),
         }
     }
 }
@@ -41,102 +95,18 @@ impl Rankable for Hand {
 }
 
 impl Hand {
-    /// Create the default empty hand.
-    #[must_use]
-    pub fn default() -> Self {
-        Self {
-            cards: Vec::with_capacity(5),
-        }
-    }
-    /// Create the hand with specific hand.
-    #[must_use]
-    pub fn new_with_cards(cards: Vec<Card>) -> Self {
-        Self { cards }
-    }
-
-    /// From a str create a new hand.
-    ///
-    /// # Examples
-    ///
-    /// ```
-    /// use rs_poker::core::Hand;
-    /// let hand = Hand::new_from_str("AdKd").unwrap();
-    /// ```
-    ///
-    /// Anything that can't be parsed will return an error.
-    ///
-    /// ```
-    /// use rs_poker::core::Hand;
-    /// let hand = Hand::new_from_str("AdKx");
-    /// assert!(hand.is_err());
-    /// ```
-    pub fn new_from_str(hand_string: &str) -> Result<Self, String> {
-        // Get the chars iterator.
-        let mut chars = hand_string.chars();
-        // Where we will put the cards
-        //
-        // We make the assumption that the hands will have 2 plus five cards.
-        let mut cards: HashSet<Card> = HashSet::with_capacity(7);
-
-        // Keep looping until we explicitly break
-        loop {
-            // Now try and get a char.
-            let vco = chars.next();
-            // If there was no char then we are done.
-            if vco == None {
-                break;
-            } else {
-                // If we got a value char then we should get a
-                // suit.
-                let sco = chars.next();
-                // Now try and parse the two chars that we have.
-                let v = vco
-                    .and_then(Value::from_char)
-                    .ok_or_else(|| format!("Couldn't parse value {}", vco.unwrap_or('?')))?;
-                let s = sco
-                    .and_then(Suit::from_char)
-                    .ok_or_else(|| format!("Couldn't parse suit {}", sco.unwrap_or('?')))?;
-
-                let c = Card { value: v, suit: s };
-                if !cards.insert(c) {
-                    // If this card is already in the set then error out.
-                    return Err(format!("This card has already been added {}", c));
-                }
+    pub fn from_hole_cards_and_board(hole_cards: HoleCards, board: Board) -> Hand {
+        match board {
+            Board::Flop([a, b, c]) => {
+                Hand::Five([hole_cards.cards[0], hole_cards.cards[1], a, b, c])
+            }
+            Board::Turn([a, b, c, d]) => {
+                Hand::Six([hole_cards.cards[0], hole_cards.cards[1], a, b, c, d])
+            }
+            Board::River([a, b, c, d, e]) => {
+                Hand::Seven([hole_cards.cards[0], hole_cards.cards[1], a, b, c, d, e])
             }
         }
-
-        if chars.next() != None {
-            return Err(String::from("Extra un-used chars found."));
-        }
-
-        let mut cv: Vec<Card> = cards.into_iter().collect();
-
-        cv.reserve(7);
-        Ok(Self { cards: cv })
-    }
-    /// Add card at to the hand.
-    /// No verification is done at all.
-    pub fn push(&mut self, c: Card) {
-        self.cards.push(c);
-    }
-    /// Truncate the hand to the given number of cards.
-    pub fn truncate(&mut self, len: usize) {
-        self.cards.truncate(len)
-    }
-    /// How many cards are in this hand so far ?
-    #[must_use]
-    pub fn len(&self) -> usize {
-        self.cards.len()
-    }
-    /// Are there any cards at all ?
-    #[must_use]
-    pub fn is_empty(&self) -> bool {
-        self.cards.is_empty()
-    }
-    /// Create an iter on the cards.
-    #[must_use]
-    pub fn iter(&self) -> Iter<Card> {
-        self.cards.iter()
     }
 }
 
@@ -145,7 +115,7 @@ impl Index<usize> for Hand {
     type Output = Card;
     #[must_use]
     fn index(&self, index: usize) -> &Card {
-        &self.cards[index]
+        &self.cards()[index]
     }
 }
 
@@ -154,7 +124,7 @@ impl Index<RangeFull> for Hand {
     type Output = [Card];
     #[must_use]
     fn index(&self, range: RangeFull) -> &[Card] {
-        &self.cards[range]
+        &self.cards()[range]
     }
 }
 
@@ -162,65 +132,92 @@ impl Index<RangeTo<usize>> for Hand {
     type Output = [Card];
     #[must_use]
     fn index(&self, index: RangeTo<usize>) -> &[Card] {
-        &self.cards[index]
+        &self.cards()[index]
     }
 }
 impl Index<RangeFrom<usize>> for Hand {
     type Output = [Card];
     #[must_use]
     fn index(&self, index: RangeFrom<usize>) -> &[Card] {
-        &self.cards[index]
+        &self.cards()[index]
     }
 }
 
 #[cfg(test)]
 mod tests {
     use super::*;
+    use std::collections::HashMap;
+    use std::hash::Hash;
 
-    #[test]
-    fn test_add_card() {
-        let mut h = Hand::default();
-        let c = Card {
-            value: Value::Three,
-            suit: Suit::Spade,
-        };
-        h.push(c);
-        // Make sure that the card was added to the vec.
-        //
-        // This will also test that has len works
-        assert_eq!(1, h.len());
-    }
-
-    #[test]
-    fn test_index() {
-        let mut h = Hand::default();
-        h.push(Card {
-            value: Value::Four,
-            suit: Suit::Spade,
-        });
-        // Make sure the card is there
-        assert_eq!(
-            Card {
-                value: Value::Four,
-                suit: Suit::Spade,
-            },
-            h[0]
-        );
-    }
-    #[test]
-    fn test_parse_error() {
-        assert!(Hand::new_from_str("BAD").is_err());
-        assert!(Hand::new_from_str("Adx").is_err());
+    fn eq_ignoring_order<T>(a: &[T], b: &[T]) -> bool
+    where
+        T: Eq + Hash,
+    {
+        fn value_count<T>(items: &[T]) -> HashMap<&T, usize>
+        where
+            T: Eq + Hash,
+        {
+            let mut cnt = HashMap::new();
+            for i in items {
+                *cnt.entry(i).or_insert(0) += 1
+            }
+            cnt
+        }
+        value_count(a) == value_count(b)
     }
 
     #[test]
-    fn test_parse_one_hand() {
-        let h = Hand::new_from_str("Ad").unwrap();
-        assert_eq!(1, h.len())
-    }
-    #[test]
-    fn test_parse_empty() {
-        let h = Hand::new_from_str("").unwrap();
-        assert!(h.is_empty());
+    fn test_card_vec_from_string() {
+        assert!(!eq_ignoring_order(
+            &card_vec_from_string("AcAh3s4s5s").unwrap()[..],
+            &[
+                Card {
+                    value: Value::Ace,
+                    suit: Suit::Club
+                },
+                Card {
+                    value: Value::Ace,
+                    suit: Suit::Heart
+                },
+                Card {
+                    value: Value::Two,
+                    suit: Suit::Spade
+                },
+                Card {
+                    value: Value::Three,
+                    suit: Suit::Spade
+                },
+                Card {
+                    value: Value::Four,
+                    suit: Suit::Spade
+                },
+            ]
+        ));
+
+        assert!(eq_ignoring_order(
+            &card_vec_from_string("AcAh3s4s5s").unwrap()[..],
+            &[
+                Card {
+                    value: Value::Ace,
+                    suit: Suit::Club
+                },
+                Card {
+                    value: Value::Ace,
+                    suit: Suit::Heart
+                },
+                Card {
+                    value: Value::Three,
+                    suit: Suit::Spade
+                },
+                Card {
+                    value: Value::Four,
+                    suit: Suit::Spade
+                },
+                Card {
+                    value: Value::Five,
+                    suit: Suit::Spade
+                },
+            ]
+        ));
     }
 }
