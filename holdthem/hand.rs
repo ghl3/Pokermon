@@ -104,19 +104,16 @@ pub enum Hand {
 }
 
 impl Hand {
-    pub fn from_hole_cards_and_board(
-        hole_cards: &HoleCards,
-        board: &Board,
-    ) -> Result<Hand, String> {
+    pub fn from_hole_cards_and_board(hole_cards: &HoleCards, board: &Board) -> Option<Hand> {
         match board {
-            Board::Flop([a, b, c]) => Ok(Hand::Five([
+            Board::Flop([a, b, c]) => Some(Hand::Five([
                 hole_cards.cards[0],
                 hole_cards.cards[1],
                 *a,
                 *b,
                 *c,
             ])),
-            Board::Turn([a, b, c, d]) => Ok(Hand::Six([
+            Board::Turn([a, b, c, d]) => Some(Hand::Six([
                 hole_cards.cards[0],
                 hole_cards.cards[1],
                 *a,
@@ -124,7 +121,7 @@ impl Hand {
                 *c,
                 *d,
             ])),
-            Board::River([a, b, c, d, e]) => Ok(Hand::Seven([
+            Board::River([a, b, c, d, e]) => Some(Hand::Seven([
                 hole_cards.cards[0],
                 hole_cards.cards[1],
                 *a,
@@ -133,9 +130,7 @@ impl Hand {
                 *d,
                 *e,
             ])),
-            Board::Empty => Err("Can only construct a hand from a non-empty board"
-                .parse()
-                .unwrap()),
+            Board::Empty => None,
         }
     }
 }

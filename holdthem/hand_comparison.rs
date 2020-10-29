@@ -9,9 +9,15 @@ pub struct NutResult {
     pub worse_hands: Vec<HoleCards>,
 }
 
-pub fn make_nut_result(hand: &HoleCards, board: &Board) -> NutResult {
-    let full_hand: Hand = Hand::from_hole_cards_and_board(hand, board)?;
-    let rank = full_hand.rank();
+pub fn make_nut_result(hole_cards: &HoleCards, board: &Board) -> NutResult {
+    match Hand::from_hole_cards_and_board(hole_cards, board) {
+        Some(hand) => make_nut_result_from_hand(&hand, board),
+        None => make_nut_result_from_hole_cards(&hole_cards),
+    }
+}
+
+fn make_nut_result_from_hand(hand: &Hand, board: &Board) -> NutResult {
+    let rank = hand.rank();
     let mut nut_result = NutResult {
         better_hands: vec![],
         tied_hands: vec![],
@@ -19,7 +25,7 @@ pub fn make_nut_result(hand: &HoleCards, board: &Board) -> NutResult {
     };
 
     for other_hand in ALL_HANDS.iter() {
-        let full_other_hand = Hand::from_hole_cards_and_board(other_hand, board);
+        let full_other_hand = Hand::from_hole_cards_and_board(other_hand, board).unwrap();
         let other_rank = full_other_hand.rank();
 
         if other_rank < rank {
@@ -32,4 +38,13 @@ pub fn make_nut_result(hand: &HoleCards, board: &Board) -> NutResult {
     }
 
     nut_result
+}
+
+// TODO: Implement this.
+fn make_nut_result_from_hole_cards(hole_cards: &HoleCards) -> NutResult {
+    NutResult {
+        better_hands: vec![],
+        tied_hands: vec![],
+        worse_hands: vec![],
+    }
 }
