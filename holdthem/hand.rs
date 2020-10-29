@@ -104,17 +104,38 @@ pub enum Hand {
 }
 
 impl Hand {
-    pub fn from_hole_cards_and_board(hole_cards: &HoleCards, board: &Board) -> Hand {
+    pub fn from_hole_cards_and_board(
+        hole_cards: &HoleCards,
+        board: &Board,
+    ) -> Result<Hand, String> {
         match board {
-            Board::Flop([a, b, c]) => {
-                Hand::Five([hole_cards.cards[0], hole_cards.cards[1], a, b, c])
-            }
-            Board::Turn([a, b, c, d]) => {
-                Hand::Six([hole_cards.cards[0], hole_cards.cards[1], a, b, c, d])
-            }
-            Board::River([a, b, c, d, e]) => {
-                Hand::Seven([hole_cards.cards[0], hole_cards.cards[1], a, b, c, d, e])
-            }
+            Board::Flop([a, b, c]) => Ok(Hand::Five([
+                hole_cards.cards[0],
+                hole_cards.cards[1],
+                *a,
+                *b,
+                *c,
+            ])),
+            Board::Turn([a, b, c, d]) => Ok(Hand::Six([
+                hole_cards.cards[0],
+                hole_cards.cards[1],
+                *a,
+                *b,
+                *c,
+                *d,
+            ])),
+            Board::River([a, b, c, d, e]) => Ok(Hand::Seven([
+                hole_cards.cards[0],
+                hole_cards.cards[1],
+                *a,
+                *b,
+                *c,
+                *d,
+                *e,
+            ])),
+            Board::Empty => Err("Can only construct a hand from a non-empty board"
+                .parse()
+                .unwrap()),
         }
     }
 }
@@ -382,7 +403,8 @@ mod tests {
             Hand::from_hole_cards_and_board(
                 &HoleCards::new_from_string("AcAh").unwrap(),
                 &Board::new_from_string("3s7d8c").unwrap()
-            ),
+            )
+            .unwrap(),
             Hand::Five([
                 Card {
                     value: Value::Ace,

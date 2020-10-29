@@ -22,7 +22,7 @@ lazy_static! {
         let mut hands: Vec<HoleCards> = vec![];
         for i in 0..ALL_CARDS.len() {
             for j in i + 1..ALL_CARDS.len() {
-                hands.push(HoleCards::new_from_cards(ALL_CARDS[i], ALL_CARDS[j]);
+                hands.push(HoleCards::new_from_cards(ALL_CARDS[i], ALL_CARDS[j]));
             }
         }
         hands

@@ -36,7 +36,7 @@ impl std::convert::From<HoldThemError> for PyErr {
 fn evaluate_hand(hole_cards: String, board: Vec<String>) -> Result<(i32, i32), HoldThemError> {
     let hole_cards = HoleCards::new_from_string(&hole_cards)?;
     let board = Board::new_from_string_vec(&board)?;
-    let hand = Hand::from_hole_cards_and_board(hole_cards, board);
+    let hand = Hand::from_hole_cards_and_board(&hole_cards, &board)?;
 
     Ok(match hand.rank() {
         Rank::HighCard(x) => (1, x as i32),
@@ -94,7 +94,7 @@ fn simulate_hand(
     let board = Board::new_from_string_vec(&board[..])?;
 
     let result = simulate(
-        &Hand::new_from_string(&*hand)?,
+        &HoleCards::new_from_string(&*hand)?,
         &range,
         &board,
         num_to_simulate,
@@ -146,14 +146,9 @@ fn make_hand_features(
     board: Vec<String>,
     num_to_simulate: i64,
 ) -> Result<HandFeatures, HoldThemError> {
-    let hand = Hand::new_from_str(&*hand)?;
-
-    let board: Vec<Card> = board
-        .iter()
-        .map(|s| card_from_str(s))
-        .collect::<Result<Vec<Card>, String>>()?;
-
-    let result = hand_features::make_hand_features(hand, board, num_to_simulate)?;
+    let hand = HoleCards::new_from_string(&*hand)?;
+    let board = Board::new_from_string_vec(&board[..])?;
+    let result = hand_features::make_hand_features(&hand, &board, num_to_simulate)?;
 
     Ok(HandFeatures::from(&result))
 }

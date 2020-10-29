@@ -5,8 +5,9 @@ mod simulate;
 
 use crate::simulate::simulate;
 
+use crate::hand::{Board, HoleCards};
 use clap::Clap;
-use rs_poker::core::{Card, Hand, Suit, Value};
+use rs_poker::core::{Card, Suit, Value};
 
 pub fn card_from_char(card_str: &str) -> Result<Card, String> {
     let value = Value::from_char(card_str.chars().next().unwrap()).unwrap();
@@ -33,24 +34,26 @@ struct Opts {
 fn main() {
     let opts: Opts = Opts::parse();
 
-    let hand = Hand::new_from_str(&*opts.hand).unwrap();
-    let oppo_range: Vec<Hand> = opts
+    let hand = HoleCards::new_from_string(&*opts.hand).unwrap();
+    let oppo_range: Vec<HoleCards> = opts
         .range
         .split(',')
-        .map(|s| Hand::new_from_str(s).unwrap())
+        .map(|s| HoleCards::new_from_string(s).unwrap())
         .collect();
 
-    let board: Vec<Card> = match opts.board {
-        Some(s) => {
-            let board_chars: Vec<char> = s.chars().collect();
-            board_chars
-                .chunks(2)
-                .map(|chunk| chunk.iter().collect::<String>())
-                .map(|s| card_from_char(&*s).unwrap())
-                .collect::<Vec<Card>>()
-        }
+    //let board = Board::new_from_string_vec(&board[..])?;
 
-        None => vec![],
+    let board: Board = match opts.board {
+        Some(s) => Board::new_from_string(&*s).unwrap(),
+
+        //           let board_chars: Vec<char> = s.chars().collect();
+        //           board_chars
+        //               .chunks(2)
+        //               .map(|chunk| chunk.iter().collect::<String>())
+        //               .map(|s| card_from_char(&*s).unwrap())
+        //              .collect::<Vec<Card>>()
+        //     }
+        None => Board::Empty,
     };
 
     let win_counts = simulate(&hand, &oppo_range, &board, opts.num_to_simulate).unwrap();

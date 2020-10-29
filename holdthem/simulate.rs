@@ -176,10 +176,10 @@ pub fn simulate(
         let drawn_board = deck.draw(&mut rng, num_cards_to_draw, villian_hole_cards.slice())?;
         let full_board: Board = drawn_board.combine(&board)?;
 
-        let hero_hand: Hand = Hand::from_hole_cards_and_board(hero_hole_cards, &full_board);
+        let hero_hand: Hand = Hand::from_hole_cards_and_board(hero_hole_cards, &full_board)?;
         let hero_rank = hero_hand.rank();
 
-        let villian_hand: Hand = Hand::from_hole_cards_and_board(villian_hole_cards, &full_board);
+        let villian_hand: Hand = Hand::from_hole_cards_and_board(villian_hole_cards, &full_board)?;
         let villian_rank = villian_hand.rank();
 
         if villian_rank == hero_rank {
