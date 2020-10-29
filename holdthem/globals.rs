@@ -1,5 +1,6 @@
+use crate::hand::HoleCards;
 use lazy_static::lazy_static;
-use rs_poker::core::{Card, Hand, Suit, Value};
+use rs_poker::core::{Card, Suit, Value};
 
 lazy_static! {
     pub static ref ALL_CARDS: Vec<Card> = {
@@ -17,11 +18,11 @@ lazy_static! {
 }
 
 lazy_static! {
-    pub static ref ALL_HANDS: Vec<Hand> = {
-        let mut hands: Vec<Hand> = vec![];
+    pub static ref ALL_HANDS: Vec<HoleCards> = {
+        let mut hands: Vec<HoleCards> = vec![];
         for i in 0..ALL_CARDS.len() {
             for j in i + 1..ALL_CARDS.len() {
-                hands.push(Hand::new_with_cards(vec![ALL_CARDS[i], ALL_CARDS[j]]))
+                hands.push(HoleCards::new_from_cards(ALL_CARDS[i], ALL_CARDS[j]);
             }
         }
         hands

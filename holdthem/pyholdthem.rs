@@ -11,7 +11,9 @@ use pyo3::prelude::*;
 use pyo3::types::PyModule;
 use pyo3::{wrap_pyfunction, PyObjectProtocol};
 
-use rs_poker::core::{Card, Hand, Rank, Rankable, Suit, Value};
+use crate::hand::{Board, Hand, HoleCards};
+
+use rs_poker::core::{Card, Rank, Rankable, Suit, Value};
 
 #[derive(Debug)]
 struct HoldThemError {
@@ -30,22 +32,11 @@ impl std::convert::From<HoldThemError> for PyErr {
     }
 }
 
-pub fn card_from_str(card_str: &str) -> Result<Card, String> {
-    if card_str.len() != 2 {
-        return Err(String::from("Error"));
-    }
-
-    let value = Value::from_char(card_str.chars().next().unwrap()).unwrap();
-    let suit = Suit::from_char(card_str.chars().nth(1).unwrap()).unwrap();
-    Ok(Card { value, suit })
-}
-
 #[pyfunction]
 fn evaluate_hand(hole_cards: String, board: Vec<String>) -> Result<(i32, i32), HoldThemError> {
-    let mut hand = Hand::new_from_str(&hole_cards)?;
-    for card in &board {
-        hand.push(card_from_str(card)?)
-    }
+    let hole_cards = HoleCards::new_from_string(&hole_cards)?;
+    let board = Board::new_from_string_vec(&board)?;
+    let hand = Hand::from_hole_cards_and_board(hole_cards, board);
 
     Ok(match hand.rank() {
         Rank::HighCard(x) => (1, x as i32),
@@ -96,17 +87,14 @@ fn simulate_hand(
     num_to_simulate: i64,
 ) -> Result<SimulationResult, HoldThemError> {
     print!("Simulating Hand");
-    let range: Vec<Hand> = range
+    let range: Vec<HoleCards> = range
         .iter()
-        .map(|s| Hand::new_from_str(s))
-        .collect::<Result<Vec<Hand>, String>>()?;
-    let board: Vec<Card> = board
-        .iter()
-        .map(|s| card_from_str(s))
-        .collect::<Result<Vec<Card>, String>>()?;
+        .map(|s| HoleCards::new_from_string(s))
+        .collect::<Result<Vec<HoleCards>, String>>()?;
+    let board = Board::new_from_string_vec(&board[..])?;
 
     let result = simulate(
-        &Hand::new_from_str(&*hand)?,
+        &Hand::new_from_string(&*hand)?,
         &range,
         &board,
         num_to_simulate,

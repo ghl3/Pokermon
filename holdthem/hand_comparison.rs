@@ -1,15 +1,16 @@
 use crate::globals::ALL_HANDS;
-use rs_poker::core::{Card, Hand, Rankable};
+use crate::hand::{Board, Hand, HoleCards};
+use rs_poker::core::{Card, Rankable};
 
 #[derive(Debug, Clone)]
 pub struct NutResult {
-    pub better_hands: Vec<Hand>,
-    pub tied_hands: Vec<Hand>,
-    pub worse_hands: Vec<Hand>,
+    pub better_hands: Vec<HoleCards>,
+    pub tied_hands: Vec<HoleCards>,
+    pub worse_hands: Vec<HoleCards>,
 }
 
-pub fn make_nut_result(hand: &Hand, board: &Vec<Card>) -> NutResult {
-    let full_hand = Hand::new_with_cards(hand.iter().chain(board.iter()).copied().collect());
+pub fn make_nut_result(hand: &HoleCards, board: &Board) -> NutResult {
+    let full_hand: Hand = Hand::from_hole_cards_and_board(hand, board);
     let rank = full_hand.rank();
     let mut nut_result = NutResult {
         better_hands: vec![],
@@ -18,8 +19,7 @@ pub fn make_nut_result(hand: &Hand, board: &Vec<Card>) -> NutResult {
     };
 
     for other_hand in ALL_HANDS.iter() {
-        let full_other_hand =
-            Hand::new_with_cards(other_hand.iter().chain(board.iter()).copied().collect());
+        let full_other_hand = Hand::from_hole_cards_and_board(other_hand, board);
         let other_rank = full_other_hand.rank();
 
         if other_rank < rank {

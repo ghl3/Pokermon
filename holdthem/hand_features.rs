@@ -1,6 +1,7 @@
+use crate::hand::{Board, HoleCards};
 use crate::hand_comparison::make_nut_result;
 use crate::simulate::simulate;
-use rs_poker::core::{Card, Hand};
+use rs_poker::core::Card;
 
 /// The input of a simulation
 #[derive(Debug)]
@@ -15,17 +16,17 @@ pub struct HandFeatures {
 }
 
 pub fn make_hand_features(
-    hand: Hand,
-    board: Vec<Card>,
+    hand: &HoleCards,
+    board: &Board,
     num_to_simulate: i64,
 ) -> Result<HandFeatures, String> {
-    let nut_result = make_nut_result(&hand, &board);
+    let nut_result = make_nut_result(hand, board);
 
-    let odds_vs_better = simulate(&hand, &nut_result.better_hands, &board, num_to_simulate)?;
+    let odds_vs_better = simulate(&hand, &nut_result.better_hands, board, num_to_simulate)?;
 
-    let odds_vs_tied = simulate(&hand, &nut_result.tied_hands, &board, num_to_simulate)?;
+    let odds_vs_tied = simulate(&hand, &nut_result.tied_hands, board, num_to_simulate)?;
 
-    let odds_vs_worse = simulate(&hand, &nut_result.worse_hands, &board, num_to_simulate)?;
+    let odds_vs_worse = simulate(&hand, &nut_result.worse_hands, board, num_to_simulate)?;
 
     Ok(HandFeatures {
         num_better_hands: nut_result.better_hands.len() as i64,

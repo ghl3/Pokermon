@@ -23,12 +23,14 @@ impl CardSet {
         CardSet { bitmap: 0 }
     }
 
-    pub fn from_iter(cards: Iter<Card>) -> CardSet {
+    pub fn from_iter<I>(cards: I) -> CardSet
+    where
+        I: Iterator<Item = Card>,
+    {
         let mut set = CardSet::new();
         for card in cards {
-            set.insert(card)
+            set.insert(&card)
         }
-
         set
     }
 

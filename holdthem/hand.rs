@@ -2,35 +2,63 @@ use rs_poker::core::{Card, Rankable, Suit, Value};
 use std::collections::HashSet;
 use std::ops::Index;
 use std::ops::{RangeFrom, RangeFull, RangeTo};
-use std::slice::Iter;
 
-#[derive(Debug, PartialEq)]
-struct HoleCards {
+pub fn card_from_str(card_str: &str) -> Result<Card, String> {
+    if card_str.len() != 2 {
+        return Err(String::from("Error"));
+    }
+
+    let value = Value::from_char(card_str.chars().next().unwrap()).unwrap();
+    let suit = Suit::from_char(card_str.chars().nth(1).unwrap()).unwrap();
+    Ok(Card { value, suit })
+}
+
+#[derive(Debug, PartialEq, Clone)]
+pub struct HoleCards {
     pub cards: [Card; 2],
 }
 
 impl HoleCards {
+    pub fn new_from_cards(c1: Card, c2: Card) -> HoleCards {
+        HoleCards { cards: [c1, c2] }
+    }
+
     pub fn new_from_string(hand_string: &str) -> Result<HoleCards, String> {
         match card_vec_from_string(hand_string)?[..] {
             [a, b] => Ok(HoleCards { cards: [a, b] }),
             _ => Err("Cannot parse hole cards".parse().unwrap()),
         }
     }
+
+    pub fn slice(&self) -> &[Card] {
+        &self.cards[..]
+    }
 }
 
-#[derive(Debug, PartialEq)]
-enum Board {
+#[derive(Debug, PartialEq, Clone)]
+pub enum Board {
+    Empty,
     Flop([Card; 3]),
     Turn([Card; 4]),
     River([Card; 5]),
 }
 
 impl Board {
-    fn cards(&self) -> &[Card] {
+    pub fn cards(&self) -> &[Card] {
         match self {
+            Board::Empty => &[] as &[Card; 0],
             Board::Flop(x) => x,
             Board::Turn(x) => x,
             Board::River(x) => x,
+        }
+    }
+
+    pub fn len(&self) -> usize {
+        match self {
+            Board::Empty => 0,
+            Board::Flop(x) => 3,
+            Board::Turn(x) => 4,
+            Board::River(x) => 5,
         }
     }
 
@@ -42,17 +70,41 @@ impl Board {
             _ => Err("Cannot parse board".parse().unwrap()),
         }
     }
+
+    pub fn new_from_string_vec(hand_strings: &[String]) -> Result<Board, String> {
+        match hand_strings {
+            [a, b, c] => Ok(Board::Flop([
+                card_from_str(a)?,
+                card_from_str(b)?,
+                card_from_str(c)?,
+            ])),
+            [a, b, c, d] => Ok(Board::Turn([
+                card_from_str(a)?,
+                card_from_str(b)?,
+                card_from_str(c)?,
+                card_from_str(d)?,
+            ])),
+            [a, b, c, d, e] => Ok(Board::River([
+                card_from_str(a)?,
+                card_from_str(b)?,
+                card_from_str(c)?,
+                card_from_str(d)?,
+                card_from_str(e)?,
+            ])),
+            _ => Err("Cannot parse board".parse().unwrap()),
+        }
+    }
 }
 
 #[derive(Debug, PartialEq)]
-enum Hand {
+pub enum Hand {
     Five([Card; 5]),
     Six([Card; 6]),
     Seven([Card; 7]),
 }
 
 impl Hand {
-    pub fn from_hole_cards_and_board(hole_cards: HoleCards, board: Board) -> Hand {
+    pub fn from_hole_cards_and_board(hole_cards: &HoleCards, board: &Board) -> Hand {
         match board {
             Board::Flop([a, b, c]) => {
                 Hand::Five([hole_cards.cards[0], hole_cards.cards[1], a, b, c])
@@ -328,8 +380,8 @@ mod tests {
     fn test_hand_from_hole_cards_and_board() {
         assert_eq!(
             Hand::from_hole_cards_and_board(
-                HoleCards::new_from_string("AcAh").unwrap(),
-                Board::new_from_string("3s7d8c").unwrap()
+                &HoleCards::new_from_string("AcAh").unwrap(),
+                &Board::new_from_string("3s7d8c").unwrap()
             ),
             Hand::Five([
                 Card {
