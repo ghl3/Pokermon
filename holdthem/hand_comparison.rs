@@ -25,6 +25,8 @@ fn make_nut_result_from_hand(hand: &Hand, board: &Board) -> NutResult {
     };
 
     for other_hand in ALL_HANDS.iter() {
+        // TODO: We should be able to eliminate this unwrap since we aready know the board
+        // is not empty at this point.
         let full_other_hand = Hand::from_hole_cards_and_board(other_hand, board).unwrap();
         let other_rank = full_other_hand.rank();
 

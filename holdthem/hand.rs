@@ -91,6 +91,7 @@ impl Board {
                 card_from_str(d)?,
                 card_from_str(e)?,
             ])),
+            [] => Ok(Board::Empty),
             _ => Err("Cannot parse board".parse().unwrap()),
         }
     }
