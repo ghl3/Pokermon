@@ -27,7 +27,7 @@ struct Opts {
     #[clap(long)]
     board: Option<String>,
 
-    #[clap(long, default_value = "10000000")]
+    #[clap(long, default_value = "100000000")]
     num_to_simulate: i64,
 }
 
