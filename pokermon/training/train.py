@@ -41,7 +41,7 @@ def train_heads_up(
 
     for player_name, model in policies.items():
         if num_hands_between_checkpoints and isinstance(model, HeadsUpModel):
-            ckpt_path = f"/Users/George/Projects/pokermon/models/{model.name}"
+            ckpt_path = f"/Users/George/Projects/pokermon/models/{model.name()}"
 
             trainers[player_name].checkpointer = Checkpointer(
                 model=model.model, optimizer=model.optimizer, directory=ckpt_path
@@ -105,14 +105,14 @@ def main():
         "--num_hands",
         help="Number of hands to play",
         type=int,
-        default=500,
+        default=10000,
     )
 
     parser.add_argument(
         "--checkpoint_every",
         help="Number between checkpoints",
         type=int,
-        default=100,
+        default=500,
     )
 
     parser.add_argument(
