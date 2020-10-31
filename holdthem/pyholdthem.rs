@@ -116,18 +116,39 @@ fn simulate_hand(
 #[derive(Debug)]
 struct HandFeatures {
     #[pyo3(get)]
-    pub num_better_hands: i64,
+    pub frac_better_hands: f32,
     #[pyo3(get)]
-    pub num_tied_hands: i64,
+    pub frac_tied_hands: f32,
     #[pyo3(get)]
-    pub num_worse_hands: i64,
+    pub frac_worse_hands: f32,
 
     #[pyo3(get)]
-    pub odds_vs_better: f32,
+    pub win_odds: f32,
     #[pyo3(get)]
-    pub odds_vs_tied: f32,
+    pub tie_odds: f32,
     #[pyo3(get)]
-    pub odds_vs_worse: f32,
+    pub lose_odds: f32,
+
+    #[pyo3(get)]
+    pub win_odds_vs_better: f32,
+    #[pyo3(get)]
+    pub tie_odds_vs_better: f32,
+    #[pyo3(get)]
+    pub lose_odds_vs_better: f32,
+
+    #[pyo3(get)]
+    pub win_odds_vs_tied: f32,
+    #[pyo3(get)]
+    pub tie_odds_vs_tied: f32,
+    #[pyo3(get)]
+    pub lose_odds_vs_tied: f32,
+
+    #[pyo3(get)]
+    pub win_odds_vs_worse: f32,
+    #[pyo3(get)]
+    pub tie_odds_vs_worse: f32,
+    #[pyo3(get)]
+    pub lose_odds_vs_worse: f32,
 }
 
 #[pyproto]
@@ -137,15 +158,27 @@ impl PyObjectProtocol for HandFeatures {
     }
 }
 
-impl std::convert::From<&features::HandFeatures> for HandFeatures {
-    fn from(res: &features::HandFeatures) -> HandFeatures {
+impl std::convert::From<&features::Features> for HandFeatures {
+    fn from(res: &features::Features) -> HandFeatures {
         HandFeatures {
-            num_better_hands: res.num_better_hands,
-            num_tied_hands: res.num_tied_hands,
-            num_worse_hands: res.num_worse_hands,
-            odds_vs_better: res.odds_vs_better.unwrap_or(-1.0),
-            odds_vs_tied: res.odds_vs_tied.unwrap_or(-1.0),
-            odds_vs_worse: res.odds_vs_worse.unwrap_or(-1.0),
+            frac_better_hands: res.frac_better_hands,
+            frac_tied_hands: res.frac_tied_hands,
+            frac_worse_hands: res.frac_worse_hands,
+            win_odds: res.win_odds,
+            tie_odds: res.tie_odds,
+            lose_odds: res.lose_odds,
+
+            win_odds_vs_better: res.win_odds_vs_better,
+            tie_odds_vs_better: res.tie_odds_vs_better,
+            lose_odds_vs_better: res.lose_odds_vs_better,
+
+            win_odds_vs_tied: res.win_odds_vs_tied,
+            tie_odds_vs_tied: res.tie_odds_vs_tied,
+            lose_odds_vs_tied: res.lose_odds_vs_tied,
+
+            win_odds_vs_worse: res.win_odds_vs_worse,
+            tie_odds_vs_worse: res.tie_odds_vs_worse,
+            lose_odds_vs_worse: res.lose_odds_vs_worse,
         }
     }
 }

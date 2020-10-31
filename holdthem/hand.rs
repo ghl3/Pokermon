@@ -13,6 +13,10 @@ pub fn card_from_str(card_str: &str) -> Result<Card, String> {
     Ok(Card { value, suit })
 }
 
+pub fn card_index(card: &Card) -> u32 {
+    card.value as u32 * 4 + card.suit as u32
+}
+
 #[derive(Debug, PartialEq, Clone)]
 pub struct HoleCards {
     pub cards: [Card; 2],
@@ -32,6 +36,19 @@ impl HoleCards {
 
     pub fn slice(&self) -> &[Card] {
         &self.cards[..]
+    }
+
+    pub fn preflop_index(&self) -> usize {
+        2 * (13 * self.cards[0].value as usize + self.cards[1].value as usize)
+            + if self.cards[0].suit == self.cards[1].suit {
+                0
+            } else {
+                1
+            }
+    }
+
+    pub fn index(&self) -> u32 {
+        52 * card_index(&self.cards[0]) + card_index(&self.cards[1])
     }
 }
 

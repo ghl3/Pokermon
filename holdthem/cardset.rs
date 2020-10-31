@@ -1,15 +1,12 @@
 // A set holding cards
 //
 
+use crate::hand::card_index;
 use rs_poker::core::Card;
 
 /// A set that holds cards
 pub struct CardSet {
     bitmap: u64,
-}
-
-fn card_index(card: &Card) -> u32 {
-    card.value as u32 * 4 + card.suit as u32
 }
 
 fn card_bit_mask(card: &Card) -> u64 {

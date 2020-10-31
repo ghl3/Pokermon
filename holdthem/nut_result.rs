@@ -9,6 +9,21 @@ pub struct NutResult {
     pub worse_hands: Vec<HoleCards>,
 }
 
+impl NutResult {
+    pub fn num_hands(&self) -> usize {
+        self.better_hands.len() + self.tied_hands.len() + self.worse_hands.len()
+    }
+    pub fn frac_better(&self) -> f32 {
+        self.better_hands.len() as f32 / self.num_hands() as f32
+    }
+    pub fn frac_tied(&self) -> f32 {
+        self.tied_hands.len() as f32 / self.num_hands() as f32
+    }
+    pub fn frac_worse(&self) -> f32 {
+        self.worse_hands.len() as f32 / self.num_hands() as f32
+    }
+}
+
 pub fn make_nut_result(hole_cards: &HoleCards, board: &Board) -> NutResult {
     let hand = Hand::from_hole_cards_and_board(hole_cards, board);
 

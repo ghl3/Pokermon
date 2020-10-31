@@ -21,11 +21,14 @@ impl SimulationResult {
     pub fn num_simulations(&self) -> i64 {
         self.num_wins + self.num_ties + self.num_losses
     }
-    pub fn win_frac(&self) -> Option<f32> {
-        match self.num_simulations() {
-            0 => None,
-            n => Some(self.num_wins as f32 / n as f32),
-        }
+    pub fn win_frac(&self) -> f32 {
+        self.num_wins as f32 / self.num_simulations() as f32
+    }
+    pub fn tie_frac(&self) -> f32 {
+        self.num_ties as f32 / self.num_simulations() as f32
+    }
+    pub fn lose_frac(&self) -> f32 {
+        self.num_losses as f32 / self.num_simulations() as f32
     }
 }
 
