@@ -1,5 +1,5 @@
 use crate::hand::{Board, HoleCards};
-use crate::hand_comparison::make_nut_result;
+use crate::nut_result::make_nut_result;
 use crate::simulate::simulate;
 
 /// The input of a simulation

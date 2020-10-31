@@ -9,7 +9,6 @@ use crate::cardset::CardSet;
 use crate::globals::ALL_CARDS;
 use crate::hand::{Board, Hand, HoleCards};
 use crate::stack_array::StackArray;
-use std::slice::Iter;
 
 #[derive(Debug, Clone)]
 pub struct SimulationResult {

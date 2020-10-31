@@ -1,8 +1,8 @@
 mod cardset;
+mod features;
 mod globals;
 mod hand;
-mod hand_comparison;
-mod hand_features;
+mod nut_result;
 mod simulate;
 mod stack_array;
 
@@ -137,8 +137,8 @@ impl PyObjectProtocol for HandFeatures {
     }
 }
 
-impl std::convert::From<&hand_features::HandFeatures> for HandFeatures {
-    fn from(res: &hand_features::HandFeatures) -> HandFeatures {
+impl std::convert::From<&features::HandFeatures> for HandFeatures {
+    fn from(res: &features::HandFeatures) -> HandFeatures {
         HandFeatures {
             num_better_hands: res.num_better_hands,
             num_tied_hands: res.num_tied_hands,
@@ -158,7 +158,7 @@ fn make_hand_features(
 ) -> Result<HandFeatures, HoldThemError> {
     let hand = HoleCards::new_from_string(&*hand)?;
     let board = Board::new_from_string_vec(&board[..])?;
-    let result = hand_features::make_hand_features(&hand, &board, num_to_simulate)?;
+    let result = features::make_hand_features(&hand, &board, num_to_simulate)?;
 
     Ok(HandFeatures::from(&result))
 }
