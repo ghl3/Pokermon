@@ -11,7 +11,7 @@ pub struct CardSet {
 
 fn card_bit_mask(card: &Card) -> u64 {
     let one: u64 = 1;
-    one.rotate_left(card_index(card))
+    one.rotate_left(card_index(card) as u32)
 }
 
 impl CardSet {

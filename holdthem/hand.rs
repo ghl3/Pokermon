@@ -13,8 +13,9 @@ pub fn card_from_str(card_str: &str) -> Result<Card, String> {
     Ok(Card { value, suit })
 }
 
-pub fn card_index(card: &Card) -> u32 {
-    card.value as u32 * 4 + card.suit as u32
+/// This must match the index of the card in globals::ALL_CARDS
+pub fn card_index(card: &Card) -> usize {
+    card.value as usize * 4 + card.suit as usize
 }
 
 #[derive(Debug, PartialEq, Clone)]
@@ -59,8 +60,16 @@ impl HoleCards {
         }
     }
 
-    pub fn index(&self) -> u32 {
-        52 * card_index(&self.cards[0]) + card_index(&self.cards[1])
+    /// This must match the index of the hand in globals::ALL_HANDS
+    pub fn index(&self) -> usize {
+        // c1 is the smaller card.  That is the 'first' one since we iterate
+        // from smaller cards to larger cards.  These indices start at 0.
+        let c1 = card_index(&self.cards[1]);
+        let c2 = card_index(&self.cards[0]);
+
+        // Sum(i=1 to c1) (52 - c1) if c1>0 else 0
+        let offset = 52 * c1 - c1 * (c1 + 1) / 2;
+        offset + (c2 - c1 - 1)
     }
 }
 
@@ -240,6 +249,8 @@ fn card_vec_from_string(hand_string: &str) -> Result<Vec<Card>, String> {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::globals::ALL_CARDS;
+    use crate::globals::ALL_HANDS;
     use std::collections::HashMap;
     use std::hash::Hash;
 
@@ -437,35 +448,16 @@ mod tests {
     }
 
     #[test]
-    fn test_three_aces() {
-        let hole_cards = HoleCards::new_from_string("3d2h").unwrap();
-        let board = Board::new_from_string("AsAdAc").unwrap().unwrap();
-        let hand = Hand::from_hole_cards_and_board(&hole_cards, &board);
-        let rank = hand.rank();
-        println!("{:?}", rank);
+    fn test_card_index() {
+        for c in ALL_CARDS.iter() {
+            assert_eq!(*c, ALL_CARDS[card_index(c)]);
+        }
     }
 
     #[test]
-    fn test_preflop_index() {
-        assert_eq!(
-            HoleCards::new_from_string("2d2s").unwrap().preflop_index(),
-            0
-        );
-        assert_eq!(
-            HoleCards::new_from_string("AcAd").unwrap().preflop_index(),
-            12
-        );
-        assert_eq!(
-            HoleCards::new_from_string("3d2h").unwrap().preflop_index(),
-            14
-        );
-        assert_eq!(
-            HoleCards::new_from_string("QsKs").unwrap().preflop_index(),
-            143
-        );
-        assert_eq!(
-            HoleCards::new_from_string("AdKh").unwrap().preflop_index(),
-            168
-        );
+    fn test_hand_index() {
+        for h in ALL_HANDS.iter() {
+            assert_eq!(*h, ALL_HANDS[h.index()]);
+        }
     }
 }
