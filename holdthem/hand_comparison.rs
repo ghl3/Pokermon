@@ -10,10 +10,7 @@ pub struct NutResult {
 }
 
 pub fn make_nut_result(hole_cards: &HoleCards, board: &Board) -> NutResult {
-    match Hand::from_hole_cards_and_board(hole_cards, board) {
-        Some(hand) => make_nut_result_from_hand(&hand, board),
-        None => make_nut_result_from_hole_cards(&hole_cards),
-    }
+    make_nut_result_from_hand(&Hand::from_hole_cards_and_board(hole_cards, board), board)
 }
 
 fn make_nut_result_from_hand(hand: &Hand, board: &Board) -> NutResult {
@@ -27,7 +24,7 @@ fn make_nut_result_from_hand(hand: &Hand, board: &Board) -> NutResult {
     for other_hand in ALL_HANDS.iter() {
         // TODO: We should be able to eliminate this unwrap since we aready know the board
         // is not empty at this point.
-        let full_other_hand = Hand::from_hole_cards_and_board(other_hand, board).unwrap();
+        let full_other_hand = Hand::from_hole_cards_and_board(other_hand, board);
         let other_rank = full_other_hand.rank();
 
         if other_rank < rank {
@@ -40,13 +37,4 @@ fn make_nut_result_from_hand(hand: &Hand, board: &Board) -> NutResult {
     }
 
     nut_result
-}
-
-// TODO: Implement this.
-fn make_nut_result_from_hole_cards(hole_cards: &HoleCards) -> NutResult {
-    NutResult {
-        better_hands: vec![],
-        tied_hands: vec![],
-        worse_hands: vec![],
-    }
 }

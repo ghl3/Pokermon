@@ -37,7 +37,6 @@ impl HoleCards {
 
 #[derive(Debug, PartialEq, Clone)]
 pub enum Board {
-    Empty,
     Flop([Card; 3]),
     Turn([Card; 4]),
     River([Card; 5]),
@@ -46,7 +45,6 @@ pub enum Board {
 impl Board {
     pub fn cards(&self) -> &[Card] {
         match self {
-            Board::Empty => &[] as &[Card; 0],
             Board::Flop(x) => x,
             Board::Turn(x) => x,
             Board::River(x) => x,
@@ -55,7 +53,6 @@ impl Board {
 
     pub fn len(&self) -> usize {
         match self {
-            Board::Empty => 0,
             Board::Flop(_) => 3,
             Board::Turn(_) => 4,
             Board::River(_) => 5,
@@ -71,27 +68,27 @@ impl Board {
         }
     }
 
-    pub fn new_from_string_vec(hand_strings: &[String]) -> Result<Board, String> {
+    pub fn new_from_string_vec(hand_strings: &[String]) -> Result<Option<Board>, String> {
         match hand_strings {
-            [a, b, c] => Ok(Board::Flop([
+            [a, b, c] => Ok(Some(Board::Flop([
                 card_from_str(a)?,
                 card_from_str(b)?,
                 card_from_str(c)?,
-            ])),
-            [a, b, c, d] => Ok(Board::Turn([
+            ]))),
+            [a, b, c, d] => Ok(Some(Board::Turn([
                 card_from_str(a)?,
                 card_from_str(b)?,
                 card_from_str(c)?,
                 card_from_str(d)?,
-            ])),
-            [a, b, c, d, e] => Ok(Board::River([
+            ]))),
+            [a, b, c, d, e] => Ok(Some(Board::River([
                 card_from_str(a)?,
                 card_from_str(b)?,
                 card_from_str(c)?,
                 card_from_str(d)?,
                 card_from_str(e)?,
-            ])),
-            [] => Ok(Board::Empty),
+            ]))),
+            [] => Ok(None),
             _ => Err("Cannot parse board".parse().unwrap()),
         }
     }
@@ -105,33 +102,17 @@ pub enum Hand {
 }
 
 impl Hand {
-    pub fn from_hole_cards_and_board(hole_cards: &HoleCards, board: &Board) -> Option<Hand> {
+    pub fn from_hole_cards_and_board(hole_cards: &HoleCards, board: &Board) -> Hand {
         match board {
-            Board::Flop([a, b, c]) => Some(Hand::Five([
-                hole_cards.cards[0],
-                hole_cards.cards[1],
-                *a,
-                *b,
-                *c,
-            ])),
-            Board::Turn([a, b, c, d]) => Some(Hand::Six([
-                hole_cards.cards[0],
-                hole_cards.cards[1],
-                *a,
-                *b,
-                *c,
-                *d,
-            ])),
-            Board::River([a, b, c, d, e]) => Some(Hand::Seven([
-                hole_cards.cards[0],
-                hole_cards.cards[1],
-                *a,
-                *b,
-                *c,
-                *d,
-                *e,
-            ])),
-            Board::Empty => None,
+            Board::Flop([a, b, c]) => {
+                Hand::Five([hole_cards.cards[0], hole_cards.cards[1], *a, *b, *c])
+            }
+            Board::Turn([a, b, c, d]) => {
+                Hand::Six([hole_cards.cards[0], hole_cards.cards[1], *a, *b, *c, *d])
+            }
+            Board::River([a, b, c, d, e]) => {
+                Hand::Seven([hole_cards.cards[0], hole_cards.cards[1], *a, *b, *c, *d, *e])
+            }
         }
     }
 }
@@ -399,8 +380,7 @@ mod tests {
             Hand::from_hole_cards_and_board(
                 &HoleCards::new_from_string("AcAh").unwrap(),
                 &Board::new_from_string("3s7d8c").unwrap()
-            )
-            .unwrap(),
+            ),
             Hand::Five([
                 Card {
                     value: Value::Ace,

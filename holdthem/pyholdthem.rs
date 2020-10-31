@@ -45,7 +45,8 @@ impl std::convert::From<HoldThemError> for PyErr {
 fn evaluate_hand(hole_cards: String, board: Vec<String>) -> Result<(i32, i32), HoldThemError> {
     let hole_cards = HoleCards::new_from_string(&hole_cards)?;
     let board = Board::new_from_string_vec(&board)?;
-    let hand = Hand::from_hole_cards_and_board(&hole_cards, &board).ok_or("err")?;
+    let hand =
+        Hand::from_hole_cards_and_board(&hole_cards, &board.ok_or("Board must not be empty")?);
 
     Ok(match hand.rank() {
         Rank::HighCard(x) => (1, x as i32),

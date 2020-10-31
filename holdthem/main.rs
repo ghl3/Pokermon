@@ -42,19 +42,9 @@ fn main() {
         .map(|s| HoleCards::new_from_string(s).unwrap())
         .collect();
 
-    //let board = Board::new_from_string_vec(&board[..])?;
-
-    let board: Board = match opts.board {
-        Some(s) => Board::new_from_string(&*s).unwrap(),
-
-        //           let board_chars: Vec<char> = s.chars().collect();
-        //           board_chars
-        //               .chunks(2)
-        //               .map(|chunk| chunk.iter().collect::<String>())
-        //               .map(|s| card_from_char(&*s).unwrap())
-        //              .collect::<Vec<Card>>()
-        //     }
-        None => Board::Empty,
+    let board: Option<Board> = match opts.board {
+        Some(s) => Some(Board::new_from_string(&*s).unwrap()),
+        None => None,
     };
 
     let win_counts = simulate(&hand, &oppo_range, &board, opts.num_to_simulate).unwrap();

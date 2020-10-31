@@ -9,6 +9,7 @@ use crate::cardset::CardSet;
 use crate::globals::ALL_CARDS;
 use crate::hand::{Board, Hand, HoleCards};
 use crate::stack_array::StackArray;
+use std::slice::Iter;
 
 #[derive(Debug, Clone)]
 pub struct SimulationResult {
@@ -37,20 +38,18 @@ enum DrawnCards {
 }
 
 impl DrawnCards {
-    fn combine(&self, board: &Board) -> Result<Board, String> {
+    fn combine(&self, board: &Option<Board>) -> Result<Board, String> {
         match (board, self) {
-            (Board::River([a, b, c, d, e]), DrawnCards::Zero) => {
+            (Some(Board::River([a, b, c, d, e])), DrawnCards::Zero) => {
                 Ok(Board::River([*a, *b, *c, *d, *e]))
             }
-            (Board::Turn([a, b, c, d]), DrawnCards::One(e)) => {
+            (Some(Board::Turn([a, b, c, d])), DrawnCards::One(e)) => {
                 Ok(Board::River([*a, *b, *c, *d, *e]))
             }
-            (Board::Flop([a, b, c]), DrawnCards::Two(d, e)) => {
+            (Some(Board::Flop([a, b, c])), DrawnCards::Two(d, e)) => {
                 Ok(Board::River([*a, *b, *c, *d, *e]))
             }
-            (Board::Empty, DrawnCards::Five(a, b, c, d, e)) => {
-                Ok(Board::River([*a, *b, *c, *d, *e]))
-            }
+            (None, DrawnCards::Five(a, b, c, d, e)) => Ok(Board::River([*a, *b, *c, *d, *e])),
             _ => Err("Foo".parse().unwrap()),
         }
     }
@@ -65,11 +64,8 @@ struct FastDrawDeck {
 }
 
 impl FastDrawDeck {
-    pub fn new<I>(ineligible_cards_iter: I) -> Self
-    where
-        I: Iterator<Item = Card>,
-    {
-        let ineligible_cards = CardSet::from_iter(ineligible_cards_iter);
+    pub fn new(ineligible_cards: CardSet) -> Self {
+        // let ineligible_cards = CardSet::from_iter(ineligible_cards_iter);
 
         FastDrawDeck {
             cards: ALL_CARDS
@@ -119,10 +115,23 @@ impl FastDrawDeck {
     }
 }
 
+fn make_cardset(hole_cards: &HoleCards, board: &Option<Board>) -> CardSet {
+    let mut set = CardSet::new();
+    for c in hole_cards.cards.iter() {
+        set.insert(c);
+    }
+    if let Some(b) = board {
+        for c in b.cards() {
+            set.insert(c)
+        }
+    };
+    set
+}
+
 pub fn simulate(
     hero_hole_cards: &HoleCards,
     range: &Vec<HoleCards>,
-    board: &Board,
+    board: &Option<Board>,
     num_to_simulate: i64,
 ) -> Result<SimulationResult, String> {
     if range.is_empty() {
@@ -130,16 +139,10 @@ pub fn simulate(
     }
 
     // First, create the deck
-    let mut deck = FastDrawDeck::new(
-        hero_hole_cards
-            .slice()
-            .iter()
-            .chain(board.cards().iter())
-            .copied(),
-    );
+    let mut deck = FastDrawDeck::new(make_cardset(hero_hole_cards, board));
 
     // Cards to draw
-    let num_cards_to_draw = 5 - board.len();
+    let num_cards_to_draw = 5 - board.as_ref().map_or(0, |b| b.len());
 
     let mut rng = thread_rng();
 
@@ -154,14 +157,12 @@ pub fn simulate(
         let villian_hole_cards = range.choose(&mut rng).unwrap();
 
         let drawn_board = deck.draw(&mut rng, num_cards_to_draw, villian_hole_cards.slice())?;
-        let full_board: Board = drawn_board.combine(&board)?;
+        let full_board: Board = drawn_board.combine(board)?;
 
-        let hero_hand: Hand =
-            Hand::from_hole_cards_and_board(hero_hole_cards, &full_board).ok_or("Foo")?;
+        let hero_hand: Hand = Hand::from_hole_cards_and_board(hero_hole_cards, &full_board);
         let hero_rank = hero_hand.rank();
 
-        let villian_hand: Hand =
-            Hand::from_hole_cards_and_board(villian_hole_cards, &full_board).ok_or("Foo")?;
+        let villian_hand: Hand = Hand::from_hole_cards_and_board(villian_hole_cards, &full_board);
         let villian_rank = villian_hand.rank();
 
         if villian_rank == hero_rank {
@@ -186,7 +187,7 @@ mod test {
             HoleCards::new_from_string("AdAh").unwrap(),
             HoleCards::new_from_string("2c2s").unwrap(),
         ];
-        let result = simulate(&hole_cards, &range, &Board::Empty, 1).unwrap();
+        let result = simulate(&hole_cards, &range, &None, 1).unwrap();
         println!("{:?}", result);
     }
 }
