@@ -10,10 +10,8 @@ pub struct NutResult {
 }
 
 pub fn make_nut_result(hole_cards: &HoleCards, board: &Board) -> NutResult {
-    make_nut_result_from_hand(&Hand::from_hole_cards_and_board(hole_cards, board), board)
-}
+    let hand = Hand::from_hole_cards_and_board(hole_cards, board);
 
-fn make_nut_result_from_hand(hand: &Hand, board: &Board) -> NutResult {
     let rank = hand.rank();
     let mut nut_result = NutResult {
         better_hands: vec![],
