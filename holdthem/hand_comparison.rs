@@ -1,6 +1,6 @@
 use crate::globals::ALL_HANDS;
 use crate::hand::{Board, Hand, HoleCards};
-use rs_poker::core::{Card, Rankable};
+use rs_poker::core::Rankable;
 
 #[derive(Debug, Clone)]
 pub struct NutResult {

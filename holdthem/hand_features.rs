@@ -1,7 +1,6 @@
 use crate::hand::{Board, HoleCards};
 use crate::hand_comparison::make_nut_result;
 use crate::simulate::simulate;
-use rs_poker::core::Card;
 
 /// The input of a simulation
 #[derive(Debug)]

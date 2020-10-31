@@ -56,9 +56,9 @@ impl Board {
     pub fn len(&self) -> usize {
         match self {
             Board::Empty => 0,
-            Board::Flop(x) => 3,
-            Board::Turn(x) => 4,
-            Board::River(x) => 5,
+            Board::Flop(_) => 3,
+            Board::Turn(_) => 4,
+            Board::River(_) => 5,
         }
     }
 

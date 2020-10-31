@@ -3,7 +3,7 @@ extern crate rand;
 use self::rand::rngs::ThreadRng;
 use self::rand::seq::SliceRandom;
 use rand::thread_rng;
-use rs_poker::core::{Card, Rankable, Suit, Value};
+use rs_poker::core::{Card, Rankable};
 
 use crate::cardset::CardSet;
 use crate::globals::ALL_CARDS;
@@ -39,7 +39,9 @@ enum DrawnCards {
 impl DrawnCards {
     fn combine(&self, board: &Board) -> Result<Board, String> {
         match (board, self) {
-            (Board::River([a, b, c, d, e]), DrawnCards::Zero) => Ok((*board).clone()),
+            (Board::River([a, b, c, d, e]), DrawnCards::Zero) => {
+                Ok(Board::River([*a, *b, *c, *d, *e]))
+            }
             (Board::Turn([a, b, c, d]), DrawnCards::One(e)) => {
                 Ok(Board::River([*a, *b, *c, *d, *e]))
             }
@@ -68,18 +70,6 @@ impl FastDrawDeck {
         I: Iterator<Item = Card>,
     {
         let ineligible_cards = CardSet::from_iter(ineligible_cards_iter);
-
-        //   let mut ineligible_cards = CardSet::new();
-        //   for card in hand.iter() {
-        //       ineligible_cards.insert(card);
-        //   }
-
-        //   let ineligible_cards = ineligible_cards.
-
-        // Note that we don't remove all cards in the range
-        //for card in board.iter() {
-        //    ineligible_cards.insert(card);
-        //}
 
         FastDrawDeck {
             cards: ALL_CARDS

@@ -2,7 +2,6 @@
 //
 
 use rs_poker::core::Card;
-use std::slice::Iter;
 
 /// A set that holds cards
 pub struct CardSet {

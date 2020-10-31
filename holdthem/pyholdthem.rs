@@ -14,7 +14,7 @@ use pyo3::{wrap_pyfunction, PyObjectProtocol};
 
 use crate::hand::{Board, Hand, HoleCards};
 
-use rs_poker::core::{Card, Rank, Rankable, Suit, Value};
+use rs_poker::core::{Rank, Rankable};
 
 #[derive(Debug)]
 struct HoldThemError {
