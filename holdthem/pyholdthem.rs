@@ -61,6 +61,32 @@ fn evaluate_hand(hole_cards: String, board: Vec<String>) -> Result<(i32, i32), H
     })
 }
 
+#[pyfunction]
+fn evaluate_hand_from_indices(
+    hole_cards: i32,
+    board: Vec<i32>,
+) -> Result<(i32, i32), HoldThemError> {
+    let hole_cards = HoleCards::new_from_index(hole_cards as usize);
+    let board: Option<Board> = Board::new_from_indices(&board)?;
+
+    //let hole_cards = HoleCards::new_from_string(&hole_cards)?;
+    //let board = Board::new_from_string_vec(&board)?;
+    let hand =
+        Hand::from_hole_cards_and_board(&hole_cards, &board.ok_or("Board must not be empty")?);
+
+    Ok(match hand.rank() {
+        Rank::HighCard(x) => (1, x as i32),
+        Rank::OnePair(x) => (2, x as i32),
+        Rank::TwoPair(x) => (3, x as i32),
+        Rank::ThreeOfAKind(x) => (4, x as i32),
+        Rank::Straight(x) => (5, x as i32),
+        Rank::Flush(x) => (6, x as i32),
+        Rank::FullHouse(x) => (7, x as i32),
+        Rank::FourOfAKind(x) => (8, x as i32),
+        Rank::StraightFlush(x) => (9, x as i32),
+    })
+}
+
 #[pyclass]
 #[derive(Debug)]
 struct SimulationResult {
@@ -192,7 +218,18 @@ fn make_hand_features(
     let hand = HoleCards::new_from_string(&*hand)?;
     let board = Board::new_from_string_vec(&board[..])?;
     let result = features::make_hand_features(&hand, &board, num_to_simulate)?;
+    Ok(HandFeatures::from(&result))
+}
 
+#[pyfunction]
+fn make_hand_features_from_indices(
+    hand: i32,
+    board: Vec<i32>,
+    num_to_simulate: i64,
+) -> Result<HandFeatures, HoldThemError> {
+    let hand = HoleCards::new_from_index(hand as usize);
+    let board = Board::new_from_indices(&board[..])?;
+    let result = features::make_hand_features(&hand, &board, num_to_simulate)?;
     Ok(HandFeatures::from(&result))
 }
 
@@ -200,7 +237,10 @@ fn make_hand_features(
 #[pymodule]
 fn pyholdthem(_py: Python, m: &PyModule) -> PyResult<()> {
     m.add_function(wrap_pyfunction!(evaluate_hand, m)?)?;
+    m.add_function(wrap_pyfunction!(evaluate_hand_from_indices, m)?)?;
     m.add_function(wrap_pyfunction!(simulate_hand, m)?)?;
     m.add_function(wrap_pyfunction!(make_hand_features, m)?)?;
+    m.add_function(wrap_pyfunction!(make_hand_features_from_indices, m)?)?;
+
     Ok(())
 }

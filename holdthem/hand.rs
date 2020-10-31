@@ -1,3 +1,4 @@
+use crate::globals;
 use rs_poker::core::{Card, Rankable, Suit, Value};
 use std::collections::HashSet;
 use std::ops::Index;
@@ -13,6 +14,10 @@ pub fn card_from_str(card_str: &str) -> Result<Card, String> {
     Ok(Card { value, suit })
 }
 
+pub fn card_from_index(i: usize) -> Card {
+    globals::ALL_CARDS[i]
+}
+
 /// This must match the index of the card in globals::ALL_CARDS
 pub fn card_index(card: &Card) -> usize {
     card.value as usize * 4 + card.suit as usize
@@ -25,7 +30,7 @@ pub struct HoleCards {
 
 impl HoleCards {
     pub fn new_from_cards(c1: Card, c2: Card) -> HoleCards {
-        if (c1 > c2) {
+        if c1 > c2 {
             HoleCards { cards: [c1, c2] }
         } else {
             HoleCards { cards: [c2, c1] }
@@ -37,6 +42,10 @@ impl HoleCards {
             [a, b] => Ok(HoleCards::new_from_cards(a, b)),
             _ => Err("Cannot parse hole cards".parse().unwrap()),
         }
+    }
+
+    pub fn new_from_index(i: usize) -> HoleCards {
+        globals::ALL_HANDS[i].clone()
     }
 
     pub fn slice(&self) -> &[Card] {
@@ -126,6 +135,31 @@ impl Board {
                 card_from_str(c)?,
                 card_from_str(d)?,
                 card_from_str(e)?,
+            ]))),
+            [] => Ok(None),
+            _ => Err("Cannot parse board".parse().unwrap()),
+        }
+    }
+
+    pub fn new_from_indices(hand_strings: &[i32]) -> Result<Option<Board>, String> {
+        match hand_strings {
+            [a, b, c] => Ok(Some(Board::Flop([
+                card_from_index(*a as usize),
+                card_from_index(*b as usize),
+                card_from_index(*c as usize),
+            ]))),
+            [a, b, c, d] => Ok(Some(Board::Turn([
+                card_from_index(*a as usize),
+                card_from_index(*b as usize),
+                card_from_index(*c as usize),
+                card_from_index(*d as usize),
+            ]))),
+            [a, b, c, d, e] => Ok(Some(Board::River([
+                card_from_index(*a as usize),
+                card_from_index(*b as usize),
+                card_from_index(*c as usize),
+                card_from_index(*d as usize),
+                card_from_index(*e as usize),
             ]))),
             [] => Ok(None),
             _ => Err("Cannot parse board".parse().unwrap()),
