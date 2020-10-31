@@ -42,14 +42,11 @@ def test_game_result():
         won_hand=[True, False, False],
         hand_results=[
             EvaluationResult(
-                hand_type=HandType.TWO_PAIR, rank=2546, percentage=0.6588046100241223
+                hand_type=HandType.TWO_PAIR,
+                kicker=33686528,
             ),
-            EvaluationResult(
-                hand_type=HandType.TWO_PAIR, rank=2667, percentage=0.6425891181988743
-            ),
-            EvaluationResult(
-                hand_type=HandType.TWO_PAIR, rank=2877, percentage=0.6144465290806754
-            ),
+            EvaluationResult(hand_type=HandType.TWO_PAIR, kicker=16909312),
+            EvaluationResult(hand_type=HandType.TWO_PAIR, kicker=4326400),
         ],
         went_to_showdown=[True, True, True],
         remained_in_hand=[True, True, True],
@@ -91,15 +88,9 @@ def test_game_with_tie():
     assert result == Result(
         won_hand=[True, True, False],
         hand_results=[
-            EvaluationResult(
-                hand_type=HandType.FULL_HOUSE, rank=167, percentage=0.9776199410345752
-            ),
-            EvaluationResult(
-                hand_type=HandType.FULL_HOUSE, rank=167, percentage=0.9776199410345752
-            ),
-            EvaluationResult(
-                hand_type=HandType.TWO_PAIR, rank=2473, percentage=0.6685875100509246
-            ),
+            EvaluationResult(hand_type=HandType.FULL_HOUSE, kicker=33556480),
+            EvaluationResult(hand_type=HandType.FULL_HOUSE, kicker=33556480),
+            EvaluationResult(hand_type=HandType.TWO_PAIR, kicker=50331680),
         ],
         remained_in_hand=[True, True, True],
         went_to_showdown=[True, True, True],

@@ -189,7 +189,7 @@ impl std::convert::From<&features::Features> for HandFeatures {
             frac_better_hands: res.frac_better_hands,
             frac_tied_hands: res.frac_tied_hands,
             frac_worse_hands: res.frac_worse_hands,
-            
+
             win_odds: res.win_odds,
             tie_odds: res.tie_odds,
             lose_odds: res.lose_odds,

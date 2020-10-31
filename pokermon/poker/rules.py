@@ -270,11 +270,11 @@ def get_ranked_hand_groups(hands: Dict[int, EvaluationResult]) -> List[List[int]
     """
 
     hand_ranks: Dict[int, List[int]] = defaultdict(list)
-    for player_idx, res in hands.items():
-        hand_ranks[res.rank].append(player_idx)
+    for player_idx, eval in hands.items():
+        hand_ranks[(eval.hand_type, eval.kicker)].append(player_idx)
 
     # The 'lowest' rank is the best hand
-    return [players for rank, players in sorted(hand_ranks.items(), key=lambda x: x[0])]
+    return [players for rank, players in sorted(hand_ranks.items(), reverse=True)]
 
 
 def create_tied_player_sidepots(

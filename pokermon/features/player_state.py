@@ -6,7 +6,6 @@ from dataclasses import dataclass
 from typing import Dict, List, Optional
 
 import pyholdthem
-
 from pokermon.features.utils import iter_game_states
 from pokermon.poker.board import Board
 from pokermon.poker.evaluation import evaluate_hand

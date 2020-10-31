@@ -3,9 +3,9 @@ from __future__ import annotations
 from dataclasses import dataclass
 from functools import total_ordering
 
+import pyholdthem
 from pokermon.poker.board import Board
 from pokermon.poker.hands import HandType, HoleCards
-import pyholdthem
 
 
 @total_ordering

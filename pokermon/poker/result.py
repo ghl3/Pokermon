@@ -101,5 +101,5 @@ def get_winning_players(hands: Dict[int, EvaluationResult]) -> Set[int]:
     :return:
     """
     # Lower ranks are better
-    winning_rank = min([res.rank for _, res in hands.items()])
-    return {player_idx for player_idx, h in hands.items() if h.rank == winning_rank}
+    winning_rank = max([eval for _, eval in hands.items()])
+    return {player_idx for player_idx, eval in hands.items() if eval == winning_rank}
