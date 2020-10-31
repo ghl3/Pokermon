@@ -139,7 +139,7 @@ pub fn make_post_flop_hand_features(
 }
 
 pub fn make_pre_flop_hand_features(hand: &HoleCards) -> Features {
-    let (_, win_odds, tie_odds, lose_odds) = PREFLOP_HAND_FEATURES[hand.preflop_index()];
+    let (_, _, win_odds, tie_odds, lose_odds) = PREFLOP_HAND_FEATURES[hand.preflop_index()];
 
     Features {
         frac_better_hands: -1.0,
