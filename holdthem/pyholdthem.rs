@@ -122,7 +122,6 @@ fn simulate_hand(
     board: Vec<String>,
     num_to_simulate: i64,
 ) -> Result<SimulationResult, HoldThemError> {
-    print!("Simulating Hand");
     let range: Vec<HoleCards> = range
         .iter()
         .map(|s| HoleCards::new_from_string(s))

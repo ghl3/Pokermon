@@ -3,45 +3,41 @@ from __future__ import annotations
 from dataclasses import dataclass
 from functools import total_ordering
 
-import deuces
-from pokermon.poker import deuces_wrapper
 from pokermon.poker.board import Board
 from pokermon.poker.hands import HandType, HoleCards
+import pyholdthem
 
 
 @total_ordering
 @dataclass
 class EvaluationResult:
-    hand_type: HandType
-
-    # Lower is better
-    rank: int
 
     # Higher is better
-    percentage: float
+    hand_type: HandType
+
+    # Higher is better
+    kicker: int
 
     def __lt__(self, other: object) -> bool:
         if not isinstance(other, EvaluationResult):
             raise Exception()
-        return self.percentage < other.percentage
+        return (self.hand_type.value, self.kicker) < (
+            other.hand_type.value,
+            other.kicker,
+        )
 
     def __eq__(self, other: object) -> bool:
         if not isinstance(other, EvaluationResult):
             raise Exception()
-        return self.rank == other.rank
-
-
-_EVALUATOR = deuces.Evaluator()
+        return (self.hand_type.value, self.kicker) == (
+            other.hand_type.value,
+            other.kicker,
+        )
 
 
 def evaluate_hand(hole_cards: HoleCards, board: Board) -> EvaluationResult:
-    d_hand = deuces_wrapper.to_deuces_hand(hole_cards)
-    d_board = deuces_wrapper.to_deuces_board(board)
+    (hand, kicker) = pyholdthem.evaluate_hand_from_indices(
+        hole_cards.index(), [c.index() for c in board.cards()]
+    )
 
-    rank = _EVALUATOR.evaluate(d_hand, d_board)
-    rank_class = _EVALUATOR.get_rank_class(rank)
-    percentage = 1.0 - _EVALUATOR.get_five_card_rank_percentage(rank)
-
-    hand_type = deuces_wrapper.from_deuces_hand_type(rank_class)
-
-    return EvaluationResult(hand_type=hand_type, rank=rank, percentage=percentage)
+    return EvaluationResult(hand_type=HandType(hand), kicker=kicker)
