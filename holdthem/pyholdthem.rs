@@ -4,6 +4,7 @@ mod hand;
 mod hand_comparison;
 mod hand_features;
 mod simulate;
+mod stack_array;
 
 use crate::simulate::simulate;
 use pyo3::exceptions::PyValueError;

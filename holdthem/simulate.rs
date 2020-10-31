@@ -4,11 +4,11 @@ use self::rand::rngs::ThreadRng;
 use self::rand::seq::SliceRandom;
 use rand::thread_rng;
 use rs_poker::core::{Card, Rankable, Suit, Value};
-use std::slice::Iter;
 
 use crate::cardset::CardSet;
 use crate::globals::ALL_CARDS;
 use crate::hand::{Board, Hand, HoleCards};
+use crate::stack_array::StackArray;
 
 #[derive(Debug, Clone)]
 pub struct SimulationResult {
@@ -102,17 +102,10 @@ impl FastDrawDeck {
         //cards.reserve_exact(num_to_draw);
 
         assert!(num_to_draw == 0 || num_to_draw == 1 || num_to_draw == 2 || num_to_draw == 5);
-        // Create an array of dummy cards of at most length 5, since thats the most
-        // number of cards we'll draw.  We use an array and not a vector to keep
-        // everything on the stack.
-        let mut cards: [Card; 5] = [Card {
-            value: Value::Ace,
-            suit: Suit::Spade,
-        }; 5];
 
-        let mut num_drawn = 0;
+        let mut cards: StackArray<Card> = StackArray::Zero;
 
-        while num_drawn < num_to_draw {
+        while cards.len() < num_to_draw {
             if self.current_index >= self.cards.len() {
                 self.cards.shuffle(rng);
                 self.current_index = 0;
@@ -122,18 +115,15 @@ impl FastDrawDeck {
                 self.current_index += 1;
                 continue;
             }
-            cards[num_drawn] = *test_card;
+            cards = cards.push(*test_card);
             skip_set.insert(test_card);
-            num_drawn += 1;
         }
 
-        match num_drawn {
-            0 => Ok(DrawnCards::Zero),
-            1 => Ok(DrawnCards::One(cards[0])),
-            2 => Ok(DrawnCards::Two(cards[0], cards[1])),
-            5 => Ok(DrawnCards::Five(
-                cards[0], cards[1], cards[2], cards[3], cards[4],
-            )),
+        match cards {
+            StackArray::Zero => Ok(DrawnCards::Zero),
+            StackArray::One(a) => Ok(DrawnCards::One(a)),
+            StackArray::Two(a, b) => Ok(DrawnCards::Two(a, b)),
+            StackArray::Five(a, b, c, d, e) => Ok(DrawnCards::Five(a, b, c, d, e)),
             _ => Err("Invaid number of cards".parse().unwrap()),
         }
     }
@@ -155,7 +145,7 @@ pub fn simulate(
             .slice()
             .iter()
             .chain(board.cards().iter())
-            .map(|c| *c),
+            .copied(),
     );
 
     // Cards to draw

@@ -2,6 +2,7 @@ mod cardset;
 mod globals;
 mod hand;
 mod simulate;
+mod stack_array;
 
 use crate::simulate::simulate;
 
