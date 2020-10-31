@@ -26,6 +26,12 @@ class HoleCards:
 
     encoded: int
 
+    def index(self):
+        c1 = self.cards[1].index()
+        c2 = self.cards[0].index()
+        offset = 52 * c1 - c1 * (c1 + 1) // 2
+        return offset + (c2 - c1 - 1)
+
 
 def _order_cards(first: Card, second: Card) -> Tuple[Card, Card]:
     if first > second:

@@ -12,8 +12,8 @@ from pokermon.poker.ordered_enum import OrderedEnum
 class Suit(OrderedEnum):
     SPADES = 1
     CLUBS = 2
-    DIAMONDS = 3
-    HEARTS = 4
+    HEARTS = 3
+    DIAMONDS = 4
 
 
 class Rank(OrderedEnum):
@@ -36,6 +36,11 @@ class Rank(OrderedEnum):
 class Card:
     rank: Rank
     suit: Suit
+
+    def index(self) -> int:
+        v = self.rank.value - 2
+        s = self.suit.value - 1
+        return v * 4 + s
 
 
 RANK_SUIT_MAP: Dict[Rank, Dict[Suit, Card]] = {}

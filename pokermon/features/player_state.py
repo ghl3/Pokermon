@@ -5,8 +5,9 @@
 from dataclasses import dataclass
 from typing import Dict, List, Optional
 
+import pyholdthem
+
 from pokermon.features.utils import iter_game_states
-from pokermon.poker import odds
 from pokermon.poker.board import Board
 from pokermon.poker.evaluation import evaluate_hand
 from pokermon.poker.game import GameView, Street
@@ -24,17 +25,26 @@ class PlayerState:
     current_player_offset: int
 
     current_hand_type: Optional[int] = None
-    current_hand_strength: Optional[float] = None
-    current_hand_rank: Optional[int] = None
 
-    frac_hands_better: Optional[float] = None
-    frac_hands_tied: Optional[float] = None
-    frac_hands_worse: Optional[float] = None
+    frac_better_hands: Optional[float] = None
+    frac_tied_hands: Optional[float] = None
+    frac_worse_hands: Optional[float] = None
 
-    win_prob_vs_any: Optional[float] = None
-    win_prob_vs_better: Optional[float] = None
-    win_prob_vs_tied: Optional[float] = None
-    win_prob_vs_worse: Optional[float] = None
+    win_odds: Optional[float] = None
+    tie_odds: Optional[float] = None
+    lose_odds: Optional[float] = None
+
+    win_odds_vs_better: Optional[float] = None
+    tie_odds_vs_better: Optional[float] = None
+    lose_odds_vs_better: Optional[float] = None
+
+    win_odds_vs_tied: Optional[float] = None
+    tie_odds_vs_tied: Optional[float] = None
+    lose_odds_vs_tied: Optional[float] = None
+
+    win_odds_vs_worse: Optional[float] = None
+    tie_odds_vs_worse: Optional[float] = None
+    lose_odds_vs_worse: Optional[float] = None
 
 
 def make_player_states(
@@ -72,24 +82,29 @@ def make_player_states(
         else:
             current_board = board.at_street(game_view.street())
             hand_eval = evaluate_hand(hole_cards, current_board)
-            nut_result = odds.make_nut_result(hole_cards, current_board)
-            odds_result = odds.make_odds_result(
-                hole_cards, current_board, nut_result, num_hands_per_group=100
+            hand_features = pyholdthem.make_hand_features_from_indices(
+                hole_cards.index(), [c.index() for c in current_board.cards()], 1000
             )
 
             player_state = PlayerState(
                 is_current_player=True,
                 current_player_offset=0,
                 current_hand_type=hand_eval.hand_type.value,
-                current_hand_strength=hand_eval.percentage,
-                current_hand_rank=hand_eval.rank,
-                frac_hands_better=nut_result.frac_better(),
-                frac_hands_tied=nut_result.frac_tied(),
-                frac_hands_worse=nut_result.frac_worse(),
-                win_prob_vs_any=odds_result.odds_vs_any(nut_result),
-                win_prob_vs_better=odds_result.odds_vs_better,
-                win_prob_vs_tied=odds_result.odds_vs_tied,
-                win_prob_vs_worse=odds_result.odds_vs_worse,
+                frac_better_hands=hand_features.frac_better_hands,
+                frac_tied_hands=hand_features.frac_tied_hands,
+                frac_worse_hands=hand_features.frac_worse_hands,
+                win_odds=hand_features.win_odds,
+                tie_odds=hand_features.tie_odds,
+                lose_odds=hand_features.lose_odds,
+                win_odds_vs_better=hand_features.win_odds_vs_better,
+                tie_odds_vs_better=hand_features.tie_odds_vs_better,
+                lose_odds_vs_better=hand_features.lose_odds_vs_better,
+                win_odds_vs_tied=hand_features.win_odds_vs_tied,
+                tie_odds_vs_tied=hand_features.tie_odds_vs_tied,
+                lose_odds_vs_tied=hand_features.lose_odds_vs_tied,
+                win_odds_vs_worse=hand_features.win_odds_vs_worse,
+                tie_odds_vs_worse=hand_features.tie_odds_vs_worse,
+                lose_odds_vs_worse=hand_features.lose_odds_vs_worse,
             )
 
         street_cache[street] = player_state

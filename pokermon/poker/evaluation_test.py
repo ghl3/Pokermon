@@ -1,14 +1,7 @@
-import deuces
 from pokermon.poker.board import Board, mkflop
 from pokermon.poker.cards import mkcard
 from pokermon.poker.evaluation import EvaluationResult, evaluate_hand
 from pokermon.poker.hands import HandType, mkhand
-
-
-def test_deck() -> None:
-    deck = deuces.Deck()
-    board = deck.draw(5)
-    deuces.Card.print_pretty_cards(board)
 
 
 def test_royal() -> None:
