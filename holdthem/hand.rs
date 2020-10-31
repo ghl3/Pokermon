@@ -24,12 +24,16 @@ pub struct HoleCards {
 
 impl HoleCards {
     pub fn new_from_cards(c1: Card, c2: Card) -> HoleCards {
-        HoleCards { cards: [c1, c2] }
+        if (c1 > c2) {
+            HoleCards { cards: [c1, c2] }
+        } else {
+            HoleCards { cards: [c2, c1] }
+        }
     }
 
     pub fn new_from_string(hand_string: &str) -> Result<HoleCards, String> {
         match card_vec_from_string(hand_string)?[..] {
-            [a, b] => Ok(HoleCards { cards: [a, b] }),
+            [a, b] => Ok(HoleCards::new_from_cards(a, b)),
             _ => Err("Cannot parse hole cards".parse().unwrap()),
         }
     }
@@ -39,12 +43,20 @@ impl HoleCards {
     }
 
     pub fn preflop_index(&self) -> usize {
-        2 * (13 * self.cards[0].value as usize + self.cards[1].value as usize)
-            + if self.cards[0].suit == self.cards[1].suit {
-                0
-            } else {
-                1
-            }
+        let paired = self.cards[0].value == self.cards[1].value;
+        let suited = self.cards[0].suit == self.cards[1].suit;
+
+        if paired {
+            self.cards[0].value as usize
+        } else {
+            let r1 = self.cards[0].value as usize;
+            let r2 = self.cards[1].value as usize;
+
+            let n = r1 - 1;
+            let offset = n * (n + 1) / 2;
+
+            13 + 2 * (offset + r2) + if suited { 0 } else { 1 }
+        }
     }
 
     pub fn index(&self) -> u32 {
@@ -379,11 +391,11 @@ mod tests {
                 cards: [
                     Card {
                         value: Value::Ace,
-                        suit: Suit::Club,
+                        suit: Suit::Heart,
                     },
                     Card {
                         value: Value::Ace,
-                        suit: Suit::Heart,
+                        suit: Suit::Club,
                     },
                 ]
             }
@@ -402,11 +414,11 @@ mod tests {
             Hand::Five([
                 Card {
                     value: Value::Ace,
-                    suit: Suit::Club,
+                    suit: Suit::Heart,
                 },
                 Card {
                     value: Value::Ace,
-                    suit: Suit::Heart,
+                    suit: Suit::Club,
                 },
                 Card {
                     value: Value::Three,
@@ -431,5 +443,29 @@ mod tests {
         let hand = Hand::from_hole_cards_and_board(&hole_cards, &board);
         let rank = hand.rank();
         println!("{:?}", rank);
+    }
+
+    #[test]
+    fn test_preflop_index() {
+        assert_eq!(
+            HoleCards::new_from_string("2d2s").unwrap().preflop_index(),
+            0
+        );
+        assert_eq!(
+            HoleCards::new_from_string("AcAd").unwrap().preflop_index(),
+            12
+        );
+        assert_eq!(
+            HoleCards::new_from_string("3d2h").unwrap().preflop_index(),
+            14
+        );
+        assert_eq!(
+            HoleCards::new_from_string("QsKs").unwrap().preflop_index(),
+            143
+        );
+        assert_eq!(
+            HoleCards::new_from_string("AdKh").unwrap().preflop_index(),
+            168
+        );
     }
 }
