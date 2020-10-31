@@ -34,18 +34,20 @@ pub fn make_nut_result(hole_cards: &HoleCards, board: &Board) -> NutResult {
         worse_hands: vec![],
     };
 
-    for other_hand in ALL_HANDS.iter() {
-        // TODO: We should be able to eliminate this unwrap since we aready know the board
-        // is not empty at this point.
-        let full_other_hand = Hand::from_hole_cards_and_board(other_hand, board);
-        let other_rank = full_other_hand.rank();
+    for villian_hole_cards in ALL_HANDS.iter() {
+        if hole_cards == villian_hole_cards {
+            continue;
+        }
 
-        if other_rank < rank {
-            nut_result.worse_hands.push(other_hand.clone());
-        } else if rank != other_rank {
-            nut_result.better_hands.push(other_hand.clone());
+        let villian_hand = Hand::from_hole_cards_and_board(villian_hole_cards, board);
+        let villian_rank = villian_hand.rank();
+
+        if villian_rank < rank {
+            nut_result.worse_hands.push(villian_hole_cards.clone());
+        } else if rank != villian_rank {
+            nut_result.better_hands.push(villian_hole_cards.clone());
         } else {
-            nut_result.tied_hands.push(other_hand.clone());
+            nut_result.tied_hands.push(villian_hole_cards.clone());
         }
     }
 

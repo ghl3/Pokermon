@@ -76,11 +76,12 @@ impl Board {
         }
     }
 
-    pub fn new_from_string(hand_string: &str) -> Result<Board, String> {
+    pub fn new_from_string(hand_string: &str) -> Result<Option<Board>, String> {
         match card_vec_from_string(hand_string)?[..] {
-            [a, b, c] => Ok(Board::Flop([a, b, c])),
-            [a, b, c, d] => Ok(Board::Turn([a, b, c, d])),
-            [a, b, c, d, e] => Ok(Board::River([a, b, c, d, e])),
+            [] => Ok(None),
+            [a, b, c] => Ok(Some(Board::Flop([a, b, c]))),
+            [a, b, c, d] => Ok(Some(Board::Turn([a, b, c, d]))),
+            [a, b, c, d, e] => Ok(Some(Board::River([a, b, c, d, e]))),
             _ => Err("Cannot parse board".parse().unwrap()),
         }
     }
@@ -306,7 +307,7 @@ mod tests {
     fn test_board_from_string() {
         assert_eq!(
             Board::new_from_string("AcAh3s4s5s").unwrap(),
-            Board::River([
+            Some(Board::River([
                 Card {
                     value: Value::Ace,
                     suit: Suit::Club,
@@ -327,11 +328,11 @@ mod tests {
                     value: Value::Five,
                     suit: Suit::Spade,
                 },
-            ])
+            ]))
         );
         assert_eq!(
             Board::new_from_string("AcAh3s").unwrap(),
-            Board::Flop([
+            Some(Board::Flop([
                 Card {
                     value: Value::Ace,
                     suit: Suit::Club,
@@ -344,11 +345,11 @@ mod tests {
                     value: Value::Three,
                     suit: Suit::Spade,
                 },
-            ])
+            ]))
         );
         assert_eq!(
             Board::new_from_string("AcAh3s7d").unwrap(),
-            Board::Turn([
+            Some(Board::Turn([
                 Card {
                     value: Value::Ace,
                     suit: Suit::Club,
@@ -365,7 +366,7 @@ mod tests {
                     value: Value::Seven,
                     suit: Suit::Diamond,
                 },
-            ])
+            ]))
         );
         assert!(Board::new_from_string("AcAh").is_err());
     }
@@ -396,7 +397,7 @@ mod tests {
         assert_eq!(
             Hand::from_hole_cards_and_board(
                 &HoleCards::new_from_string("AcAh").unwrap(),
-                &Board::new_from_string("3s7d8c").unwrap()
+                &Board::new_from_string("3s7d8c").unwrap().unwrap()
             ),
             Hand::Five([
                 Card {

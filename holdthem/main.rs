@@ -45,7 +45,7 @@ fn main() {
         .collect();
 
     let board: Option<Board> = match opts.board {
-        Some(s) => Some(Board::new_from_string(&*s).unwrap()),
+        Some(s) => Board::new_from_string(&*s).unwrap(),
         None => None,
     };
 

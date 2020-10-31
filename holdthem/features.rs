@@ -159,3 +159,17 @@ pub fn make_pre_flop_hand_features(hand: &HoleCards) -> Features {
         lose_odds_vs_worse: -1.0,
     }
 }
+
+#[cfg(test)]
+mod test {
+    use super::*;
+
+    #[test]
+    fn test_three_aces() {
+        let hole_cards = HoleCards::new_from_string("3d2h").unwrap();
+        let board = Board::new_from_string("AsAdAc").unwrap();
+        let features = make_hand_features(&hole_cards, &board, 1000);
+
+        println!("{:?}", result);
+    }
+}
