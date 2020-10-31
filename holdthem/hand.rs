@@ -423,4 +423,13 @@ mod tests {
             ])
         );
     }
+
+    #[test]
+    fn test_three_aces() {
+        let hole_cards = HoleCards::new_from_string("3d2h").unwrap();
+        let board = Board::new_from_string("AsAdAc").unwrap().unwrap();
+        let hand = Hand::from_hole_cards_and_board(&hole_cards, &board);
+        let rank = hand.rank();
+        println!("{:?}", rank);
+    }
 }

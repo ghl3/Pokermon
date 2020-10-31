@@ -168,8 +168,8 @@ mod test {
     fn test_three_aces() {
         let hole_cards = HoleCards::new_from_string("3d2h").unwrap();
         let board = Board::new_from_string("AsAdAc").unwrap();
-        let features = make_hand_features(&hole_cards, &board, 1000);
+        let features = make_hand_features(&hole_cards, &board, 1000).unwrap();
 
-        println!("{:?}", result);
+        println!("{:?}", features);
     }
 }

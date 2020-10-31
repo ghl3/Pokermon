@@ -1,7 +1,7 @@
 // A set holding cards
 //
 
-use crate::hand::card_index;
+use crate::hand::{card_index, Board, HoleCards};
 use rs_poker::core::Card;
 
 /// A set that holds cards
@@ -30,6 +30,19 @@ impl CardSet {
         set
     }
 
+    pub fn from_hole_cards_and_board(hole_cards: &HoleCards, board: &Option<Board>) -> CardSet {
+        let mut set = CardSet::new();
+        for c in hole_cards.cards.iter() {
+            set.insert(c);
+        }
+        if let Some(b) = board {
+            for c in b.cards() {
+                set.insert(c)
+            }
+        };
+        set
+    }
+
     pub fn contains(&self, card: &Card) -> bool {
         self.bitmap & card_bit_mask(card) != 0
     }
@@ -40,6 +53,10 @@ impl CardSet {
 
     pub fn remove(&mut self, card: &Card) {
         self.bitmap &= !card_bit_mask(card)
+    }
+
+    pub fn intersects(&self, hole_cards: &HoleCards) -> bool {
+        self.contains(&hole_cards.cards[0]) || self.contains(&hole_cards.cards[1])
     }
 }
 

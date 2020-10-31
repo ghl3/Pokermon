@@ -1,3 +1,4 @@
+use crate::cardset::CardSet;
 use crate::globals::ALL_HANDS;
 use crate::hand::{Board, Hand, HoleCards};
 use rs_poker::core::Rankable;
@@ -34,8 +35,10 @@ pub fn make_nut_result(hole_cards: &HoleCards, board: &Board) -> NutResult {
         worse_hands: vec![],
     };
 
+    let used_cards = CardSet::from_hole_cards_and_board(hole_cards, &Some(board.clone()));
+
     for villian_hole_cards in ALL_HANDS.iter() {
-        if hole_cards == villian_hole_cards {
+        if used_cards.intersects(villian_hole_cards) {
             continue;
         }
 

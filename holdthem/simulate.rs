@@ -117,19 +117,6 @@ impl FastDrawDeck {
     }
 }
 
-fn make_cardset(hole_cards: &HoleCards, board: &Option<Board>) -> CardSet {
-    let mut set = CardSet::new();
-    for c in hole_cards.cards.iter() {
-        set.insert(c);
-    }
-    if let Some(b) = board {
-        for c in b.cards() {
-            set.insert(c)
-        }
-    };
-    set
-}
-
 pub fn simulate(
     hero_hole_cards: &HoleCards,
     range: &Vec<HoleCards>,
@@ -141,7 +128,7 @@ pub fn simulate(
     }
 
     // First, create the deck
-    let mut deck = FastDrawDeck::new(make_cardset(hero_hole_cards, board));
+    let mut deck = FastDrawDeck::new(CardSet::from_hole_cards_and_board(hero_hole_cards, board));
 
     // Cards to draw
     let num_cards_to_draw = 5 - board.as_ref().map_or(0, |b| b.len());
